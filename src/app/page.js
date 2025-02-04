@@ -31,7 +31,7 @@ export default function Home() {
 
   return (
 
-    <main className={styles.main}>
+    <main className="main">
       <Header />
       <div className="flexWrapper">
         <Aside type="main" />

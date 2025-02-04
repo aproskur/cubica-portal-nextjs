@@ -10,6 +10,11 @@ const GalleryWrapper = styled.div`
   padding: 16px;
   flex-grow: 1;
   padding: 1.5em 1em;
+
+   /* Is needed if menu is sticky */
+  @media(max-width: 768px ){
+  padding: 110px 5px;
+  }
 `;
 
 const GameGallery = ({ games }) => {

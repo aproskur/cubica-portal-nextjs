@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import Link from "next/link";
 import { LuLogIn } from "react-icons/lu";
-import { FiMenu } from "react-icons/fi";
+import { FiMenu, FiX } from "react-icons/fi";
 import Logo from "@/components/Logo"
 
 const HeaderContainer = styled.header`
@@ -41,7 +41,6 @@ const LogoWrapper = styled.div`
   cursor: pointer;
   color: rgb(var(--theme-grey)); 
   transition: color 0.3s ease-in-out; 
-
   &:hover {
     color: rgb(var(--theme-yellow)); 
   }
@@ -133,60 +132,217 @@ const LoginIconWrapper = styled.div`
   }
 `;
 
+/* MOBILE MENU */
+const MobileHeaderContainer = styled.header`
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: rgb(var(--background));
+    height: 100px;
+    width: 100vw;
+    box-shadow: 0px 5px 8px rgba(0, 0, 0, 0.15);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+   
+  
+
+    
+  }
+`;
+
+const MobileBurgerWrapper = styled.div`
+  cursor: pointer;
+`;
+
+const CloseIcon = styled(FiX)`
+  width: 40px;
+  height: 40px;
+  color: rgb(var(--theme-yellow));
+  transition: color 0.3s ease-in-out;
+
+  &:hover {
+    color: rgb(var(--foreground));
+  }
+`;
+
+const MobileOffCanvasMenu = styled.div`
+  position: fixed;
+  top: 0;
+  right: ${({ $isOpen }) => ($isOpen ? "0" : "-100%")};
+  width: 100%;
+  height: 100vh;
+  background-color: rgb(var(--background));
+  box-shadow: -5px 0 10px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  transition: right 0.3s ease-in-out;
+  z-index: 999;
+`;
+
+const MobileOffCanvasMenuHeader = styled.div`
+
+  display: flex;
+  align-items: center; /* ✅ Keeps logo and close icon aligned */
+  justify-content: space-between; /* ✅ Pushes items to edges */
+  width: 100%;
+`;
+
+
+const MobileOffCanavasMenuContainer = styled.div`
+display: flex;
+flex-direction: column;
+padding: 1em 0.5em;
+width: 100%;
+gap: 20px;
+
+`;
+
+const StyledNextLink = styled(Link).attrs({ as: "a" })`
+  color: rgb(var(--foreground));
+  text-decoration: none;
+  font-size: 18px;
+  border-radius: 5px;
+  padding: 0.5em;
+  transition: background 0.3s ease-in-out;
+  border: 1px solid rgb(var(--background));
+
+  &:hover {
+    border: 1px solid rgb(var(--theme-yellow));
+  }
+`;
+
+
+const LoginButton = styled.button`
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: 1px solid rgb(var(--theme-grey));
+  font-size: 18px;
+  cursor: pointer;
+  color: rgb(var(--foreground));
+  transition: color 0.3s ease-in-out;
+  width: 100px;
+  padding: 0.5em 1em;
+  border-radius: 5px;
+  gap: 8px;
+  margin: .5em;
+
+  &:hover {
+    color: rgb(var(--theme-yellow));
+  }
+`;
+
+
 
 const Header = () => {
+  const [menuOpen, setMenuOpen] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [pageName, setPageName] = useState("");
 
   useEffect(() => {
-    // Dynamically retrieve the page title from the document's <title>
-    const title = document.title;
-    setPageName(title);
+    setPageName(document.title);
+
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
+
   return (
-    <HeaderContainer>
-      <LeftContainer>
-        {/* Logo */}
-        <LogoWrapper>
-          <Link href="/">
-            <Logo width={150} height={70}> </Logo>
-          </Link>
-        </LogoWrapper>
+    <>
+      {!isMobile && (
+        <HeaderContainer>
+          <LeftContainer>
+            {/* Logo */}
+            <LogoWrapper>
+              <Link href="/">
+                <Logo width={150} height={70}> </Logo>
+              </Link>
+            </LogoWrapper>
 
-        {/* Burger Icon and Menu */}
-        <BurgerWrapper
-          onMouseEnter={() => setMenuVisible(true)}
-          onMouseLeave={() => setMenuVisible(false)}
-        >
-          <BurgerIcon />
-          <HoverBuffer>
-            <MenuPopup $isVisible={menuVisible}
+            {/* Burger Icon and Menu */}
+            <BurgerWrapper
               onMouseEnter={() => setMenuVisible(true)}
-              onMouseLeave={() => setMenuVisible(false)}>
-              <Link href="/option1" passHref>
-                О платформе
+              onMouseLeave={() => setMenuVisible(false)}
+            >
+              <BurgerIcon />
+              <HoverBuffer>
+                <MenuPopup $isVisible={menuVisible}
+                  onMouseEnter={() => setMenuVisible(true)}
+                  onMouseLeave={() => setMenuVisible(false)}>
+                  <Link href="/option1" passHref>
+                    О платформе
+                  </Link>
+                  <Link href="/option2" passHref>
+                    Поддержка
+                  </Link>
+                </MenuPopup>
+              </HoverBuffer>
+            </BurgerWrapper>
+
+          </LeftContainer>
+          <RightContainer>
+            {/* Page Name */}
+            <PageName>{pageName}</PageName>
+
+            {/* User Icon */}
+            <LoginIconWrapper>
+              <LuLogIn />
+            </LoginIconWrapper>
+          </RightContainer>
+
+
+        </HeaderContainer>)}
+      {/* NEW MOBILE MENU */}
+      {isMobile && (
+        <>{!menuOpen && (
+          <MobileHeaderContainer>
+            <LogoWrapper>
+              <Link href="/">
+                <Logo />
               </Link>
-              <Link href="/option2" passHref>
-                Поддержка
-              </Link>
-            </MenuPopup>
-          </HoverBuffer>
-        </BurgerWrapper>
+            </LogoWrapper>
+            <MobileBurgerWrapper onClick={() => setMenuOpen(true)}>
+              <BurgerIcon />
+            </MobileBurgerWrapper>
+          </MobileHeaderContainer>)}
 
-      </LeftContainer>
-      <RightContainer>
-        {/* Page Name */}
-        <PageName>{pageName}</PageName>
+          {/* MOBILE OFF-CANVAS MENU */}
+          <MobileOffCanvasMenu $isOpen={menuOpen}>
+            <MobileOffCanvasMenuHeader>
+              <LogoWrapper>
+                <Logo />
+              </LogoWrapper>
+              <MobileBurgerWrapper onClick={() => setMenuOpen(false)}>
+                <CloseIcon />
+              </MobileBurgerWrapper>
+            </MobileOffCanvasMenuHeader>
+            <MobileOffCanavasMenuContainer>
+              <StyledNextLink href="#">О платформе</StyledNextLink>
+              <StyledNextLink href="#">Поддержка</StyledNextLink>
+              <LoginButton onClick={() => console.log("Open login modal")}>
+                <LuLogIn size={20} /> Вход
+              </LoginButton>
+            </MobileOffCanavasMenuContainer>
 
-        {/* User Icon */}
-        <LoginIconWrapper>
-          <LuLogIn />
-        </LoginIconWrapper>
-      </RightContainer>
-
-
-    </HeaderContainer>
+          </MobileOffCanvasMenu>
+        </>
+      )}
+    </>
   );
 };
 

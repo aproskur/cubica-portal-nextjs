@@ -15,13 +15,13 @@ const IconWrapper = styled.div`
   transition: all 0.2s ease;
 
   svg {
-    ${({ variant }) =>
-        variant === 'fill'
-            ? `
+    ${({ $variant }) =>
+    $variant === 'fill'
+      ? `
         fill: rgb(var(--theme-grey));
         stroke: none; /* No stroke for fill-based icons */
       `
-            : `
+      : `
         fill: none; /* No fill for stroke-based icons */
         stroke: rgb(var(--theme-grey));
         stroke-width: 1.5;
@@ -31,20 +31,20 @@ const IconWrapper = styled.div`
   &:hover {
   border: 1px solid rgba(var(--theme-yellow), 0.7);
     svg {
-      ${({ variant }) =>
-        variant === 'fill'
-            ? `
+      ${({ $variant }) =>
+    $variant === 'fill'
+      ? `
           fill: #ffffff;
         `
-            : `
+      : `
           stroke: #ffffff;
         `}
     }
   }
 `;
 
-const SquareIcon = ({ icon, variant = 'stroke' }) => {
-    return <IconWrapper variant={variant}>{icon}</IconWrapper>;
+const SquareIcon = ({ icon, $variant = 'stroke' }) => {
+  return <IconWrapper $variant={$variant}>{icon}</IconWrapper>;
 };
 
 export default SquareIcon;

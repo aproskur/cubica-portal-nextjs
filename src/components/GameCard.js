@@ -98,7 +98,7 @@ const GameCard = ({ game }) => {
       {/* Footer with Linkable Game Name */}
       <Footer>
         <FooterIcon>
-          <SquareIcon icon={<CiHeart />} variant="fill" />
+          <SquareIcon icon={<CiHeart />} $variant="fill" />
         </FooterIcon>
         <Link href={`/games/${game.slug}`}>
           <GameName>{game.title}</GameName>

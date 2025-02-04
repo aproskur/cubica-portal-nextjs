@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { FiChevronDown, FiChevronUp, FiFilter } from "react-icons/fi";
 
@@ -8,6 +8,11 @@ const AsideContainer = styled.aside`
   background-color: inherit;
   color: inherit;
   padding: 0.5rem 1rem;
+
+  /* Is needed if menu is sticky */
+  @media(max-width: 768px ){
+  padding: 110px 5px;
+  }
 `;
 
 const SectionTitle = styled.h2`
@@ -74,6 +79,7 @@ const stopPropagation = (event) => {
 const Dropdown = ({ title, icon, items, type, stateKey, dropdownState, setDropdownState }) => {
     const isOpen = dropdownState[stateKey];
 
+
     return (
         <DropdownContainer>
             <DropdownHeader onClick={() => setDropdownState(prev => ({ ...prev, [stateKey]: !prev[stateKey] }))} $isOpen={isOpen}>
@@ -99,6 +105,21 @@ const Aside = ({ type }) => {
         filter: false,
         gameGenre: false,
     });
+
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkScreenSize = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
+
+        checkScreenSize(); // Initial check
+        window.addEventListener("resize", checkScreenSize);
+
+        return () => window.removeEventListener("resize", checkScreenSize);
+    }, []);
+
+    if (isMobile) return null;
 
     if (type === 'main') {
         return (
