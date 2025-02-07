@@ -136,7 +136,7 @@ const LoginIconWrapper = styled.div`
 const MobileHeaderContainer = styled.header`
   display: none;
 
-  @media (max-width: 768px) {
+  @media (max-width: 875px) {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -190,8 +190,8 @@ const MobileOffCanvasMenu = styled.div`
 const MobileOffCanvasMenuHeader = styled.div`
 
   display: flex;
-  align-items: center; /* ✅ Keeps logo and close icon aligned */
-  justify-content: space-between; /* ✅ Pushes items to edges */
+  align-items: center; 
+  justify-content: space-between; 
   width: 100%;
 `;
 

@@ -25,6 +25,24 @@ export default function Home() {
       pricePerLaunch: 650,
       pricePerMonth: 1550,
       description: "Explore the classic adventures of Tom Sawyer and his friends."
+    },
+    {
+      id: 3,
+      title: "Пингвины",
+      slug: "pinguins",
+      image: "/assets/images/antarctika.webp",
+      pricePerLaunch: 750,
+      pricePerMonth: 1650,
+      description: "An exciting adventure in Antarctica."
+    },
+    {
+      id: 4,
+      title: "Приключения Тома Сойера и его закадычного друга Приключения Тома Сойера и его закадычного друга Приключения Тома Сойера и его закадычного друга",
+      slug: "adventures-of-tom-sawyer",
+      image: "/assets/images/tom.webp",
+      pricePerLaunch: 650,
+      pricePerMonth: 1550,
+      description: "Explore the classic adventures of Tom Sawyer and his friends."
     }
   ];
 

@@ -12,29 +12,40 @@ import InfoContainer from "@/components/InfoContainer";
 const GridContainer = styled.div`
     display: grid;
     grid-template-columns: 1fr 1fr; /* Two equal columns */
-    grid-template-rows: auto auto; /* First for slider + info, second for tabs */
+    grid-template-rows: auto auto; /* First row (slider + info), second row (tabs) */
     width: 100%;
+    max-width: 100vw;
     margin: 0 auto;
     gap: 20px;
     padding: 20px;
     box-sizing: border-box;
+    grid-template-areas: 
+        "slider info"
+        "tabs tabs";
+
+    /* Mobile layout */
+    @media (max-width: 875px) {
+        grid-template-columns: 1fr; /* Single column */
+        grid-template-rows: auto auto auto; /* Three rows */
+        grid-template-areas: 
+            "info"
+            "slider"
+            "tabs";
+        gap: 15px;
+
+        /* Is needed if menu is sticky */
+        padding: 110px 5px;
+    }
 `;
 
-
 const FirstRow = styled.div`
-width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* Matches the second row's column setup */
-    gap: 20px;
-    justify-content: space-around;
-    grid-row: 1;
-    grid-column: 1 / span 2;
-    align-items: stretch;
+    width: 100%;
+    display: contents; 
+    
 `;
 
 const SliderContainer = styled.div`
-    grid-column: 1; 
-    padding: 0; 
+    grid-area: slider;
     display: flex;
     width: 100%;
     height: 100%;
@@ -43,23 +54,20 @@ const SliderContainer = styled.div`
     background-color: inherit;
     color: #fff;
     padding: 20px;
-    /* border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); */
 `;
 
 const InfoContainerWrapper = styled.div`
-    grid-column: 2; 
+    grid-area: info;
     display: flex;
     flex-direction: column;
-    justify-content: center; 
-    align-items: flex-start; 
+    justify-content: center;
+    align-items: flex-start;
 `;
 
 const SecondRow = styled.div`
-    grid-column: 1 / span 2; 
+    grid-area: tabs;
     padding-top: 1em;
     border-radius: 10px;
-    grid-row: 2;
 `;
 
 

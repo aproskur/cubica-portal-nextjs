@@ -5,12 +5,13 @@ import { FiChevronDown, FiChevronUp, FiFilter } from "react-icons/fi";
 
 const AsideContainer = styled.aside`
   width: 300px;
+  flex-shrink: 0;
   background-color: inherit;
   color: inherit;
   padding: 0.5rem 1rem;
 
   /* Is needed if menu is sticky */
-  @media(max-width: 768px ){
+  @media(max-width: 875px ){
   padding: 110px 5px;
   }
 `;
@@ -110,7 +111,7 @@ const Aside = ({ type }) => {
 
     useEffect(() => {
         const checkScreenSize = () => {
-            setIsMobile(window.innerWidth <= 768);
+            setIsMobile(window.innerWidth <= 875);
         };
 
         checkScreenSize(); // Initial check
