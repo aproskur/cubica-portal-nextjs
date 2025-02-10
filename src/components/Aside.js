@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { FiChevronDown, FiChevronUp, FiFilter } from "react-icons/fi";
+import { FiChevronDown, FiChevronUp, FiFilter, FiSearch } from "react-icons/fi";
 
 const AsideContainer = styled.aside`
   width: 300px;
@@ -15,6 +15,37 @@ const AsideContainer = styled.aside`
   padding: 110px 5px;
   }
 `;
+const SearchContainer = styled.div`
+  position: relative;
+  width: 100%;
+  margin-bottom: 1rem;
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+   padding: 0.75rem 2.5rem 0.75rem 2.5rem; /* Left padding for icon */
+  margin-bottom: 1rem;
+  border: 1px solid rgba(var(--theme-yellow), 0.5);
+  border-radius: 90px;
+  font-size: 16px;
+  outline: none;
+  background: inherit;
+  color: inherit;
+
+  &:focus {
+    border-color: rgb(var(--theme-yellow));
+  }
+`;
+
+const SearchIcon = styled(FiSearch)`
+  position: absolute;
+  left: 10px; 
+  top: 37%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  color: rgba(var(--theme-grey), 0.7);
+`;
+
 
 const SectionTitle = styled.h2`
   font-size: 16px;
@@ -100,7 +131,7 @@ const Dropdown = ({ title, icon, items, type, stateKey, dropdownState, setDropdo
     );
 };
 
-const Aside = ({ type }) => {
+const Aside = ({ type, setSearchQuery }) => {
     const [dropdownState, setDropdownState] = useState({
         sort: false,
         filter: false,
@@ -125,6 +156,15 @@ const Aside = ({ type }) => {
     if (type === 'main') {
         return (
             <AsideContainer>
+                <SectionTitle>Поиск</SectionTitle>
+                <SearchContainer>
+                    <SearchIcon />
+                    <SearchInput
+                        type="text"
+                        placeholder="Введите название игры..."
+                        onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
+                    />
+                </SearchContainer>
                 <FilterGroup>
                     <SectionTitle>Сортировка</SectionTitle>
                     <Dropdown

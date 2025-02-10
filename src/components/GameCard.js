@@ -5,9 +5,11 @@ import styled from "styled-components";
 import SquareIcon from "./SquareIcon";
 import { CiHeart } from "react-icons/ci";
 import { LuShoppingCart } from "react-icons/lu";
+import { FaStar } from "react-icons/fa";
 
 
 const CardWrapper = styled.div`
+position: relative; /* ! fixed star appering somewhere on the top left where logo */
   background-color: inherit;
   border-radius: 5px;
   padding: 16px;
@@ -18,6 +20,32 @@ const CardWrapper = styled.div`
     transform: scale(1.02);
     box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
   }
+`;
+
+const TopLeftBadge = styled.div`
+  position: absolute;
+  top: 25px;
+  left: 16px;
+  background-color: rgba(var(--theme-grey), 0.6);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: .4rem 1rem;
+  font-size: 1rem;
+  gap: 4px;
+  z-index: 2; 
+`;
+
+const TopRightBadge = styled.div`
+  position: absolute;
+  top: 25px;
+  right: 15px;
+  background-color: rgba(var(--theme-grey), 0.6);
+  color: #fff;
+  padding: .4rem 1rem;
+  font-size: 1rem;
+  z-index: 2; 
 `;
 
 const CardImage = styled.img`
@@ -75,6 +103,15 @@ const FooterIcon = styled.div`
 const GameCard = ({ game }) => {
   return (
     <CardWrapper>
+      {/* top left badge (rating) */}
+      <TopLeftBadge>
+        <FaStar color="white" />
+        {game.rating}
+      </TopLeftBadge>
+
+      {/* top right badge (total reviews) */}
+      <TopRightBadge>{game.reviews}</TopRightBadge>
+
       {/* Link the image to the game page */}
       <Link href={`/games/${game.slug}`}>
         <CardImage src={game.image} alt={game.title} />

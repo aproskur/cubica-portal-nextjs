@@ -25,12 +25,28 @@ const GalleryWrapper = styled.div`
   }
 `;
 
-const GameGallery = ({ games }) => {
+
+const NoResults = styled.p`
+  font-size: 18px;
+  text-align: center;
+  color: rgba(var(--theme-grey), 0.7);
+`;
+
+const GameGallery = ({ games, searchQuery }) => {
+
+
+    // Filter games based on search query
+    const filteredGames = games.filter((game) =>
+        game.title.toLowerCase().includes(searchQuery)
+    );
+
     return (
         <GalleryWrapper>
-            {games.map((game) => (
-                <GameCard key={game.id} game={game} />
-            ))}
+            {filteredGames.length > 0 ? (
+                filteredGames.map((game) => <GameCard key={game.id} game={game} />)
+            ) : (
+                <NoResults>Игр не найдено</NoResults>
+            )}
         </GalleryWrapper>
     );
 };
