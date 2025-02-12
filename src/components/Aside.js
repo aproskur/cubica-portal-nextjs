@@ -23,7 +23,7 @@ const SearchContainer = styled.div`
 
 const SearchInput = styled.input`
   width: 100%;
-   padding: 0.75rem 2.5rem 0.75rem 2.5rem; /* Left padding for icon */
+padding: 0.75rem 2.5rem 0.75rem 2.5rem; /* Left padding for icon */
   margin-bottom: 1rem;
   border: 1px solid rgba(var(--theme-yellow), 0.5);
   border-radius: 90px;
@@ -103,9 +103,15 @@ const DropdownListItem = styled.div`
   }
 `;
 
+
+
 const stopPropagation = (event) => {
     event.stopPropagation();
 };
+
+
+
+
 
 // Reusable Dropdown Component
 const Dropdown = ({ title, icon, items, type, stateKey, dropdownState, setDropdownState }) => {

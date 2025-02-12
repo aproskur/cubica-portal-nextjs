@@ -19,7 +19,7 @@ export default function Home() {
       reviews: 244,
       pricePerLaunch: 750,
       pricePerMonth: 1650,
-      description: "An exciting adventure in Antarctica."
+      description: "Описание игры Пингвины. Что за игра, для чего итд"
     },
     {
       id: 2,

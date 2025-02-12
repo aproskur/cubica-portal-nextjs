@@ -5,6 +5,7 @@ import Link from "next/link";
 import { LuLogIn } from "react-icons/lu";
 import { FiMenu, FiX } from "react-icons/fi";
 import Logo from "@/components/Logo"
+import Breadcrumbs from "./Breadcrumb";
 
 const HeaderContainer = styled.header`
   display: flex;
@@ -103,11 +104,6 @@ const MenuPopup = styled.div`
   }
 `;
 
-
-const PageName = styled.div`
-  font-size: 18px;
-  font-weight: bold;
-`;
 
 const LoginIconWrapper = styled.div`
   display: flex;
@@ -248,18 +244,17 @@ const Header = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [pageName, setPageName] = useState("");
 
-  useEffect(() => {
-    setPageName(document.title);
 
+  useEffect(() => {
     const checkScreenSize = () => {
-      setIsMobile(window.innerWidth <= 768);
+      setIsMobile(window.innerWidth <= 875);
     };
 
     checkScreenSize();
     window.addEventListener("resize", checkScreenSize);
-
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
+
 
 
   return (
@@ -296,8 +291,8 @@ const Header = () => {
 
           </LeftContainer>
           <RightContainer>
-            {/* Page Name */}
-            <PageName>{pageName}</PageName>
+            {/* Breadcrumbs */}
+            <Breadcrumbs />
 
             {/* User Icon */}
             <LoginIconWrapper>
@@ -316,7 +311,7 @@ const Header = () => {
                 <Logo />
               </Link>
             </LogoWrapper>
-            <MobileBurgerWrapper onClick={() => setMenuOpen(true)}>
+            <MobileBurgerWrapper onClick={() => setMenuOpen(!menuOpen)}>
               <BurgerIcon />
             </MobileBurgerWrapper>
           </MobileHeaderContainer>)}
