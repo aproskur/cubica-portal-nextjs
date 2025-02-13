@@ -305,16 +305,32 @@ const Header = () => {
       {/* NEW MOBILE MENU */}
       {isMobile && (
         <>{!menuOpen && (
-          <MobileHeaderContainer>
-            <LogoWrapper>
-              <Link href="/">
-                <Logo />
-              </Link>
-            </LogoWrapper>
-            <MobileBurgerWrapper onClick={() => setMenuOpen(!menuOpen)}>
-              <BurgerIcon />
-            </MobileBurgerWrapper>
-          </MobileHeaderContainer>)}
+          <>
+            <MobileHeaderContainer>
+              <LogoWrapper>
+                <Link href="/">
+                  <Logo />
+                </Link>
+              </LogoWrapper>
+              <MobileBurgerWrapper onClick={() => setMenuOpen(!menuOpen)}>
+                <BurgerIcon />
+              </MobileBurgerWrapper>
+            </MobileHeaderContainer>
+            {/* Breadcrumbs Below Sticky Header */}
+            <div
+              style={{
+                padding: "0.5rem 1rem",
+                background: "rgb(var(--background))",
+                borderBottom: "1px solid rgba(var(--theme-grey), 0.3)",
+                marginTop: "100px"
+              }}
+            >
+              <Breadcrumbs />
+            </div>
+          </>
+        )
+
+        }
 
           {/* MOBILE OFF-CANVAS MENU */}
           <MobileOffCanvasMenu $isOpen={menuOpen}>

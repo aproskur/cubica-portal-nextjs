@@ -16,8 +16,8 @@ const GalleryWrapper = styled.div`
    
   @media(max-width: 875px ){
   
-  padding: 110px 5px; /* Is needed if menu is sticky */
    grid-template-columns: repeat(2, minmax(300px, 1fr));
+   margin-bottom: 3rem; /* only if there is sticky footer */
   }
 
     @media(max-width: 500px ){

@@ -25,16 +25,13 @@ const GridContainer = styled.div`
 
     /* Mobile layout */
     @media (max-width: 875px) {
-        grid-template-columns: 1fr; /* Single column */
-        grid-template-rows: auto auto auto; /* Three rows */
+        grid-template-columns: 1fr; 
+        grid-template-rows: auto auto auto; 
         grid-template-areas: 
             "info"
             "slider"
             "tabs";
         gap: 15px;
-
-        /* Is needed if menu is sticky */
-        padding: 110px 5px;
     }
 `;
 
@@ -48,12 +45,13 @@ const SliderContainer = styled.div`
     grid-area: slider;
     display: flex;
     width: 100%;
-    height: 100%;
+    height: auto;
     flex-direction: column;
     gap: 10px;
     background-color: inherit;
     color: #fff;
     padding: 20px;
+    overflow: hidden;
 `;
 
 const InfoContainerWrapper = styled.div`

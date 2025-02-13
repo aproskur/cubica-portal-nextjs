@@ -4,6 +4,8 @@ import styles from "./page.module.css";
 import Header from "@/components/Header";
 import Aside from "@/components/Aside";
 import GameGallery from "@/components/GameGallery";
+import MobileFooter from "@/components/MobileFooter";
+import MobileAside from "@/components/MobileAside";
 import { useState } from "react";
 
 
@@ -57,6 +59,7 @@ export default function Home() {
   ];
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   return (
 
@@ -66,6 +69,10 @@ export default function Home() {
         <Aside type="main" setSearchQuery={setSearchQuery} />
         <GameGallery games={games} searchQuery={searchQuery} />
       </div>
+
+      {/* Mobile Components */}
+      <MobileFooter openFilter={() => setIsFilterOpen(true)} />
+      <MobileAside isOpen={isFilterOpen} onClose={() => setIsFilterOpen(false)} />
     </main>
 
   );
