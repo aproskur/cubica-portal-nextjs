@@ -1,6 +1,7 @@
 import StyledComponentsRegistry from '../lib/registry'
 import { Montserrat } from "next/font/google";
 import "./globals.css";
+import { SearchProvider } from "@/context/SearchContext";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -16,10 +17,12 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={`${montserrat.variable}`}>
-        <StyledComponentsRegistry>{children}</StyledComponentsRegistry>
-      </body>
-    </html>
+    <SearchProvider>
+      <html lang="ru">
+        <body className={`${montserrat.variable}`}>
+          <StyledComponentsRegistry>{children}</StyledComponentsRegistry>
+        </body>
+      </html>
+    </SearchProvider>
   );
 }

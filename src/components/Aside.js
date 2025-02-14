@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { FiChevronDown, FiChevronUp, FiFilter, FiSearch } from "react-icons/fi";
+import { useSearch } from "@/context/SearchContext";
 
 const AsideContainer = styled.aside`
   width: 300px;
@@ -53,7 +54,7 @@ const SectionTitle = styled.h2`
   margin-bottom: 10px;
   color: rgb(var(--theme-yellow));
   border-bottom: 1px solid rgba(var(--theme-yellow), 0.4);
-  padding: 1em 0;
+  padding: 1.20rem ;
 `;
 
 const FilterGroup = styled.div`
@@ -65,6 +66,7 @@ const DropdownContainer = styled.div`
   position: relative;
   background-color: inherit;
 margin-bottom: 5px;
+
 `;
 
 const DropdownHeader = styled.div`
@@ -79,6 +81,7 @@ const DropdownHeader = styled.div`
   padding: 1em .5em;
   font-weight: bold;
   color: ${({ $isOpen }) => ($isOpen ? "rgb(var(--foreground))" : "rgb(var(--theme-grey))")};
+  
 
   &:hover {
    border: 1px solid rgb(var(--theme-yellow));
@@ -137,7 +140,7 @@ const Dropdown = ({ title, icon, items, type, stateKey, dropdownState, setDropdo
     );
 };
 
-const Aside = ({ type, setSearchQuery }) => {
+const Aside = ({ type }) => {
     const [dropdownState, setDropdownState] = useState({
         sort: false,
         filter: false,
@@ -145,6 +148,7 @@ const Aside = ({ type, setSearchQuery }) => {
     });
 
     const [isMobile, setIsMobile] = useState(false);
+    const { setSearchQuery } = useSearch(); // Get function to update search
 
     useEffect(() => {
         const checkScreenSize = () => {
@@ -232,6 +236,38 @@ const Aside = ({ type, setSearchQuery }) => {
 
 
                 ПОИСК
+            </AsideContainer>
+        );
+    }
+
+    if (type === "my-purchases") {
+        return (
+            <AsideContainer>
+                <SectionTitle>Поиск</SectionTitle>
+                <SearchContainer>
+                    <SearchIcon />
+                    <SearchInput
+                        type="text"
+                        placeholder="Введите название игры..."
+                        onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
+                    />
+                </SearchContainer>
+                <FilterGroup>
+                    <SectionTitle>Фильтр ссылок</SectionTitle>
+                    <Dropdown
+                        title="Отображать ссылки"
+                        icon={<FiFilter />}
+                        type="radio"
+                        stateKey="filter"
+                        dropdownState={dropdownState}
+                        setDropdownState={setDropdownState}
+                        items={[
+                            { label: "Все", value: "all-links" },
+                            { label: "Активные", value: "active-links" },
+                            { label: "Архивные", value: "archive-links" },
+                        ]}
+                    />
+                </FilterGroup>
             </AsideContainer>
         );
     }

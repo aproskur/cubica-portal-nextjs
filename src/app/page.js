@@ -7,9 +7,12 @@ import GameGallery from "@/components/GameGallery";
 import MobileFooter from "@/components/MobileFooter";
 import MobileAside from "@/components/MobileAside";
 import { useState } from "react";
+import { useSearch } from "@/context/SearchContext";
 
 
 export default function Home() {
+
+  const { searchQuery } = useSearch();
 
   const games = [
     {
@@ -58,7 +61,6 @@ export default function Home() {
     }
   ];
 
-  const [searchQuery, setSearchQuery] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   return (
@@ -66,8 +68,8 @@ export default function Home() {
     <main className="main">
       <Header />
       <div className="flexWrapper">
-        <Aside type="main" setSearchQuery={setSearchQuery} />
-        <GameGallery games={games} searchQuery={searchQuery} />
+        <Aside type="main" />
+        <GameGallery games={games} searchQuery={searchQuery} /> {/* now uses constext */}
       </div>
 
       {/* Mobile Components */}

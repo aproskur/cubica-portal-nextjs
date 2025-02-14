@@ -2,6 +2,7 @@
 import React from "react";
 import styled from "styled-components";
 import GameCard from "./GameCard";
+import { useSearch } from "@/context/SearchContext";
 
 const GalleryWrapper = styled.div`
   display: grid;
@@ -32,7 +33,9 @@ const NoResults = styled.p`
   color: rgba(var(--theme-grey), 0.7);
 `;
 
-const GameGallery = ({ games, searchQuery }) => {
+const GameGallery = ({ games }) => {
+
+    const { searchQuery } = useSearch();
 
 
     // Filter games based on search query

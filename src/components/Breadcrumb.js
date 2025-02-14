@@ -32,6 +32,7 @@ const ActiveBreadcrumb = styled.span`
 const breadcrumbTranslations = {
     home: "Магазин игр",
     launch: "Запуск",
+    my: "Мои покупки"
 };
 
 // Function to dynamically fetch game name (Supports API in the future)
@@ -59,7 +60,6 @@ const Breadcrumbs = () => {
     const pathname = usePathname();
     const pathSegments = pathname.split("/").filter(Boolean);
     const [titles, setTitles] = useState({}); // Store translated names
-    const [loaded, setLoaded] = useState(false); // Prevents flash of unstyled content
 
     // Fetch game names or translations on mount
     useEffect(() => {
