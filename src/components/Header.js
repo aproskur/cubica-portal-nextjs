@@ -6,6 +6,7 @@ import { LuLogIn } from "react-icons/lu";
 import { FiMenu, FiX } from "react-icons/fi";
 import Logo from "@/components/Logo"
 import Breadcrumbs from "./Breadcrumb";
+import LoginModal from "./LoginModal";
 
 const HeaderContainer = styled.header`
   display: flex;
@@ -103,7 +104,6 @@ const MenuPopup = styled.div`
     }
   }
 `;
-
 
 const LoginIconWrapper = styled.div`
   display: flex;
@@ -238,11 +238,13 @@ const LoginButton = styled.button`
 
 
 
+
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [pageName, setPageName] = useState("");
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
 
 
   useEffect(() => {
@@ -294,8 +296,8 @@ const Header = () => {
             {/* Breadcrumbs */}
             <Breadcrumbs />
 
-            {/* User Icon */}
-            <LoginIconWrapper>
+            {/* Login Button (Desktop) */}
+            <LoginIconWrapper onClick={() => setIsLoginOpen(true)}>
               <LuLogIn />
             </LoginIconWrapper>
           </RightContainer>
@@ -345,7 +347,8 @@ const Header = () => {
             <MobileOffCanavasMenuContainer>
               <StyledNextLink href="#">О платформе</StyledNextLink>
               <StyledNextLink href="#">Поддержка</StyledNextLink>
-              <LoginButton onClick={() => console.log("Open login modal")}>
+              {/* Mobile Login Button */}
+              <LoginButton onClick={() => setIsLoginOpen(true)}>
                 <LuLogIn size={20} /> Вход
               </LoginButton>
             </MobileOffCanavasMenuContainer>
@@ -353,6 +356,9 @@ const Header = () => {
           </MobileOffCanvasMenu>
         </>
       )}
+
+      {/* LOGIN MODAL (visible for both desktop and mobile) */}
+      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </>
   );
 };
