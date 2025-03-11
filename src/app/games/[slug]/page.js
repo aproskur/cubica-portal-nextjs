@@ -1,11 +1,12 @@
 "use client"
-import { games } from "@/data/games";
 import Head from "next/head";
 import Swiper from "@/components/Swiper";
 import styled from "styled-components";
-import { use } from "react";
+import { useState, useEffect } from "react";
 import Tabs from "@/components/Tabs"
 import InfoContainer from "@/components/InfoContainer";
+import { useParams } from "next/navigation";
+import { fetchGameBySlug } from "@/utils/apiService";
 
 
 
@@ -72,27 +73,43 @@ const SecondRow = styled.div`
 
 
 
-const GamePage = ({ params: paramsPromise }) => {
-    const params = use(paramsPromise); // Unwrap the params Promise
-    const { slug } = params; // Access slug from unwrapped params
+const GamePage = () => {
+    const { slug } = useParams(); // Get slug from URL
+    const [game, setGame] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    const game = games.find((g) => g.slug === slug);
+    useEffect(() => {
+        const fetchGame = async () => {
+            const gameData = await fetchGameBySlug(slug);
+            setGame(gameData);
+            setLoading(false);
+        };
 
-    if (!game) {
-        return <div>Game not found</div>;
-    }
+        fetchGame();
+    }, [slug]);
+
+    if (loading) return <p>Загрузка...</p>;
+    if (!game) return <p>Игра не найдена</p>;
+
+    const API_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+
+    const imageUrlArray = game.images.map(image => ({
+        id: image.id,
+        url: `${API_URL}${image.url}`,
+    }));
+
+
+
 
     return (
         <>
             <Head>
-                <title>Страница игры {game.title}</title>
+                <title>{game.title}</title>
             </Head>
-
             <GridContainer>
-                {/* First Row */}
                 <FirstRow>
                     <SliderContainer>
-                        <Swiper images={game.images} />
+                        <Swiper images={imageUrlArray} />
                     </SliderContainer>
                     <InfoContainerWrapper>
                         <InfoContainer
@@ -111,16 +128,14 @@ const GamePage = ({ params: paramsPromise }) => {
                         />
                     </InfoContainerWrapper>
                 </FirstRow>
-
-
-                {/* Second Row */}
                 <SecondRow>
                     <Tabs />
                 </SecondRow>
             </GridContainer>
-
         </>
     );
 };
+
+
 
 export default GamePage;

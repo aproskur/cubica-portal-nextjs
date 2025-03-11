@@ -1,12 +1,13 @@
 "use client"
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import styled from "styled-components";
 import Link from "next/link";
-import { LuLogIn } from "react-icons/lu";
+import { LuLogIn, LuLogOut } from "react-icons/lu";
 import { FiMenu, FiX } from "react-icons/fi";
 import Logo from "@/components/Logo"
 import Breadcrumbs from "./Breadcrumb";
 import LoginModal from "./LoginModal";
+import { AuthContext, useAuth } from "@/context/AuthContext";
 
 const HeaderContainer = styled.header`
   display: flex;
@@ -236,8 +237,25 @@ const LoginButton = styled.button`
   }
 `;
 
+const FlexWrapper = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5em 1em;
+  gap: 1rem;
+`
 
 
+const LoggedUser = () => {
+
+  const { user } = useAuth();
+
+  return (
+    <>
+      {user?.username}
+    </>
+  )
+}
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -245,6 +263,7 @@ const Header = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [pageName, setPageName] = useState("");
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const { isAuthenticated, handleLogout } = useContext(AuthContext);
 
 
   useEffect(() => {
@@ -296,10 +315,14 @@ const Header = () => {
             {/* Breadcrumbs */}
             <Breadcrumbs />
 
-            {/* Login Button (Desktop) */}
-            <LoginIconWrapper onClick={() => setIsLoginOpen(true)}>
-              <LuLogIn />
-            </LoginIconWrapper>
+            <FlexWrapper>
+              <LoggedUser></LoggedUser>
+
+              {/* Login Button (Desktop) */}
+              <LoginIconWrapper onClick={isAuthenticated ? handleLogout : () => setIsLoginOpen(true)}>
+                {isAuthenticated ? <LuLogOut /> : <LuLogIn />}
+              </LoginIconWrapper>
+            </FlexWrapper>
           </RightContainer>
 
 

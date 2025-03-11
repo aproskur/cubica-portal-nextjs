@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { FiChevronDown, FiChevronUp, FiFilter, FiSearch } from "react-icons/fi";
 import { useSearch } from "@/context/SearchContext";
+import { usePathname } from "next/navigation";
+
 
 const AsideContainer = styled.aside`
   width: 300px;
@@ -140,15 +142,24 @@ const Dropdown = ({ title, icon, items, type, stateKey, dropdownState, setDropdo
     );
 };
 
-const Aside = ({ type }) => {
+const Aside = () => {
     const [dropdownState, setDropdownState] = useState({
         sort: false,
         filter: false,
         gameGenre: false,
+        showLinks: true,
     });
 
     const [isMobile, setIsMobile] = useState(false);
     const { setSearchQuery } = useSearch(); // Get function to update search
+
+    const pathname = usePathname();
+    let asideType = "game-page"; // Default type
+    if (pathname === "/games/my") {
+        asideType = "my-purchases";
+    } else if (pathname === "/") {
+        asideType = "main";
+    }
 
     useEffect(() => {
         const checkScreenSize = () => {
@@ -163,7 +174,7 @@ const Aside = ({ type }) => {
 
     if (isMobile) return null;
 
-    if (type === 'main') {
+    if (asideType === 'main') {
         return (
             <AsideContainer>
                 <SectionTitle>Поиск</SectionTitle>
@@ -230,7 +241,7 @@ const Aside = ({ type }) => {
             </AsideContainer>
         );
     }
-    if (type === 'game-page') {
+    if (asideType === 'game-page') {
         return (
             <AsideContainer>
 
@@ -240,7 +251,7 @@ const Aside = ({ type }) => {
         );
     }
 
-    if (type === "my-purchases") {
+    if (asideType === "my-purchases") {
         return (
             <AsideContainer>
                 <SectionTitle>Поиск</SectionTitle>
@@ -258,7 +269,7 @@ const Aside = ({ type }) => {
                         title="Отображать ссылки"
                         icon={<FiFilter />}
                         type="radio"
-                        stateKey="filter"
+                        stateKey="showLinks"
                         dropdownState={dropdownState}
                         setDropdownState={setDropdownState}
                         items={[

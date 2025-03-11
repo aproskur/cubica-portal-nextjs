@@ -2,15 +2,18 @@
 
 import Link from "next/link";
 import styled from "styled-components";
-import SquareIcon from "./SquareIcon";
+import SquareIconButton from "./SquareIconButton";
 import { CiHeart } from "react-icons/ci";
 import { LuShoppingCart, LuGamepad2 } from "react-icons/lu";
 import { FaStar, FaInfoCircle, FaEdit, FaCopy, FaCheck, FaArchive, FaTimes } from "react-icons/fa";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useDeferredValue } from "react";
+import { toggleFavorite, fetchFavorites } from "../utils/toggleFavourites";
+import { useAuth } from "../context/AuthContext";
+import { useModal } from "../context/ModalContext";
 
 
 const CardWrapper = styled.div`
-position: relative; /* ! fixed star appering somewhere on the top left where logo */
+position: relative; 
   background-color: inherit;
   border-radius: 5px;
   padding: 16px;
@@ -62,7 +65,6 @@ const CardImage = styled.img`
   margin-bottom: 12px;
   cursor: pointer;
 `;
-
 
 
 const CardImageWrapper = styled.div`
@@ -333,67 +335,151 @@ const ModalDescription = styled.p`
 
 
 const GameCard = ({ game }) => {
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
+  const { isAuthenticated, user, token } = useAuth();
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleOverlayToggle = () => {
-    if (window.innerWidth <= 768) {
-      setIsOverlayVisible(!isOverlayVisible);
-    }
-  };
 
-  const handleOutsideClick = (e) => {
-    if (isOverlayVisible && !e.target.closest('.hover-overlay')) {
-      setIsOverlayVisible(false);
-    }
-  };
+  const { openPurchaseModal } = useModal();
+
 
   useEffect(() => {
-    document.addEventListener("click", handleOutsideClick);
-    return () => {
-      document.removeEventListener("click", handleOutsideClick);
-    };
-  }, [isOverlayVisible]);
+    console.log("Component Mounted");
 
+    return () => {
+      console.log("Component Unmounted");
+    };
+  }, []); // Empty dependency array to run this effect only on mount/unmount
+
+  useEffect(() => {
+    console.log("Window object:", typeof window !== "undefined" ? window : "No window");
+  }, []);
+
+
+  // Handle favorite status on mount
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      setIsFavorite(false); // Reset favorite when user logs out
+      return;
+    }
+
+    console.log("useEffect for fetching favourites", user);
+
+    let isMounted = true; // Flag to prevent state updates after unmounting
+    console.log("Fetching favorites for user:"); // Log to check if the request is triggered
+
+    fetchFavorites(user.documentId, token).then((favoriteGameIds) => {
+      console.log("Fetched favorite game IDs:", favoriteGameIds); // Log the fetched favorite game IDs
+
+      if (isMounted) {
+        console.log("Entering the isMounted block"); // Log to check if isMounted is true
+        console.log("EXiting game id", game.id);
+        const isFav = favoriteGameIds.includes(game.id); // Check if the current game is in the list of favorite games
+        console.log("Is this game favorited?", isFav); // Log whether the game is favorited or not
+
+        setIsFavorite(isFav); // Update the state
+      } else {
+        console.log("Component is unmounted, skipping state update"); // Log when the component is unmounted
+      }
+    });
+
+    return () => { isMounted = false }; // Cleanup function to prevent memory leaks
+  }, [isAuthenticated, user, game.id, token]);
+
+
+
+
+
+  // Optimistic update for faster UX
+  const handleFavoriteClick = async () => {
+    console.log("Heart clicked!");
+
+    if (!isAuthenticated) {
+      alert("Please log in to add games to favorites.");
+      console.warn("User not authenticated!");
+      return;
+    }
+
+    console.log("Game ID:", game.id);
+    console.log("User ID:", user?.documentId);
+    console.log("Current favorite state:", isFavorite);
+
+    setLoading(true);
+    setIsFavorite((prev) => !prev);
+
+    try {
+      const result = await toggleFavorite(game.id, user.documentId, token, isFavorite);
+      console.log("Toggle favorite result:", result);
+
+      if (!result) {
+        setIsFavorite((prev) => !prev); // Revert if request fails
+        console.warn("Toggle favorite request failed, reverting state.");
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      setIsFavorite((prev) => !prev);
+    }
+
+    setLoading(false);
+  };
+
+
+  // Handle overlay toggle
+  const handleOverlayToggle = () => {
+    if (window.innerWidth <= 768) {
+      setIsOverlayVisible((prev) => !prev);
+    }
+  };
+
+  // Close overlay when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (isOverlayVisible && !e.target.closest('.hover-overlay')) {
+        setIsOverlayVisible(false);
+      }
+    };
+
+    document.addEventListener("click", handleOutsideClick);
+    return () => document.removeEventListener("click", handleOutsideClick);
+  }, [isOverlayVisible]);
 
   return (
     <>
       <CardWrapper>
-        {/* top left badge (rating) */}
+        {/* Top left badge (rating) */}
         <TopLeftBadge>
-          <FaStar color="white" />
-          {game.rating}
+          <FaStar color="white" /> {game.rating}
         </TopLeftBadge>
 
-        {/* top right badge (total reviews) */}
+        {/* Top right badge (total reviews) */}
         <TopRightBadge>{game.reviews}</TopRightBadge>
 
-        {/* Link the image to the game page */}
+        {/* Game Image & Hover Overlay */}
         <CardImageWrapper onClick={handleOverlayToggle}>
           <CardImage src={game.image} alt={game.title} />
           <HoverOverlay className="hover-overlay" $isOverlayVisible={isOverlayVisible}>
             <ButtonRow>
-              <LargeIconButton data-tooltip="информация" onClick={() => setIsModalOpen(true)}>
+              <LargeIconButton data-tooltip="Информация" onClick={() => setIsModalOpen(true)}>
                 <FaInfoCircle />
               </LargeIconButton>
-              <LargeIconButton data-tooltip="демо">
+              <LargeIconButton data-tooltip="Демо">
                 <LuGamepad2 />
               </LargeIconButton>
             </ButtonRow>
             <ButtonRow>
-              <IconButton data-tooltip="редактировать"><FaEdit /></IconButton>
-              <IconButton data-tooltip="копировать"><FaCopy /></IconButton>
-              <IconButton data-tooltip="публикация"><FaCheck /></IconButton>
-              <IconButton data-tooltip="в архив"><FaArchive /></IconButton>
+              <IconButton data-tooltip="Редактировать"><FaEdit /></IconButton>
+              <IconButton data-tooltip="Копировать"><FaCopy /></IconButton>
+              <IconButton data-tooltip="Публикация"><FaCheck /></IconButton>
+              <IconButton data-tooltip="В архив"><FaArchive /></IconButton>
             </ButtonRow>
           </HoverOverlay>
         </CardImageWrapper>
 
-
-        {/* Cart Icon and Prices */}
+        {/* Shopping Cart & Price */}
         <CardContent>
-          <SquareIcon icon={<LuShoppingCart />} />
+          <SquareIconButton icon={<LuShoppingCart />} onClick={() => openPurchaseModal(game)} />
           <PriceContainer>
             <PriceText>
               <PriceValue>{game.pricePerLaunch}</PriceValue>
@@ -406,16 +492,24 @@ const GameCard = ({ game }) => {
           </PriceContainer>
         </CardContent>
 
-        {/* Row with Linkable Game Name */}
+        {/* Game Title & Favorite Button */}
         <Row>
           <RowIcon>
-            <SquareIcon icon={<CiHeart />} $variant="fill" />
+            <SquareIconButton
+              icon={<CiHeart />}
+              iconType="stroke"
+              color={isFavorite ? "rgb(var(--theme-yellow))" : "rgb(var(--theme-grey))"}
+              onClick={handleFavoriteClick}
+              isFavorite={isFavorite}
+            />
           </RowIcon>
           <Link href={`/games/${game.slug}`}>
             <GameName>{game.title}</GameName>
           </Link>
         </Row>
       </CardWrapper>
+
+      {/* Game Details Modal */}
       {isModalOpen && (
         <ModalOverlay>
           <ModalContent>
@@ -437,8 +531,13 @@ const GameCard = ({ game }) => {
                   </PriceText>
                 </PriceContainer>
                 <ButtonGroup>
-                  <SquareIcon icon={<LuShoppingCart />} />
-                  <SquareIcon icon={<CiHeart />} $variant="fill" />
+                  <SquareIconButton icon={<LuShoppingCart />} onClick={() => openPurchaseModal(game)} />
+                  <SquareIconButton
+                    icon={<CiHeart />}
+                    iconType="stroke"
+                    color={isFavorite ? "rgb(var(--theme-yellow))" : "rgb(var(--theme-grey))"}
+                    onClick={handleFavoriteClick}
+                  />
                   <Link href={`/games/${game.slug}`}>
                     <ModalButton>Подробнее</ModalButton>
                   </Link>
@@ -454,3 +553,5 @@ const GameCard = ({ game }) => {
 };
 
 export default GameCard;
+
+

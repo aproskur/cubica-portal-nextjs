@@ -11,3 +11,19 @@
         padding-top: 150px !important;
     }
 }
+
+/*
+const LayoutWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  width: 100%;
+  gap: 20px; 
+`;
+
+const Content = styled.div`
+  flex: 1;
+  overflow: auto;
+  padding: 1rem 0.5rem;
+`;
+*/

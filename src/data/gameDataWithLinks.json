@@ -5,13 +5,13 @@
         "links": [
             {
                 "id": 101,
-                "date": "22/09/2025",
+                "purchaseDate": "22/09/2025",
                 "url": "http://game1.cubica.pro",
                 "type": "день"
             },
             {
                 "id": 102,
-                "date": "22/10/2025",
+                "purchaseDate": "22/10/2025",
                 "url": "http://game1.cubica.pro",
                 "type": "разовая"
             }
@@ -23,17 +23,35 @@
         "links": [
             {
                 "id": 201,
-                "date": "22/09/2025",
+                "purchaseDate": "22/09/2025",
                 "url": "http://game2.cubica.pro",
                 "type": "разовая"
             },
             {
                 "id": 202,
-                "date": "22/10/2025",
+                "purchaseDate": "22/10/2025",
                 "url": "http://game2.cubica.pro",
                 "type": "месяц",
                 "startDate": "22/09/2025",
                 "endDate": "22/10/2025"
+            }
+        ]
+    },
+    {
+        "gameId": 3,
+        "gameName": "Приключения Тома сойера и его закадычного друга",
+        "links": [
+            {
+                "id": 101,
+                "purchaseDate": "22/09/2025",
+                "url": "http://game1.cubica.pro",
+                "type": "день"
+            },
+            {
+                "id": 102,
+                "purchaseDate": "22/10/2025",
+                "url": "http://game1.cubica.pro",
+                "type": "разовая"
             }
         ]
     }

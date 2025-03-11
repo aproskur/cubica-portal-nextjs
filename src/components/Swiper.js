@@ -42,14 +42,14 @@ const Swiper = ({ images = [] }) => {
                         style={{ marginBottom: "10px" }}
 
                     >
-                        {images.map((image, index) => (
+                        {images.map((image) => (
                             <SwiperSlide
-                                key={index}
+                                key={image.id}
                                 style={{ display: "flex", justifyContent: "center" }}
                             >
                                 <img
-                                    src={image}
-                                    alt={`Slide ${index + 1}`}
+                                    src={image.url}
+                                    alt={`Slide ${image.id + 1}`}
                                     style={{
                                         width: "100%",
                                         maxHeight: "300px",
@@ -77,14 +77,14 @@ const Swiper = ({ images = [] }) => {
                         watchOverflow
                         style={{ cursor: "pointer" }}
                     >
-                        {images.map((image, index) => (
+                        {images.map((image) => (
                             <SwiperSlide
-                                key={index}
+                                key={image.id}
                                 style={{ cursor: "pointer", display: "flex", justifyContent: "center" }}
                             >
                                 <img
-                                    src={image}
-                                    alt={`Thumbnail ${index + 1}`}
+                                    src={image.url}
+                                    alt={`Thumbnail ${image.id}`}
                                     style={{
                                         width: "80px",
                                         height: "60px",

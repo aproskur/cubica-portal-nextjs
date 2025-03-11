@@ -37,6 +37,20 @@ a {
   align-items: flex-start;
 }
 
+.flex-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  width: 100%;
+  gap: 20px;
+}
+
+.content {
+  flex: 1;
+  overflow: auto;
+  padding: 1rem 0.5rem;
+}
+
 
 /* SOME SWIPER SETTINGS */
 /* Prevents focus highlight on Swiper images */

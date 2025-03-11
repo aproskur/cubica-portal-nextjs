@@ -4,6 +4,9 @@ import styled from "styled-components";
 import GameCard from "./GameCard";
 import { useSearch } from "@/context/SearchContext";
 
+const API_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+const FALLBACK_IMAGE = "/assets/images/antarctika.webp";
+
 const GalleryWrapper = styled.div`
   display: grid;
   grid-template-columns: repeat(3, minmax(250px, 1fr));
@@ -33,15 +36,40 @@ const NoResults = styled.p`
   color: rgba(var(--theme-grey), 0.7);
 `;
 
-const GameGallery = ({ games }) => {
-
+const GameGallery = ({ games = [] }) => {
     const { searchQuery } = useSearch();
 
+    console.log("GameGallery - Image URLs:", games.map(game => game.image));
 
-    // Filter games based on search query
-    const filteredGames = games.filter((game) =>
-        game.title.toLowerCase().includes(searchQuery)
-    );
+
+    // Ensure games is an array before filtering
+    const filteredGames = games.map((game) => {
+        console.log("Before Processing:", game);
+        console.log("Game Image Object:", game.image); // Debugging
+
+        let imageUrl = FALLBACK_IMAGE; // Default fallback image
+
+        if (game.image && typeof game.image === "object" && game.image.url) {
+            // Ensure we prepend API_URL if the URL is relative
+            imageUrl = game.image.url.startsWith("/") ? `${API_URL}${game.image.url}` : game.image.url;
+        } else if (typeof game.image === "string") {
+            // If the image is a string (not an object), handle it correctly
+            imageUrl = game.image.startsWith("/") ? `${API_URL}${game.image}` : game.image;
+        } else {
+            console.warn(`Game ID ${game.id} has an invalid image format:`, game.image);
+        }
+
+        return {
+            ...game,
+            image: imageUrl,
+        };
+    });
+
+
+    console.log("Final Processed Games Array:", filteredGames);
+
+
+
 
     return (
         <GalleryWrapper>

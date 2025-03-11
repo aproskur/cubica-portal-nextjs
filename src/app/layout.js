@@ -1,28 +1,37 @@
-import StyledComponentsRegistry from '../lib/registry'
+import StyledComponentsRegistry from "../lib/registry";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
-import { SearchProvider } from "@/context/SearchContext";
+import Providers from "@/context/Providers";
+import Header from "@/components/Header";
+import Aside from "@/components/Aside";
+import PurchaseModal from "@/components/PurchaseModal";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
   subsets: ["latin", "cyrillic"],
 });
 
-
-
 export const metadata = {
-  title: "Магазин игр",
-  description: "Портал",
+  title: "Главная | Магазин игр",
+  description: "Добро пожаловать в Магазин игр - лучший портал для игр.",
 };
+
 
 export default function RootLayout({ children }) {
   return (
-    <SearchProvider>
-      <html lang="ru">
-        <body className={`${montserrat.variable}`}>
-          <StyledComponentsRegistry>{children}</StyledComponentsRegistry>
-        </body>
-      </html>
-    </SearchProvider>
+    <html lang="ru">
+      <body className={`${montserrat.variable}`}>
+        <StyledComponentsRegistry>
+          <Providers>
+            <Header />
+            <div className="flex-wrapper">
+              <Aside />
+              <div className="content">{children}</div>
+            </div>
+            <PurchaseModal />
+          </Providers>
+        </StyledComponentsRegistry>
+      </body>
+    </html>
   );
 }

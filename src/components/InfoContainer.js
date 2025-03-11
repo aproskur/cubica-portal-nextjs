@@ -116,7 +116,7 @@ const InfoContainer = ({ title, reviews, priceLaunch, priceMonth, description, d
                 <span>{priceMonth} ₽/месяц</span>
             </PriceWrapper>
             <ButtonGroup>
-                <button>Играть</button>
+                <button>Демо</button>
                 <button>Купить</button>
 
             </ButtonGroup>
