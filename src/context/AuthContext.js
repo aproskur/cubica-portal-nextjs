@@ -1,5 +1,6 @@
 // AuthContext manages the authentication state 
 // Provides functions for login, registration, and logout.
+// Manages login modal
 
 "use client";
 import { createContext, useState, useEffect } from "react";
@@ -14,7 +15,7 @@ export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(null); // Store token in state (not in local storage as before)
     const [isLoading, setIsLoading] = useState(true); //Prevent unnecessary redirects
     const router = useRouter(); // For redirection
-
+    const [isLoginModalOpen, setLoginModalOpen] = useState(false);
 
     // After refreshing the page, React loses state. 
     // To keep the user logged in the following useEffect()  retrieves the token from localStorage:
@@ -50,7 +51,7 @@ export const AuthProvider = ({ children }) => {
 
             setUser({
                 id: responseData.id,
-                documentId: responseData.documentId,  // ✅ Store `documentId`, NOT `document_id`
+                documentId: responseData.documentId,  // Store `documentId`, NOT `document_id`
                 username: responseData.username,
                 email: responseData.email
             });
@@ -158,20 +159,48 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Functions to control login modal
+    const openLoginModal = () => {
+        console.log("openLoginModal() called (message from state)")
+        setLoginModalOpen(true);
+    }
+    const closeLoginModal = () => {
+        console.log("Cloelogin modal called (msg from state)");
+        setLoginModalOpen(false);
+    }
+
+    useEffect(() => {
+        console.log("Auth context: isLoginModalOpen=", isLoginModalOpen);
+    }, [isLoginModalOpen]);
+
 
 
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, user, token, isLoading, login, handleLogout, register }}>
+        <AuthContext.Provider value={{
+            isAuthenticated,
+            user, token, isLoading, login,
+            handleLogout,
+            register,
+            openLoginModal,
+            isLoginModalOpen,
+            closeLoginModal
+        }}>
             {children}
         </AuthContext.Provider>
     );
 };
 
+
+
+
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {
+        console.log("useAuth() called, context =", context); //
+        console.log("ERROR: useAuth() is called outside of AuthProvider")
         throw new Error("useAuth must be used within an AuthProvider");
     }
+    console.log("useAuth() called, context =", context); //
     return context;
 };

@@ -261,9 +261,7 @@ const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [pageName, setPageName] = useState("");
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const { isAuthenticated, handleLogout } = useContext(AuthContext);
+  const { isAuthenticated, handleLogout, openLoginModal } = useContext(AuthContext);
 
 
   useEffect(() => {
@@ -316,10 +314,15 @@ const Header = () => {
             <Breadcrumbs />
 
             <FlexWrapper>
-              <LoggedUser></LoggedUser>
 
+
+              <LoggedUser></LoggedUser>
               {/* Login Button (Desktop) */}
-              <LoginIconWrapper onClick={isAuthenticated ? handleLogout : () => setIsLoginOpen(true)}>
+              <LoginIconWrapper
+                onClick={() => {
+                  console.log("LOGIN BUTTON clicked")
+                  isAuthenticated ? handleLogout() : openLoginModal();
+                }}>
                 {isAuthenticated ? <LuLogOut /> : <LuLogIn />}
               </LoginIconWrapper>
             </FlexWrapper>
@@ -380,8 +383,9 @@ const Header = () => {
         </>
       )}
 
-      {/* LOGIN MODAL (visible for both desktop and mobile) */}
+      {/* LOGIN MODAL (visible for both desktop and mobile) - removing to Root layout
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+      */}
     </>
   );
 };

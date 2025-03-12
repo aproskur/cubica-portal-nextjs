@@ -5,6 +5,7 @@ import Providers from "@/context/Providers";
 import Header from "@/components/Header";
 import Aside from "@/components/Aside";
 import PurchaseModal from "@/components/PurchaseModal";
+import ClientWrapperAuth from "@/components/ClientWrapperAuth";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -18,6 +19,7 @@ export const metadata = {
 
 
 export default function RootLayout({ children }) {
+
   return (
     <html lang="ru">
       <body className={`${montserrat.variable}`}>
@@ -29,6 +31,7 @@ export default function RootLayout({ children }) {
               <div className="content">{children}</div>
             </div>
             <PurchaseModal />
+            <ClientWrapperAuth />
           </Providers>
         </StyledComponentsRegistry>
       </body>

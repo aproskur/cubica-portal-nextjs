@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import styled from "styled-components";
-import { loginUser, registerUser } from "@/utils/OUTDATEDauthService";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
 
@@ -126,14 +125,14 @@ const ErrorMessage = styled.p`
 `;
 
 const LoginModal = ({ isOpen, onClose }) => {
-  const { login, register } = useAuth();
+  const { login, register, isLoginModalOpen } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const router = useRouter();
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [username, setUsername] = useState(""); // Only needed for registration
+
 
   if (!isOpen) return null;
 
@@ -146,7 +145,6 @@ const LoginModal = ({ isOpen, onClose }) => {
         await login(email, password);
       }
       onClose();
-      //router.push("/games/my");
     } catch (err) {
       setError(err.message || "Operation failed.");
     }

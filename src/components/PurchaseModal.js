@@ -252,7 +252,7 @@ const PurchaseModal = () => {
                 <p>
                     Стоимость: <strong style={{ color: "rgb(var(--theme-yellow))" }}>{price} руб.</strong>
                 </p>
-                <p>После оплаты ссылка будет доступна в "Мои игры"</p>
+                <p>После оплаты ссылка будет доступна в "Мои покупки"</p>
 
                 <CubicaButton>Оплатить</CubicaButton>
             </ModalContent>
