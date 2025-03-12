@@ -264,6 +264,7 @@ const Header = () => {
   const { isAuthenticated, handleLogout, openLoginModal } = useContext(AuthContext);
 
 
+
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth <= 875);
@@ -298,10 +299,10 @@ const Header = () => {
                 <MenuPopup $isVisible={menuVisible}
                   onMouseEnter={() => setMenuVisible(true)}
                   onMouseLeave={() => setMenuVisible(false)}>
-                  <Link href="/option1" passHref>
+                  <Link href="/option1">
                     О платформе
                   </Link>
-                  <Link href="/option2" passHref>
+                  <Link href="/option2">
                     Поддержка
                   </Link>
                 </MenuPopup>
@@ -315,7 +316,8 @@ const Header = () => {
 
             <FlexWrapper>
 
-
+              {isAuthenticated && <Link href="/games/my"> Мои покупки</Link>}
+              {isAuthenticated && <Link href="#"> Мои игры</Link>}
               <LoggedUser></LoggedUser>
               {/* Login Button (Desktop) */}
               <LoginIconWrapper

@@ -63,12 +63,12 @@ export default function MyGamesPage() {
         )
         : [];
 
-    if (loading || fetching) return <p>Loading...</p>;
-    if (!games.length) return <p>You haven't purchased any games.</p>;
+    if (loading || fetching) return <p>Загружаем...</p>;
+    if (!games.length) return <p>У вас пока что нет купленных игр</p>;
 
     return (
         <Container>
-            <h1>{user?.username}'s Games</h1>
+            {/*<h1>{user?.username}'s Games</h1>*/}
             {/*Pass extracted links to the GameLinksTable */}
             <GameLinksTable games={filteredGames} links={links} />
         </Container>
