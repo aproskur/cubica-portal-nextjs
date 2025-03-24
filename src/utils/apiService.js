@@ -33,7 +33,7 @@ export const fetchGames = async () => {
             }
 
             return {
-                id: game.documentId || 0,
+                documentId: game.documentId || 0,
                 title: game.title || "Untitled Game",
                 slug: game.slug || "no-slug",
                 image: game.image?.url || "/default.jpg", // Fix image reference
@@ -73,7 +73,7 @@ export const fetchGameBySlug = async (slug) => {
         let imageUrl = game.image?.url ? `${baseURL}${game.image.url}` : "/default.jpg";
 
         return {
-            id: game.documentId || 0,
+            documentId: game.documentId || 0,
             title: game.title || "Untitled Game",
             slug: game.slug || "no-slug",
             image: imageUrl,
@@ -95,37 +95,130 @@ export const fetchGameBySlug = async (slug) => {
 };
 
 
+
 // Fetch purchases for a user
 export const fetchUserPurchases = async () => {
     try {
-        const url = "http://localhost:1337/api/purchases/my";
-        console.log("Fetching purchases from:", url);
+        const token = localStorage.getItem("jwt");
 
-        const response = await fetch(url, {
+        if (!token) {
+            console.error("No token found! User might not be authenticated.");
+            return null;
+        }
+
+        console.log("Fetching user purchases with token:", token);
+
+        const response = await fetch(`${API_URL}/api/purchases`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-            },
+                "Authorization": `Bearer ${token}`
+            }
         });
 
         console.log("Response Status:", response.status);
+
         const data = await response.json();
-        console.log("API Response:", data);
         console.log("Purchases API Response:", JSON.stringify(data, null, 2));
 
-
-
-
         if (!response.ok) {
+            console.error("API Error:", data || "No error message in response");
             throw new Error(`API Error! Status: ${response.status} - ${data?.error?.message || "No message"}`);
         }
 
-        return data;
+        return data.purchases; // Ensure it returns only purchases array
     } catch (error) {
         console.error("Error fetching purchases:", error);
         return null;
     }
 };
+
+export const createOrder = async (gameDocumentId, packageType, startDate, endDate, price) => {
+    try {
+        const token = localStorage.getItem("jwt")
+        if (!token) throw new Error("Authentication required");
+
+        const response = await fetch(`${API_URL}/api/orders`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ gameDocumentId, packageType, startDate, endDate, price })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error_code || "ORDER_CREATION_FAILED");
+        }
+        return { success: true, order: data.order };
+    } catch (error) {
+        console.error("Error creating order:", error);
+        return { success: false, error: error.message };
+    }
+};
+
+// Update order status
+export const updateOrderStatus = async (orderDocumentId, status) => {
+    try {
+        const token = localStorage.getItem("jwt");
+        if (!token) throw new Error("Authentication required");
+
+        const response = await fetch(`${API_URL}/api/orders/${orderDocumentId}/status`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ orderDocumentId, status })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error("ORDER_UPDATE_FAILED");
+
+        return { success: true, data };
+    } catch (error) {
+        console.error("Error updating order status:", error);
+        return { success: false, error: error.message };
+    }
+};
+
+
+export const createPurchase = async (orderDocumentId) => {
+    try {
+        const token = localStorage.getItem("jwt");
+        if (!token) throw new Error("Authentication required");
+
+        const response = await fetch(`${API_URL}/api/purchases`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                data: {
+                    documentId: orderDocumentId  // This must match the expected key in Strapi 5
+                }
+            })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "PURCHASE_CREATION_FAILED");
+
+        return { success: true, data };
+    } catch (error) {
+        console.error("Error creating purchase:", error);
+        return { success: false, error: error.message };
+    }
+};
+
+
+
+
+
+
+
+
 
 
 

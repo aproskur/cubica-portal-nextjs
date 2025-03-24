@@ -5,6 +5,16 @@ import styled from "styled-components";
 import { useAuth } from "../context/AuthContext";
 import { useModal } from "../context/ModalContext";
 import LoginModal from "./LoginModal";
+import { createOrder } from "@/utils/apiService";
+import { updateOrderStatus, createPurchase } from "@/utils/apiService";
+
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import ru from "date-fns/locale/ru";
+import { registerLocale } from "react-datepicker";
+
+registerLocale("ru", ru);
+
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -81,8 +91,9 @@ const RadioInput = styled.input`
   }
 `;
 
+
 const DateInput = styled.input`
-  width: 35%;
+ 
   padding: 8px;
   font-size: 1rem;
   border: 1px solid rgb(var(--theme-grey));
@@ -91,6 +102,7 @@ const DateInput = styled.input`
   color: rgb(var(--foreground));
   cursor: pointer;
   transition: border 0.3s ease;
+  font-family: var(--font-montserrat), Arial, Helvetica, sans-serif;
 
   &:focus {
     border-color: rgb(var(--theme-yellow));
@@ -136,43 +148,131 @@ const PurchaseModal = () => {
     const [selectedPackage, setSelectedPackage] = useState("one-time");
     const [price, setPrice] = useState(gameData?.pricePerLaunch || 0);
     const [startDate, setStartDate] = useState("");
-    const [endDate, setEndDate] = useState("");
+    const [endDate, setEndDate] = useState(""); // display only
+    const [endDateRaw, setEndDateRaw] = useState(""); // raw ISO value for API
+
+    const [loading, setLoading] = useState(false);
+    const [purchaseDone, setPurchaseDone] = useState(false)
+    const [error, setError] = useState(null);
+    const [successMessage, setSuccessMessage] = useState(null);
 
     useEffect(() => {
         if (selectedPackage === "one-time") {
             setPrice(gameData?.pricePerLaunch || 0);
             setEndDate("");
+            setEndDateRaw(""); // reset raw value too
         } else if (selectedPackage === "day") {
             setPrice(gameData?.pricePerDay || 0);
-            setEndDate(startDate); // End date same as start date for one day
+            setEndDate(startDate);
+            setEndDateRaw(startDate); // match start date
         } else if (selectedPackage === "month") {
             setPrice(gameData?.pricePerMonth || 0);
             if (startDate) {
                 const newEndDate = new Date(startDate);
                 newEndDate.setMonth(newEndDate.getMonth() + 1);
-
-                // Format to DD-MM-YYYY
-                const formattedEndDate = newEndDate.toLocaleDateString("ru-RU", {
+                const iso = newEndDate.toISOString().split("T")[0];
+                const formatted = newEndDate.toLocaleDateString("ru-RU", {
                     day: "2-digit",
                     month: "2-digit",
                     year: "numeric"
                 });
-
-                setEndDate(formattedEndDate);
+                setEndDate(formatted); // or set display version
+                setEndDateRaw(iso); // for backend
             } else {
                 setEndDate("");
+                setEndDateRaw("");
             }
         }
     }, [selectedPackage, gameData, startDate]);
 
+    const handleCloseModal = () => {
+        setPurchaseDone(false);
+        closePurchaseModal();
+    }
 
     if (!isModalOpen) return null;
-    if (!isAuthenticated) return <LoginModal onClose={closePurchaseModal} />;
+    if (!isAuthenticated) return <LoginModal onClose={handleCloseModal} />;
+
+
+
+
+    const handlePurchase = async () => {
+        setLoading(true);
+        setError(null);
+        setSuccessMessage(null);
+
+        try {
+            // Step 1: Create Order
+            const orderResponse = await createOrder(
+                gameData.documentId,
+                selectedPackage,
+                startDate ? new Date(startDate).toISOString() : null,
+                endDateRaw ? new Date(endDateRaw).toISOString() : null,
+                price
+            );
+
+
+
+            console.log("Frontend recieved following new order", orderResponse);
+            if (!orderResponse.success) {
+                setError(mapOrderError(orderResponse.error));
+                setLoading(false);
+                return;
+            }
+
+            // Simulated payment success (replace this with actual payment processing)
+            const paymentSuccess = true;
+
+            if (paymentSuccess) {
+                // Step 2: Update Order Status
+                const orderDocumentId = orderResponse.order.documentId;
+                const updateResponse = await updateOrderStatus(orderDocumentId, "paid");
+
+                if (!updateResponse.success) {
+                    setError("Failed to update order status.");
+                    setLoading(false);
+                    return;
+                }
+
+                // Step 3: Create Purchase. 
+                const purchaseResponse = await createPurchase(orderDocumentId);
+
+                if (!purchaseResponse.success) {
+                    setError("Error creating purchase.");
+                } else {
+                    setPurchaseDone(true);
+                    setSuccessMessage("Покупка успешно завершена, вы можете найти игру в разделе Мои покупки.");
+                }
+            } else {
+                setError("Payment failed. Please try again.");
+            }
+        } catch (error) {
+            setError("An unexpected error occurred. Please try again.");
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Map API errors to user-friendly messages
+    const mapOrderError = (errorCode) => {
+        switch (errorCode) {
+            case "AUTHENTICATION_REQUIRED":
+                return "You need to log in to purchase this game.";
+            case "GAME_NOT_FOUND":
+                return "The selected game is no longer available.";
+            case "INVALID_PACKAGE_TYPE":
+                return "Invalid package selection. Please choose a valid option.";
+            default:
+                return "An unexpected error occurred. Please try again.";
+        }
+    };
+
 
     return (
         <ModalOverlay>
             <ModalContent>
-                <CloseButton onClick={closePurchaseModal}>×</CloseButton>
+                <CloseButton onClick={handleCloseModal}>×</CloseButton>
                 <h2 style={{
                     textAlign: "center",
                     fontWeight: "normal",
@@ -209,12 +309,21 @@ const PurchaseModal = () => {
                         Игровой день
                     </RadioLabel>
                     {selectedPackage === "day" && (
-                        <DateInput
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
+                        <DatePicker
+                            selected={startDate ? new Date(startDate) : null}
+                            onChange={(date) => {
+                                const iso = date.toISOString().split("T")[0];
+                                setStartDate(iso);
+                                setEndDateRaw(iso); // <== this was missing
+                                setEndDate(iso);    // optional: for display
+                            }}
+
+                            dateFormat="dd.MM.yyyy"
+                            locale="ru"
+                            customInput={<DateInput />}
                         />
                     )}
+
 
                     {/* Game Month (Show Date Picker and auto-calculate end date) */}
                     <RadioLabel>
@@ -229,22 +338,35 @@ const PurchaseModal = () => {
                     </RadioLabel>
                     {selectedPackage === "month" && (
                         <div>
-                            <DateInput
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => {
-                                    const newStartDate = e.target.value;
-                                    setStartDate(newStartDate);
+                            <DatePicker
+                                selected={startDate ? new Date(startDate) : null}
+                                onChange={(date) => {
+                                    const isoStart = date.toISOString().split("T")[0];
+                                    setStartDate(isoStart);
 
-                                    // Automatically set end date one month ahead
-                                    const newEndDate = new Date(newStartDate);
-                                    newEndDate.setMonth(newEndDate.getMonth() + 1);
-                                    setEndDate(newEndDate.toISOString().split("T")[0]);
+                                    const end = new Date(date);
+                                    end.setMonth(end.getMonth() + 1);
+
+
+                                    const isoEnd = end.toISOString().split("T")[0]; // raw
+                                    const formattedEnd = end.toLocaleDateString("ru-RU", {
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        year: "numeric"
+                                    });
+
+                                    setEndDate(isoEnd);
+                                    setEndDate(formattedEnd);
+
                                 }}
+                                dateFormat="dd.MM.yyyy"
+                                locale="ru"
+                                customInput={<DateInput />}
                             />
                             {endDate && <span> - {endDate}</span>}
                         </div>
                     )}
+
                 </RadioButtonsWrapper>
 
 
@@ -252,9 +374,17 @@ const PurchaseModal = () => {
                 <p>
                     Стоимость: <strong style={{ color: "rgb(var(--theme-yellow))" }}>{price} руб.</strong>
                 </p>
-                <p>После оплаты ссылка будет доступна в "Мои покупки"</p>
+                <p> {purchaseDone ? successMessage : `После оплаты ссылка будет доступна в "Мои покупки"`}</p>
 
-                <CubicaButton>Оплатить</CubicaButton>
+                {purchaseDone ? (
+                    <CubicaButton onClick={handleCloseModal}>Закрыть</CubicaButton>
+                ) : (
+                    <CubicaButton onClick={handlePurchase} disabled={loading}>
+                        {loading ? "Обработка..." : "Оплатить"}
+                    </CubicaButton>
+                )}
+
+
             </ModalContent>
         </ModalOverlay>
     );

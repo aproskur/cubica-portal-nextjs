@@ -22,23 +22,29 @@ export const AuthProvider = ({ children }) => {
     // To keep the user logged in the following useEffect()  retrieves the token from localStorage:
     useEffect(() => {
         const storedToken = localStorage.getItem("jwt");
+
         if (storedToken) {
-            fetchUser(storedToken);
+            console.log("Found stored JWT token:", storedToken);
+            setToken(storedToken);
+            fetchUser(storedToken); // Ensure fetchUser() is always called
         } else {
+            console.log("No token found in local storage. User is not authenticated.");
             setIsLoading(false);
         }
     }, []);
+
 
     useEffect(() => {
         console.log("Auth State Updated:", { isAuthenticated, user, token }); // Debug UI updates
     }, [isAuthenticated, user, token]);
 
 
-    // When a user logs in or registers, we fetch their details using a stored token.
+    // When a user logs in or registers,  fetch their details using a stored token.
     // If a user has a valid JWT token, this function fetches their details from the Strapi API.
     const fetchUser = async (token) => {
         try {
-            console.log("Fetching user with token:", token); // Debug 
+            console.log("Fetching user with token:", token); // Debug token
+
             const response = await fetch(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/users/me`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -50,18 +56,20 @@ export const AuthProvider = ({ children }) => {
                 throw new Error("Failed to fetch user");
             }
 
+            // Store token in both `localStorage` and `useState`
+            localStorage.setItem("jwt", token);
+            setToken(token);
+
             setUser({
                 id: responseData.id,
-                documentId: responseData.documentId,  // Store `documentId`, NOT `document_id`
+                documentId: responseData.documentId,
                 username: responseData.username,
                 email: responseData.email
             });
 
-
             setIsAuthenticated(true);
-            setToken(token);
 
-            console.log("User stored:", responseData); // Debug user state
+            console.log("User stored in context:", user); // Debug user state
         } catch (error) {
             console.error("Error fetching user:", error);
             handleLogout();
@@ -69,6 +77,7 @@ export const AuthProvider = ({ children }) => {
             setIsLoading(false);
         }
     };
+
 
 
 
@@ -93,14 +102,13 @@ export const AuthProvider = ({ children }) => {
                 throw new Error(responseData?.error?.message || "Invalid credentials");
             }
 
-            console.log("Storing JWT:", responseData.jwt);
+            console.log("Storing new JWT:", responseData.jwt);
             localStorage.setItem("jwt", responseData.jwt);
             setToken(responseData.jwt);
 
             await fetchUser(responseData.jwt); // Ensure fetchUser() is awaited
 
             console.log("User after login:", user); // DEBUG
-            //router.push("/games/my");
         } catch (error) {
             console.error("Login error:", error);
             alert(error.message || "Login failed. Please check your credentials.");
@@ -110,19 +118,19 @@ export const AuthProvider = ({ children }) => {
 
 
 
+
     const handleLogout = () => {
-        localStorage.removeItem("jwt"); //  Remove token
+        console.log("Logging out, clearing JWT token");
+        localStorage.removeItem("jwt"); // Remove token from storage
         setIsAuthenticated(false);
         setUser(null);
         setToken(null);
 
-        //  If user is on a protected page, send them to home
-        if (window.location.pathname !== "/") {
-            router.push("/");
-        }
+        console.log("JWT Cleared. Redirecting to home.");
 
-        // If login modal is controlled by state, close modal here if needed
+        router.push("/"); // Redirect to homepage after logout
     };
+
 
 
     // When a user signs up, we send their username, email, and password to Strapi.

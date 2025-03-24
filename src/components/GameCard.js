@@ -345,6 +345,12 @@ const GameCard = ({ game }) => {
   const { openPurchaseModal } = useModal();
 
 
+  const handleModalsBuyClick = (game) => {
+    openPurchaseModal(game);
+    setIsModalOpen(false);
+  }
+
+
   useEffect(() => {
     console.log("Component Mounted");
 
@@ -375,8 +381,8 @@ const GameCard = ({ game }) => {
 
       if (isMounted) {
         console.log("Entering the isMounted block"); // Log to check if isMounted is true
-        console.log("EXiting game id", game.id);
-        const isFav = favoriteGameIds.includes(game.id); // Check if the current game is in the list of favorite games
+        console.log("EXiting game id", game.documentId);
+        const isFav = favoriteGameIds.includes(game.documentId); // Check if the current game is in the list of favorite games
         console.log("Is this game favorited?", isFav); // Log whether the game is favorited or not
 
         setIsFavorite(isFav); // Update the state
@@ -386,7 +392,7 @@ const GameCard = ({ game }) => {
     });
 
     return () => { isMounted = false }; // Cleanup function to prevent memory leaks
-  }, [isAuthenticated, user, game.id, token]);
+  }, [isAuthenticated, user, game.documentId, token]);
 
 
 
@@ -402,7 +408,7 @@ const GameCard = ({ game }) => {
       return;
     }
 
-    console.log("Game ID:", game.id);
+    console.log("Game ID:", game.documentId);
     console.log("User ID:", user?.documentId);
     console.log("Current favorite state:", isFavorite);
 
@@ -410,7 +416,7 @@ const GameCard = ({ game }) => {
     setIsFavorite((prev) => !prev);
 
     try {
-      const result = await toggleFavorite(game.id, user.documentId, token, isFavorite);
+      const result = await toggleFavorite(game.documentId, user.documentId, token, isFavorite);
       console.log("Toggle favorite result:", result);
 
       if (!result) {
@@ -531,7 +537,7 @@ const GameCard = ({ game }) => {
                   </PriceText>
                 </PriceContainer>
                 <ButtonGroup>
-                  <SquareIconButton icon={<LuShoppingCart />} onClick={() => openPurchaseModal(game)} />
+                  <SquareIconButton icon={<LuShoppingCart />} onClick={() => handleModalsBuyClick(game)} />
                   <SquareIconButton
                     icon={<CiHeart />}
                     iconType="stroke"

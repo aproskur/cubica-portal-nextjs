@@ -8,6 +8,7 @@ import Logo from "@/components/Logo"
 import Breadcrumbs from "./Breadcrumb";
 import LoginModal from "./LoginModal";
 import { AuthContext, useAuth } from "@/context/AuthContext";
+import { useGamesData } from "@/context/GamesDataContext";
 
 const HeaderContainer = styled.header`
   display: flex;
@@ -263,6 +264,9 @@ const Header = () => {
   const [isMobile, setIsMobile] = useState(false);
   const { isAuthenticated, handleLogout, openLoginModal } = useContext(AuthContext);
 
+  const { purchasedGames } = useGamesData();
+
+
 
 
   useEffect(() => {
@@ -316,7 +320,8 @@ const Header = () => {
 
             <FlexWrapper>
 
-              {isAuthenticated && <Link href="/games/my"> Мои покупки</Link>}
+              {isAuthenticated && purchasedGames.length > 0 && <Link href="/games/my">Мои покупки</Link>}
+
               {isAuthenticated && <Link href="#"> Мои игры</Link>}
               <LoggedUser></LoggedUser>
               {/* Login Button (Desktop) */}

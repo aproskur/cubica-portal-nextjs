@@ -56,7 +56,7 @@ const GameGallery = ({ games = [] }) => {
             // If the image is a string (not an object), handle it correctly
             imageUrl = game.image.startsWith("/") ? `${API_URL}${game.image}` : game.image;
         } else {
-            console.warn(`Game ID ${game.id} has an invalid image format:`, game.image);
+            console.warn(`Game ID ${game.documentId} has an invalid image format:`, game.image);
         }
 
         return {
@@ -74,7 +74,7 @@ const GameGallery = ({ games = [] }) => {
     return (
         <GalleryWrapper>
             {filteredGames.length > 0 ? (
-                filteredGames.map((game) => <GameCard key={game.id} game={game} />)
+                filteredGames.map((game) => <GameCard key={game.documentId} game={game} />)
             ) : (
                 <NoResults>Игр не найдено</NoResults>
             )}

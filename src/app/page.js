@@ -2,31 +2,14 @@
 import GameGallery from "@/components/GameGallery";
 import MobileFooter from "@/components/MobileFooter";
 import MobileAside from "@/components/MobileAside";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSearch } from "@/context/SearchContext";
-import { fetchGames } from "@/utils/apiService";
+import { useGamesData } from "@/context/GamesDataContext";
 
 export default function Home() {
   const { searchQuery } = useSearch();
+  const { games, loading, error } = useGamesData();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [games, setGames] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    async function loadGames() {
-      try {
-        const data = await fetchGames();
-        setGames(data);
-      } catch (err) {
-        setError("Failed to load games. Please try again.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadGames();
-  }, []);
 
   return (
     <main className="main">
