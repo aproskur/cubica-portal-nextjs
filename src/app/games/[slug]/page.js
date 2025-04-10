@@ -7,7 +7,7 @@ import Tabs from "@/components/Tabs"
 import InfoContainer from "@/components/InfoContainer";
 import { useParams } from "next/navigation";
 import { fetchGameBySlug } from "@/utils/apiService";
-
+import { useModal } from "@/context/ModalContext";
 
 
 const GridContainer = styled.div`
@@ -78,15 +78,24 @@ const GamePage = () => {
     const [game, setGame] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const { openPurchaseModal, setIsModalOpen } = useModal();
+
     useEffect(() => {
         const fetchGame = async () => {
             const gameData = await fetchGameBySlug(slug);
             setGame(gameData);
             setLoading(false);
+            console.log("Row game data, fetcehed by gamePage", gameData)
         };
 
         fetchGame();
     }, [slug]);
+
+
+    const handleModalsBuyClick = (game) => {
+        openPurchaseModal(game);
+
+    }
 
     if (loading) return <p>Загрузка...</p>;
     if (!game) return <p>Игра не найдена</p>;
@@ -125,11 +134,12 @@ const GamePage = () => {
                                 duration: game.duration,
                                 author: game.author,
                             }}
+                            onBuyClick={() => handleModalsBuyClick(game)}
                         />
                     </InfoContainerWrapper>
                 </FirstRow>
                 <SecondRow>
-                    <Tabs />
+                    <Tabs game={game} />
                 </SecondRow>
             </GridContainer>
         </>

@@ -103,7 +103,7 @@ const Rating = ({ rating }) => {
 };
 
 
-const InfoContainer = ({ title, reviews, priceLaunch, priceMonth, description, details, rating }) => {
+const InfoContainer = ({ title, reviews, priceLaunch, priceMonth, description, details, rating, onBuyClick }) => {
     return (
         <InfoWrapper>
             <Title>{title}</Title>
@@ -117,7 +117,7 @@ const InfoContainer = ({ title, reviews, priceLaunch, priceMonth, description, d
             </PriceWrapper>
             <ButtonGroup>
                 <button>Демо</button>
-                <button>Купить</button>
+                <button onClick={onBuyClick}>Купить</button>
 
             </ButtonGroup>
             <Delimeter />

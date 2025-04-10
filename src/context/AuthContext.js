@@ -190,6 +190,15 @@ export const AuthProvider = ({ children }) => {
     };
 
 
+    useEffect(() => {
+        if (isAuthenticated && isLoginModalOpen) {
+            console.log("User authenticated — closing login modal automatically.");
+            setLoginModalOpen(false);
+        }
+    }, [isAuthenticated, isLoginModalOpen]);
+
+
+
 
     return (
         <AuthContext.Provider value={{

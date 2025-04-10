@@ -33,20 +33,28 @@ export default function MyGamesPage() {
                 console.log("Purchases API Response:", data);
 
                 if (!data || !Array.isArray(data)) {
-                    console.error("API returned invalid data:", data);
                     setGames([]);
-                    setLinks([]);
                     return;
                 }
 
-                //Extract games and links and store them in state
-                setGames(data.flatMap(purchase => purchase.games || []));
-                setLinks(data.flatMap(purchase => purchase.links || []));
+                const enrichedPurchases = data.map(p => ({
+                    ...p,
+                    game: p.game,
+                    title: p.game?.title || "Без названия",
+                    date: new Date(p.purchaseDate).toLocaleDateString("ru-RU"),
+                    type: p.package_type,
+                    startDate: p.start_date
+                        ? new Date(p.start_date).toLocaleDateString("ru-RU")
+                        : null,
+                    endDate: p.end_date
+                        ? new Date(p.end_date).toLocaleDateString("ru-RU")
+                        : null,
+                }));
 
-                console.log("Extracted Games:", games);
-                console.log("Extracted Links:", links);
+                setGames(enrichedPurchases);
             } catch (error) {
                 console.error("Error fetching purchases:", error);
+                setGames([]);
             } finally {
                 setFetching(false);
             }
@@ -56,6 +64,7 @@ export default function MyGamesPage() {
             loadPurchases();
         }
     }, [token]);
+
 
     const filteredGames = games && Array.isArray(games)
         ? games.filter(game =>
@@ -70,7 +79,7 @@ export default function MyGamesPage() {
         <Container>
             {/*<h1>{user?.username}'s Games</h1>*/}
             {/*Pass extracted links to the GameLinksTable */}
-            <GameLinksTable games={filteredGames} links={links} />
+            <GameLinksTable games={filteredGames} />
         </Container>
     );
 }

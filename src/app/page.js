@@ -13,7 +13,7 @@ export default function Home() {
 
   return (
     <main className="main">
-      {loading && <p>Loading games...</p>}
+      {loading && <p>Игры загружаются...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
       {!loading && !error && <GameGallery games={games} searchQuery={searchQuery} />}
       <MobileFooter openFilter={() => setIsFilterOpen(true)} />

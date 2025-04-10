@@ -7,7 +7,12 @@ import { createContext, useState, useEffect, useContext } from "react";
 import { fetchGames, fetchUserPurchases } from "@/utils/apiService"; // Import your fetch function
 import { useAuth } from "./AuthContext";
 
-const GamesDataContext = createContext();
+export const GamesDataContext = createContext({
+    purchasedGames: [],
+    setPurchasedGames: () => { },
+    refreshPurchasedGames: () => { },
+});
+
 
 export const GamesDataProvider = ({ children }) => {
     const [games, setGames] = useState([]);
@@ -32,7 +37,24 @@ export const GamesDataProvider = ({ children }) => {
         loadGames();
     }, []);
 
+    const fetchAndSetPurchasedGames = async () => {
+        if (!isAuthenticated && !user) return;
+        try {
+            const purchases = await fetchUserPurchases(token);
+            setPurchasedGames(purchases || []);
+            console.log("DATA context, user's purchases", purchases);
+        } catch (err) {
+            console.error("Error fetching user purchases:", err);
+        }
+    };
 
+
+    useEffect(() => {
+        fetchAndSetPurchasedGames();
+    }, [isAuthenticated, user, token]);
+
+
+    /*
     useEffect(() => {
         async function loadUsersPurchases() {
             if (!isAuthenticated && !user) return;
@@ -45,10 +67,10 @@ export const GamesDataProvider = ({ children }) => {
             }
         }
         loadUsersPurchases();
-    }, [isAuthenticated, user, token]);
+    }, [isAuthenticated, user, token]); */
 
     return (
-        <GamesDataContext.Provider value={{ games, loading, error, purchasedGames }}>
+        <GamesDataContext.Provider value={{ games, loading, error, purchasedGames, setPurchasedGames, refreshPurchasedGames: fetchAndSetPurchasedGames }}>
             {children}
         </GamesDataContext.Provider>
     );

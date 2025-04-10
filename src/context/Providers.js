@@ -5,7 +5,11 @@ import { GamesDataProvider } from "@/context/GamesDataContext"
 import { ModalProvider } from "./ModalContext";
 
 
+
 export default function Providers({ children }) {
+
+
+
     return (
         <AuthProvider>
             <GamesDataProvider>

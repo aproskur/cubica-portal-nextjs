@@ -63,11 +63,14 @@ export const fetchGameBySlug = async (slug) => {
 
         const data = await response.json();
 
-        if (!data || !data.data.length) {
+
+        if (!data || !data.data || !data.data.length) {
             throw new Error("Game not found");
         }
 
-        const game = data.data[0]; // Get first (and only) game result
+        const game = data.data[0]
+        console.log("Game full entry:", data.data[0]);
+
 
         let baseURL = API_URL.endsWith('/api') ? API_URL.replace('/api', '') : API_URL;
         let imageUrl = game.image?.url ? `${baseURL}${game.image.url}` : "/default.jpg";
@@ -87,6 +90,11 @@ export const fetchGameBySlug = async (slug) => {
             duration: game.duration || "Unknown Duration",
             author: game.author || "Unknown Author",
             images: game.images || [],
+            purpose: game.game_purpose || [],
+            plot: game.game_plot || [],
+            about: game.about_author || "",
+            support: game.game_support || "",
+            reviews: game.reviews_tmp || ""
         };
     } catch (error) {
         console.error("Error fetching game:", error);
@@ -211,6 +219,51 @@ export const createPurchase = async (orderDocumentId) => {
         return { success: false, error: error.message };
     }
 };
+
+
+// for testing, used in ROBOKASSA button
+export const testRobokassaLink = async () => {
+    try {
+        const token = localStorage.getItem("jwt");
+
+        const res = await fetch("http://localhost:1337/api/robokassa/payment-link?documentId=test123", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+            },
+        });
+
+        const data = await res.json();
+        console.log("Backend response:", data);
+    } catch (err) {
+        console.error("Error fetching robokassa link:", err);
+    }
+};
+
+export const getRobokassaPaymentLink = async (orderDocumentId) => {
+    try {
+        const token = localStorage.getItem("jwt");
+
+        const res = await fetch(`${API_URL}/api/robokassa/payment-link?documentId=${orderDocumentId}`, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data?.message || "Failed to get Robokassa link");
+
+        return { success: true, url: data.url };
+    } catch (error) {
+        console.error("Robokassa link error:", error);
+        return { success: false, error: error.message };
+    }
+};
+
 
 
 

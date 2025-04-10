@@ -12,14 +12,26 @@ export const ModalProvider = ({ children }) => {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [gameData, setGameData] = useState(null);
+    const [successData, setSuccessData] = useState(null);
 
-    const openPurchaseModal = (game) => {
-        if (!isAuthenticated) {
-            requestLoginForPurchase(game);
-            // openLoginModal();
+    const openPurchaseModal = (payload) => {
+        // Case 1: Robokassa success redirect
+        if (payload?.showSuccessMessage) {
+            setSuccessData(payload);
+            setGameData(null);
+            setIsModalOpen(true);
             return;
         }
-        setGameData(game);
+
+        // Case 2: Not authenticated yet, initiate login
+        if (!isAuthenticated) {
+            requestLoginForPurchase(payload);
+            return;
+        }
+
+        // Case 3: Normal game purchase
+        setGameData(payload);
+        setSuccessData(null);
         setIsModalOpen(true);
     };
 
@@ -38,7 +50,7 @@ export const ModalProvider = ({ children }) => {
 
 
     return (
-        <ModalContext.Provider value={{ isModalOpen, gameData, openPurchaseModal, closePurchaseModal }}>
+        <ModalContext.Provider value={{ isModalOpen, gameData, openPurchaseModal, closePurchaseModal, successData, setSuccessData }}>
             {children}
         </ModalContext.Provider>
     );

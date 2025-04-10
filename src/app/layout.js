@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Aside from "@/components/Aside";
 import PurchaseModal from "@/components/PurchaseModal";
 import ClientWrapperAuth from "@/components/ClientWrapperAuth";
+import ClientPaymentRedirectHandler from "@/components/ClientPaymentRedirectHandler";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -31,6 +32,7 @@ export default function RootLayout({ children }) {
               <div className="content">{children}</div>
             </div>
             <PurchaseModal />
+            <ClientPaymentRedirectHandler />
             <ClientWrapperAuth />
           </Providers>
         </StyledComponentsRegistry>

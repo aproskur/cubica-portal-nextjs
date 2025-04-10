@@ -3,7 +3,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styled from "styled-components";
 import { useEffect, useState } from "react";
-import { games } from "@/data/games";
+import { fetchGameBySlug } from "@/utils/apiService";
+
 
 const BreadcrumbContainer = styled.nav`
   font-size: 16px;
@@ -25,68 +26,65 @@ const BreadcrumbLink = styled(Link)`
 
 const ActiveBreadcrumb = styled.span`
   font-weight: normal;
-  color: rgb(var(--foreground)); /* Make active page more distinct */
+  color: rgb(var(--foreground));
 `;
 
-// Translations for static routes. Might be expanded later
 const breadcrumbTranslations = {
     home: "Магазин игр",
     launch: "Запуск",
     my: "Мои покупки"
 };
 
-// Function to dynamically fetch game name (Supports API in the future)
-const getBreadcrumbName = async (segment, setTitles) => {
-    // Check if the segment is a game slug in JSON
-    const game = games.find((g) => g.slug === segment);
-
-    if (game) {
-        setTitles((prev) => ({ ...prev, [segment]: game.title })); // Store title in state
-        return;
-    }
-
-    // Future API call to get game names dynamically (when JSON is replaced)
-    // const response = await fetch(`/api/games?slug=${segment}`);
-    // const data = await response.json();
-    // if (data.title) {
-    //   setTitles((prev) => ({ ...prev, [segment]: data.title }));
-    //   return;
-    // }
-
-    setTitles((prev) => ({ ...prev, [segment]: breadcrumbTranslations[segment] || segment.replace(/-/g, " ") }));
-};
-
 const Breadcrumbs = () => {
     const pathname = usePathname();
     const pathSegments = pathname.split("/").filter(Boolean);
-    const [titles, setTitles] = useState({}); // Store translated names
+    const filteredSegments = pathSegments.filter((segment) => segment !== "games");
 
-    // Fetch game names or translations on mount
+    const [titles, setTitles] = useState({});
     useEffect(() => {
-        pathSegments.forEach((segment) => {
-            if (!titles[segment]) {
-                getBreadcrumbName(segment, setTitles);
+        const fetchTitles = async () => {
+            const updatedTitles = { ...titles };
+
+            for (const segment of filteredSegments) {
+                if (updatedTitles[segment]) continue;
+
+                const staticLabel = breadcrumbTranslations[segment];
+                if (staticLabel) {
+                    updatedTitles[segment] = staticLabel;
+                    continue;
+                }
+
+                try {
+                    const game = await fetchGameBySlug(segment);
+                    console.log("Game for breadcrumb:", game);
+                    updatedTitles[segment] = game?.title || segment.replace(/-/g, " ");
+                } catch (err) {
+                    console.error("Error fetching game for breadcrumb:", segment, err);
+                    updatedTitles[segment] = segment.replace(/-/g, " ");
+                }
             }
-        });
+
+            setTitles(updatedTitles);
+        };
+
+        fetchTitles();
     }, [pathname]);
 
-    // Remove  /games/ from breadcrumbs because there is no such page, but I've a directory games
-    const filteredSegments = pathSegments.filter((segment) => segment !== "games");
 
     return (
         <BreadcrumbContainer>
-            <BreadcrumbLink href="/">Магазин игр</BreadcrumbLink> {/* Home  */}
+            <BreadcrumbLink href="/">Магазин игр</BreadcrumbLink>
             {filteredSegments.map((segment, index) => {
                 const path = `/${filteredSegments.slice(0, index + 1).join("/")}`;
-                const name = titles[segment] || segment; // Use translated name or fallback
+                const name = titles[segment] || segment;
 
                 return (
                     <span key={path}>
                         {" > "}
                         {index === filteredSegments.length - 1 ? (
-                            <ActiveBreadcrumb>{name}</ActiveBreadcrumb> // Highlight active page
+                            <ActiveBreadcrumb>{name}</ActiveBreadcrumb>
                         ) : (
-                            <BreadcrumbLink href={path}>{name}</BreadcrumbLink> // Previous pages as links
+                            <BreadcrumbLink href={path}>{name}</BreadcrumbLink>
                         )}
                     </span>
                 );

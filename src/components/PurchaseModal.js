@@ -6,8 +6,8 @@ import { useAuth } from "../context/AuthContext";
 import { useModal } from "../context/ModalContext";
 import LoginModal from "./LoginModal";
 import { createOrder } from "@/utils/apiService";
-import { updateOrderStatus, createPurchase } from "@/utils/apiService";
-
+import { updateOrderStatus, createPurchase, testRobokassaLink, getRobokassaPaymentLink } from "@/utils/apiService";
+import { useGamesData } from "@/context/GamesDataContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import ru from "date-fns/locale/ru";
@@ -143,8 +143,8 @@ const CloseButton = styled.div`
 `;
 
 const PurchaseModal = () => {
-    const { isAuthenticated } = useAuth();
-    const { isModalOpen, gameData, closePurchaseModal } = useModal();
+    const { isAuthenticated, isLoading } = useAuth();
+    const { isModalOpen, gameData, closePurchaseModal, successData, setSuccessData } = useModal();
     const [selectedPackage, setSelectedPackage] = useState("one-time");
     const [price, setPrice] = useState(gameData?.pricePerLaunch || 0);
     const [startDate, setStartDate] = useState("");
@@ -155,6 +155,8 @@ const PurchaseModal = () => {
     const [purchaseDone, setPurchaseDone] = useState(false)
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
+
+    const { refreshPurchasedGames } = useGamesData();
 
     useEffect(() => {
         if (selectedPackage === "one-time") {
@@ -185,16 +187,102 @@ const PurchaseModal = () => {
         }
     }, [selectedPackage, gameData, startDate]);
 
+
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const paymentStatus = params.get("payment");
+        const orderId = params.get("InvId");
+
+        if (paymentStatus === "success" && orderId) {
+            // trigger refetch or success message
+            setPurchaseDone(true);
+            // optionally clear URL
+            window.history.replaceState(null, "", "/");
+        }
+    }, []);
+
+
     const handleCloseModal = () => {
         setPurchaseDone(false);
         closePurchaseModal();
     }
 
-    if (!isModalOpen) return null;
+    if (!isModalOpen || isLoading) return null;
     if (!isAuthenticated) return <LoginModal onClose={handleCloseModal} />;
 
 
-
+    /*
+    //Simulated payment success
+        const handlePurchase = async () => {
+            setLoading(true);
+            setError(null);
+            setSuccessMessage(null);
+    
+            try {
+                // Step 1: Create Order
+                const orderResponse = await createOrder(
+                    gameData.documentId,
+                    selectedPackage,
+                    startDate ? new Date(startDate).toISOString() : null,
+                    endDateRaw ? new Date(endDateRaw).toISOString() : null,
+                    price
+                );
+    
+    
+    
+                console.log("Frontend recieved following new order", orderResponse);
+                if (!orderResponse.success) {
+                    setError(mapOrderError(orderResponse.error));
+                    setLoading(false);
+                    return;
+                }
+    
+      
+    
+                // Simulated payment success (replace this with actual payment processing)
+                const paymentSuccess = true;
+    
+                if (paymentSuccess) {
+                    // Step 2: Update Order Status
+                    const orderDocumentId = orderResponse.order.documentId;
+                    const updateResponse = await updateOrderStatus(orderDocumentId, "paid");
+    
+                    if (!updateResponse.success) {
+                        setError("Failed to update order status.");
+                        setLoading(false);
+                        return;
+                    }
+    
+                    // Step 3: Create Purchase. 
+                    const purchaseResponse = await createPurchase(orderDocumentId);
+    
+                    if (!purchaseResponse.success) {
+                        setError("Error creating purchase.");
+                    } else {
+                        setPurchaseDone(true);
+    
+                        setSuccessMessage(
+                            <div style={{ lineHeight: "25px" }}>
+                                Покупка успешно завершена, вы можете найти игру в разделе{" "}
+                                <a href="/games/my" style={{ color: "rgb(var(--theme-yellow))", textDecoration: "none" }}>
+                                    Мои покупки
+                                </a>.
+                            </div>
+                        );
+                        refreshPurchasedGames();
+    
+                    }
+                } else {
+                    setError("Payment failed. Please try again.");
+                }
+            } catch (error) {
+                setError("An unexpected error occurred. Please try again.");
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
+        }; */
 
     const handlePurchase = async () => {
         setLoading(true);
@@ -211,41 +299,26 @@ const PurchaseModal = () => {
                 price
             );
 
-
-
-            console.log("Frontend recieved following new order", orderResponse);
+            console.log("Frontend received following new order", orderResponse);
             if (!orderResponse.success) {
                 setError(mapOrderError(orderResponse.error));
                 setLoading(false);
                 return;
             }
 
-            // Simulated payment success (replace this with actual payment processing)
-            const paymentSuccess = true;
+            // Step 2: Get Robokassa payment link
+            const paymentLinkResponse = await getRobokassaPaymentLink(orderResponse.order.documentId);
 
-            if (paymentSuccess) {
-                // Step 2: Update Order Status
-                const orderDocumentId = orderResponse.order.documentId;
-                const updateResponse = await updateOrderStatus(orderDocumentId, "paid");
-
-                if (!updateResponse.success) {
-                    setError("Failed to update order status.");
-                    setLoading(false);
-                    return;
-                }
-
-                // Step 3: Create Purchase. 
-                const purchaseResponse = await createPurchase(orderDocumentId);
-
-                if (!purchaseResponse.success) {
-                    setError("Error creating purchase.");
-                } else {
-                    setPurchaseDone(true);
-                    setSuccessMessage("Покупка успешно завершена, вы можете найти игру в разделе Мои покупки.");
-                }
-            } else {
-                setError("Payment failed. Please try again.");
+            if (!paymentLinkResponse.success) {
+                setError("Не удалось получить ссылку на оплату.");
+                setLoading(false);
+                return;
             }
+
+            // Step 3: Redirect and exit
+            window.location.href = paymentLinkResponse.url;
+            return;
+
         } catch (error) {
             setError("An unexpected error occurred. Please try again.");
             console.error(error);
@@ -253,6 +326,7 @@ const PurchaseModal = () => {
             setLoading(false);
         }
     };
+
 
     // Map API errors to user-friendly messages
     const mapOrderError = (errorCode) => {
@@ -269,6 +343,47 @@ const PurchaseModal = () => {
     };
 
 
+
+    // added to render modal after redirect from payment gateway
+    if (successData) {
+        return (
+            <ModalOverlay>
+                <ModalContent>
+                    <CloseButton onClick={() => {
+                        setSuccessData(null);
+                        handleCloseModal();
+                    }}>×</CloseButton>
+
+                    <h2 style={{
+                        textAlign: "center",
+                        fontWeight: "normal",
+                        color: "rgb(var(--theme-yellow))",
+                        fontSize: "1rem",
+                        textTransform: "uppercase"
+                    }}>Покупка успешно завершена</h2>
+
+                    <p>Номер заказа: <strong>{successData.orderId}</strong></p>
+                    <p>Сумма: <strong style={{ color: "rgb(var(--theme-yellow))" }}>{successData.price} руб.</strong></p>
+                    <div style={{ lineHeight: "25px" }}>
+                        Вы можете найти игру в разделе{" "}
+                        <a href="/games/my" style={{ color: "rgb(var(--theme-yellow))", textDecoration: "none" }}>
+                            Мои покупки
+                        </a>.
+                    </div>
+
+                    <CubicaButton onClick={() => {
+                        setSuccessData(null);
+                        handleCloseModal();
+                    }}>Закрыть</CubicaButton>
+                </ModalContent>
+            </ModalOverlay>
+        );
+    }
+
+    // Defensive check — don't show anything if game data is missing
+    if (!gameData) return null;
+
+    // Normal purchas modal UI
     return (
         <ModalOverlay>
             <ModalContent>
@@ -374,7 +489,7 @@ const PurchaseModal = () => {
                 <p>
                     Стоимость: <strong style={{ color: "rgb(var(--theme-yellow))" }}>{price} руб.</strong>
                 </p>
-                <p> {purchaseDone ? successMessage : `После оплаты ссылка будет доступна в "Мои покупки"`}</p>
+                <div> {purchaseDone ? successMessage : `После оплаты ссылка будет доступна в "Мои покупки"`}</div>
 
                 {purchaseDone ? (
                     <CubicaButton onClick={handleCloseModal}>Закрыть</CubicaButton>
@@ -384,7 +499,7 @@ const PurchaseModal = () => {
                     </CubicaButton>
                 )}
 
-
+                <CubicaButton onClick={testRobokassaLink}>ROBOKASSA</CubicaButton>
             </ModalContent>
         </ModalOverlay>
     );

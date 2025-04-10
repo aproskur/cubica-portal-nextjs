@@ -1,28 +1,41 @@
 "use client";
 import { useState } from "react";
 import styled from "styled-components";
+import RichTextBlockRenderer from './RichTextBlockRenderer';
+
+
+
+
+const DesktopOnly = styled.div`
+  display: none;
+
+  @media (min-width: 875px) {
+    display: block;
+  }
+`;
+
+const MobileOnly = styled.div`
+  @media (min-width: 875px) {
+    display: none;
+  }
+`;
+
 
 const TabContainer = styled.div`
   display: flex;
-  flex-direction: column;
-  background-color: inherit;
+  flex-direction: column; // always column
   border-radius: 8px;
-  width: 100%;
-  margin: 0 auto;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  background-color: inherit;
   overflow: hidden;
-
-  @media (min-width: 875px) {
-    flex-direction: row;
-    box-shadow: none;
-  }
-
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 `;
+
 
 const TabHeaders = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
+  border-bottom: 1px solid #333;
 
   @media (min-width: 875px) {
     flex-direction: row;
@@ -30,53 +43,70 @@ const TabHeaders = styled.div`
   }
 `;
 
+
 const TabHeader = styled.button`
-  width: 100%;
+  flex: 1 1 200px;
+  min-width: 120px;
+  max-width: 300px;
   padding: 14px 20px;
   text-transform: uppercase;
   background-color: ${(props) => (props.$active ? "#262626" : "transparent")};
   color: ${(props) => (props.$active ? "rgb(var(--theme-yellow))" : "#aaa")};
   border: none;
-  border-bottom: ${(props) => (props.$active ? "2px solid rgb(var(--theme-yellow))" : "2px solid rgb(var(--background));")};
-  text-align: left;
+  border-bottom: ${(props) =>
+    props.$active
+      ? "2px solid rgb(var(--theme-yellow))"
+      : "2px solid transparent"};
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
+  text-align: center;
 
   &:hover {
     color: rgb(var(--theme-yellow));
     background-color: #1c1c1c;
   }
-
   @media (min-width: 875px) {
+    flex: 1 1 200px;
+    min-width: 120px;
+    max-width: 300px;
     text-align: center;
-    flex: 1;
+  }
   }
 `;
 
 const TabContent = styled.div`
-  display: ${(props) => (props.$visible ? "block" : "none")};
+width: 100%;
   padding: 20px;
   color: #fff;
-  font-size: 16px;
-  border-top: ${(props) => (props.$visible ? "1px solid #333" : "none")};
+  font-size: 0.85rem;
+  line-height: 1.5;
   background-color: #1c1c1c;
 
-  @media (min-width: 875px) {
-    display: ${(props) => (props.$visible ? "block" : "none")};
+  h3 {
+    font-size: 0.95rem;
+    margin-top: 1rem;
   }
+
 `;
 
-const Tabs = () => {
+const Tabs = ({ game }) => {
+  console.log("Tabs got a game purpose", game.purpose);
   const [activeTab, setActiveTab] = useState(0); // 1st tab opened initially
 
   const tabs = [
-    { label: "Для чего и кого", content: "Контент для Для чего и кого" },
-    { label: "Сюжет игры", content: "Контент для Сюжет игры" },
-    { label: "Отзывы", content: "Контент для Отзывы" },
-    { label: "Об авторе", content: "Контент для Об авторе" },
-    { label: "Поддержка", content: "Контент для Поддержка" },
+    {
+      label: "Для чего и кого",
+      content: <RichTextBlockRenderer blocks={game.purpose} />,
+    },
+    {
+      label: "Сюжет игры",
+      content: <RichTextBlockRenderer blocks={game.plot} />
+    },
+    { label: "Отзывы", content: game.reviews },
+    { label: "Об авторе", content: game.about },
+    { label: "Поддержка", content: game.support },
   ];
 
   const toggleTab = (index) => {
@@ -85,20 +115,44 @@ const Tabs = () => {
 
   return (
     <TabContainer>
-      {tabs.map((tab, index) => (
-        <div key={index}>
-          <TabHeader
-            $active={activeTab === index}
-            onClick={() => toggleTab(index)}
-          >
-            {tab.label}
-          </TabHeader>
-          <TabContent $visible={activeTab === index}>
-            {tab.content}
-          </TabContent>
-        </div>
-      ))}
+      {/* ✅ Desktop layout only */}
+      <DesktopOnly>
+        <TabHeaders>
+          {tabs.map((tab, index) => (
+            <TabHeader
+              key={index}
+              $active={activeTab === index}
+              onClick={() => setActiveTab(index)}
+            >
+              {tab.label}
+            </TabHeader>
+          ))}
+        </TabHeaders>
+        <TabContent>
+          {tabs[activeTab].content}
+        </TabContent>
+      </DesktopOnly>
+
+      {/* ✅ Mobile stacked layout */}
+      <MobileOnly>
+        {tabs.map((tab, index) => (
+          <div key={index}>
+            <TabHeader
+              $active={activeTab === index}
+              onClick={() => setActiveTab(index === activeTab ? null : index)}
+            >
+              {tab.label}
+            </TabHeader>
+            {activeTab === index && (
+              <TabContent>
+                {tab.content}
+              </TabContent>
+            )}
+          </div>
+        ))}
+      </MobileOnly>
     </TabContainer>
+
   );
 };
 

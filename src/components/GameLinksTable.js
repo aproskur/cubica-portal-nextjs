@@ -180,15 +180,26 @@ transition: background 0.2s ease-in-out;
 }
 `;
 
-const GameLinksTable = ({ games, links }) => {
-  if (!games || games.length === 0) {
+const GameLinksTable = ({ games: purchases }) => {
+  if (!purchases || purchases.length === 0) {
     return <p>У вас пока что нет купленных игр</p>;
   }
 
-  const handleShare = (url) => {
-    navigator.clipboard.writeText(url);
-    alert("Link copied to clipboard!");
+  const handleShare = (purchase) => {
+    // Later: call backend to generate a share link
+    alert(`Создать ссылку для игры: ${purchase.title}`);
   };
+
+
+  const translateType = (type) => {
+    switch (type) {
+      case "one-time": return "Разовый запуск";
+      case "day": return "День";
+      case "month": return "Месяц";
+      default: return "Неизвестно";
+    }
+  };
+
 
   return (
     <Table>
@@ -196,31 +207,30 @@ const GameLinksTable = ({ games, links }) => {
         <tr>
           <Th>Дата покупки</Th>
           <Th>Название</Th>
-          <Th>Тип ссылки</Th>
+          <Th>Тип пакета</Th>
           <Th>Период действия</Th>
         </tr>
       </thead>
       <tbody>
-        {links.map((link) => (
-          <HoverRow key={link.id} tabIndex="0">
-            <Td>{link.date}</Td>
+        {purchases.map((purchase) => (
+          <HoverRow key={purchase.id} tabIndex="0">
+            <Td>{purchase.date}</Td>
             <GameNameTd>
               <GameNameContainer>
-                <GameNameSpan>{link.game?.title || "Название отсутствует"}</GameNameSpan>
-                <Tooltip>{link.game?.title || "Название отсутствует"}</Tooltip>
-                <GameShareButton onClick={() => handleShare(link.url)}>
+                <GameNameSpan>{purchase.title}</GameNameSpan>
+                <Tooltip>{purchase.title}</Tooltip>
+                <GameShareButton onClick={() => handleShare(purchase)}>
                   <CiShare2 size={18} color="rgb(var(--theme-yellow))" />
                 </GameShareButton>
               </GameNameContainer>
-
             </GameNameTd>
-            <Td>{link.type}</Td>
+            <Td>{translateType(purchase.type)}</Td>
             <Td>
               <DateContainer>
-                {link.startDate && link.endDate ? (
-                  <span>{link.startDate} - {link.endDate}</span>
+                {purchase.startDate && purchase.endDate ? (
+                  <span>{purchase.startDate} - {purchase.endDate}</span>
                 ) : (
-                  <span>{link.date}</span>
+                  <span>{purchase.date}</span>
                 )}
               </DateContainer>
             </Td>
@@ -230,6 +240,7 @@ const GameLinksTable = ({ games, links }) => {
     </Table>
   );
 };
+
 
 
 
