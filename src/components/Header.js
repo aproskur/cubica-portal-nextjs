@@ -9,6 +9,7 @@ import Breadcrumbs from "./Breadcrumb";
 import LoginModal from "./LoginModal";
 import { AuthContext, useAuth } from "@/context/AuthContext";
 import { useGamesData } from "@/context/GamesDataContext";
+import { useFilters } from "@/context/FiltersContext";
 
 const HeaderContainer = styled.header`
   display: flex;
@@ -130,6 +131,8 @@ const LoginIconWrapper = styled.div`
   }
 `;
 
+
+
 /* MOBILE MENU */
 const MobileHeaderContainer = styled.header`
   display: none;
@@ -245,6 +248,9 @@ const FlexWrapper = styled.div`
   padding: 0.5em 1em;
   gap: 1rem;
 `
+const FlexItemWrapper = styled.div`
+  flex-shrink: 0;
+`;
 
 
 const LoggedUser = () => {
@@ -267,7 +273,11 @@ const Header = () => {
   const { purchasedGames } = useGamesData();
 
 
+  const { filters, updateFilters } = useFilters();
 
+  const toggleMyGames = () => {
+    updateFilters({ onlyMyGames: !filters.onlyMyGames });
+  };
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -319,10 +329,30 @@ const Header = () => {
             <Breadcrumbs />
 
             <FlexWrapper>
+              <FlexItemWrapper>
+                {isAuthenticated && purchasedGames.length > 0 && <Link href="/games/my">Мои покупки</Link>}
+              </FlexItemWrapper>
+              {isAuthenticated && (
+                <FlexItemWrapper>
+                  <button
+                    onClick={() =>
+                      updateFilters({
+                        onlyMyDevelopedGames: !filters.onlyMyDevelopedGames,
+                      })
+                    }
+                    style={{
+                      all: "unset",
+                      cursor: "pointer",
+                      color: "inherit",
+                      textDecoration: "none",
+                      font: "inherit",
+                    }}
+                  >
+                    {filters.onlyMyDevelopedGames ? "Все игры" : "Мои игры"}
+                  </button>
+                </FlexItemWrapper>
+              )}
 
-              {isAuthenticated && purchasedGames.length > 0 && <Link href="/games/my">Мои покупки</Link>}
-
-              {isAuthenticated && <Link href="#"> Мои игры</Link>}
               <LoggedUser></LoggedUser>
               {/* Login Button (Desktop) */}
               <LoginIconWrapper

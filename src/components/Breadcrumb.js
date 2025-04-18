@@ -35,6 +35,11 @@ const breadcrumbTranslations = {
     my: "Мои покупки"
 };
 
+
+const FlexItemWarapper = styled.div`
+flex-shrink: 0;
+`;
+
 const Breadcrumbs = () => {
     const pathname = usePathname();
     const pathSegments = pathname.split("/").filter(Boolean);
@@ -73,7 +78,9 @@ const Breadcrumbs = () => {
 
     return (
         <BreadcrumbContainer>
-            <BreadcrumbLink href="/">Магазин игр</BreadcrumbLink>
+            <FlexItemWarapper>
+                <BreadcrumbLink href="/">Магазин игр</BreadcrumbLink>
+            </FlexItemWarapper>
             {filteredSegments.map((segment, index) => {
                 const path = `/${filteredSegments.slice(0, index + 1).join("/")}`;
                 const name = titles[segment] || segment;

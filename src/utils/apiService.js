@@ -1,54 +1,77 @@
-
-// Fetch all games
+import qs from "qs";
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
 
-// Fetch all games and prevent undefined errors
+
 export const fetchGames = async () => {
     try {
-        const API_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-        console.log("Fetching games from:", `${API_URL}/api/games?populate=*`);
+        // Query to explicitly populate image and developed_by
+        const query = qs.stringify(
+            {
+                populate: {
+                    image: {
+                        fields: ['url'],
+                    },
+                    developed_by: {
+                        populate: true,
+                        fields: ['username', 'email'],
+                    },
+                },
+            },
+            {
+                encodeValuesOnly: true,
+            }
+        );
 
-        const response = await fetch(`${API_URL}/api/games?populate=*`);
+        const url = `${API_URL}/api/games?${query}`;
+        console.log("Fetching games from:", url);
+
+        const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
-        const data = await response.json();
-        console.log("Full API Response:", JSON.stringify(data, null, 2)); //Debug API response
-        console.log("Raw Game Data from Strapi:", JSON.stringify(data, null, 2));
+        const result = await response.json();
 
+        return result.data.map((game, index) => {
 
-        if (!data || !data.data) {
-            throw new Error("Invalid API response structure");
-        }
+            console.log(`Game #${index + 1} - developed_by:`, game.developed_by);
+            // Safe image URL logic
+            const imageUrl = game.image?.url
+                ? game.image.url.startsWith('/')
+                    ? `${API_URL}${game.image.url}`
+                    : game.image.url
+                : null;
 
-        return data.data.map((game) => {
-            console.log("Processing Game:", game); // Log each game object
-
-            // Debug game properties to check structure
-            if (!game || typeof game !== "object") {
-                console.error("Invalid game object:", game);
-                return null;
-            }
+            // Safe developer info
+            const developer = game.developed_by
+                ? {
+                    id: game.developed_by.id,
+                    username: game.developed_by.username,
+                    email: game.developed_by.email,
+                }
+                : null;
 
             return {
-                documentId: game.documentId || 0,
+                documentId: game.documentId || game.id,
                 title: game.title || "Untitled Game",
                 slug: game.slug || "no-slug",
-                image: game.image?.url || "/default.jpg", // Fix image reference
+                image: imageUrl,
                 rating: game.rating || 0,
                 reviews: game.reviews || 0,
                 pricePerLaunch: game.pricePerLaunch || 0,
                 pricePerMonth: game.pricePerMonth || 0,
-                description: game.description || "No description available."
+                description: game.description || "No description available.",
+                developed_by: developer,
             };
-        }).filter(Boolean); // Remove `null` entries
+        });
     } catch (error) {
-        console.error("Error fetching games:", error);
+        console.error("❌ Error fetching games:", error);
         return [];
     }
 };
+
+
 
 
 //Fetching data for 1 game (by slug)
@@ -94,7 +117,8 @@ export const fetchGameBySlug = async (slug) => {
             plot: game.game_plot || [],
             about: game.about_author || "",
             support: game.game_support || "",
-            reviews: game.reviews_tmp || ""
+            reviews: game.reviews_tmp || "",
+            developed_by: game.developed_by || ""
         };
     } catch (error) {
         console.error("Error fetching game:", error);
@@ -241,6 +265,7 @@ export const testRobokassaLink = async () => {
     }
 };
 
+
 export const getRobokassaPaymentLink = async (orderDocumentId) => {
     try {
         const token = localStorage.getItem("jwt");
@@ -261,6 +286,38 @@ export const getRobokassaPaymentLink = async (orderDocumentId) => {
     } catch (error) {
         console.error("Robokassa link error:", error);
         return { success: false, error: error.message };
+    }
+};
+
+
+
+
+
+export const handleGameUpdate = async (documentId, data, token) => {
+    if (!token) {
+        throw new Error("Missing or invalid credentials");
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/api/games/${documentId}/update`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(data),
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+            throw new Error(result?.error?.message || "Failed to update game");
+        }
+
+        return result;
+    } catch (error) {
+        console.error("Ошибка при обновлении игры:", error);
+        throw error;
     }
 };
 

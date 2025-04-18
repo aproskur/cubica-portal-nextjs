@@ -10,6 +10,7 @@ import { useState, useEffect, useDeferredValue } from "react";
 import { toggleFavorite, fetchFavorites } from "../utils/toggleFavourites";
 import { useAuth } from "../context/AuthContext";
 import { useModal } from "../context/ModalContext";
+import { handleGameUpdate } from "@/utils/apiService";
 
 
 const CardWrapper = styled.div`
@@ -19,6 +20,7 @@ position: relative;
   padding: 16px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+
 
   &:hover {
     transform: scale(1.02);
@@ -57,6 +59,21 @@ const TopRightBadge = styled.div`
   z-index: 2; 
 `;
 
+
+const DeveloperRibbon = styled.div`
+  position: absolute;
+  bottom: 128px;
+  left: 15px;
+  background-color: rgba(var(--theme-yellow), 0.8);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: .3rem .6rem;
+  border-radius: 0px 4px 0px 4px;
+z-index: 1;
+  pointer-events: none;
+`;
+
 const CardImage = styled.img`
   width: 100%;
   height: 200px;
@@ -91,6 +108,7 @@ const HoverOverlay = styled.div`
   opacity: ${({ $isOverlayVisible }) => ($isOverlayVisible ? "1" : "0")};
   visibility: ${({ $isOverlayVisible }) => ($isOverlayVisible ? "visible" : "hidden")};
   transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease-out;
+  z-index: 10;
 
   ${CardImageWrapper}:hover & {
     @media (min-width: 769px) {
@@ -108,6 +126,10 @@ const ButtonRow = styled.div`
   gap: 10px;
   width: 100%; 
   justify-content: center;
+`;
+
+const FixedIconWrapper = styled.div`
+flex-shrink: 0;
 `;
 
 const IconButton = styled.div`
@@ -139,11 +161,11 @@ const IconButton = styled.div`
     border-radius: 5px;
     font-size: 12px;
     white-space: nowrap;
+     bottom: -35px; /* Move tooltips below for smaller buttons */
+    z-index: 999;
+
   }
 
-  &:hover::after {
-    bottom: -35px; /* Move tooltips below for smaller buttons */
-  }
 `;
 
 const LargeIconButton = styled(IconButton)`
@@ -155,6 +177,7 @@ const LargeIconButton = styled(IconButton)`
     bottom: auto;
     left: 50%;
     transform: translateX(-50%);
+    z-index: 999;
   }
 `;
 
@@ -185,12 +208,42 @@ const PriceLabel = styled.span`
   color: rgb(var(--theme-grey));
 `;
 
+const PriceLabelDevmode = styled.div`
+align-self: center;
+font-size: .9rem;
+color: rgb(var(--theme-grey));
+`;
+
 const Row = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
 `;
+
+const PriceInput = styled.input`
+  width: 50px;
+  padding: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background-color: rgb(var(--background));
+  color: rgb(var(--foreground));
+  border: 1px solid rgba(var(--theme-grey), 0.5);
+  border-radius: 4px;
+  text-align: right;
+  appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    display: none;
+  }
+
+  &:focus {
+    border-color: rgb(var(--theme-yellow));
+    box-shadow: 0 0 5px rgba(var(--theme-yellow), 0.5);
+  }
+`;
+
 
 const GameName = styled.h3`
   font-size: 1rem;
@@ -334,12 +387,72 @@ const ModalDescription = styled.p`
 `;
 
 
+
+
 const GameCard = ({ game }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
   const { isAuthenticated, user, token } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const isDeveloper = game.developed_by?.id === user?.id;
+
+  const [isEditingPrice, setIsEditingPrice] = useState(false);
+  const [editedLaunchPrice, setEditedLaunchPrice] = useState(game.pricePerLaunch);
+  const [editedMonthPrice, setEditedMonthPrice] = useState(game.pricePerMonth);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedTitle, setEditedTitle] = useState(game.title);
+
+
+
+  /*
+
+  //TODO
+  const handleSavePrices = async () => {
+    console.log("HANDLE SAVE")
+    console.log("Token:", token);
+    console.log("Document ID:", game.documentId);
+    console.log("Launch Price:", editedLaunchPrice);
+    console.log("Month Price:", editedMonthPrice);
+
+    try {
+
+
+      await handleGameUpdate({
+        title: editedTitle, // optional — or remove if you don't want title saved here
+        pricePerLaunch: parseFloat(editedLaunchPrice),
+        pricePerMonth: parseFloat(editedMonthPrice),
+      });
+
+      console.log("Game prices updated successfully");
+      setIsEditingPrice(false);
+    } catch (error) {
+      console.error("Failed to update prices:", error);
+      alert("Ошибка при сохранении цен. Проверьте соединение или авторизацию.");
+    }
+  }; */
+
+  const updateGameFields = async (fieldsToUpdate, callback = () => { }) => {
+    try {
+      await handleGameUpdate(game.documentId, fieldsToUpdate, token);
+      callback(); // run local cleanup like setIsEditingTitle(false)
+    } catch (error) {
+      console.error("Failed to update game:", error);
+      alert("Ошибка при обновлении данных. Проверьте соединение или авторизацию.");
+    }
+  };
+
+
+  const handleSavePrices = () => {
+    updateGameFields(
+      {
+        pricePerLaunch: parseFloat(editedLaunchPrice),
+        pricePerMonth: parseFloat(editedMonthPrice),
+      },
+      () => setIsEditingPrice(false)
+    );
+  };
 
 
   const { openPurchaseModal } = useModal();
@@ -371,20 +484,14 @@ const GameCard = ({ game }) => {
       return;
     }
 
-    console.log("useEffect for fetching favourites", user);
 
     let isMounted = true; // Flag to prevent state updates after unmounting
-    console.log("Fetching favorites for user:"); // Log to check if the request is triggered
 
     fetchFavorites(user.documentId, token).then((favoriteGameIds) => {
-      console.log("Fetched favorite game IDs:", favoriteGameIds); // Log the fetched favorite game IDs
 
       if (isMounted) {
-        console.log("Entering the isMounted block"); // Log to check if isMounted is true
         console.log("EXiting game id", game.documentId);
         const isFav = favoriteGameIds.includes(game.documentId); // Check if the current game is in the list of favorite games
-        console.log("Is this game favorited?", isFav); // Log whether the game is favorited or not
-
         setIsFavorite(isFav); // Update the state
       } else {
         console.log("Component is unmounted, skipping state update"); // Log when the component is unmounted
@@ -453,12 +560,14 @@ const GameCard = ({ game }) => {
 
   return (
     <>
+
       <CardWrapper>
         {/* Top left badge (rating) */}
         <TopLeftBadge>
           <FaStar color="white" /> {game.rating}
         </TopLeftBadge>
 
+        {isDeveloper && <DeveloperRibbon>Вы разработчик</DeveloperRibbon>}
         {/* Top right badge (total reviews) */}
         <TopRightBadge>{game.reviews}</TopRightBadge>
 
@@ -485,17 +594,85 @@ const GameCard = ({ game }) => {
 
         {/* Shopping Cart & Price */}
         <CardContent>
-          <SquareIconButton icon={<LuShoppingCart />} onClick={() => openPurchaseModal(game)} />
-          <PriceContainer>
-            <PriceText>
-              <PriceValue>{game.pricePerLaunch}</PriceValue>
-              <PriceLabel> ₽/запуск</PriceLabel>
-            </PriceText>
-            <PriceText>
-              <PriceValue>{game.pricePerMonth}</PriceValue>
-              <PriceLabel> ₽/месяц</PriceLabel>
-            </PriceText>
-          </PriceContainer>
+          <FixedIconWrapper>
+            <SquareIconButton icon={<LuShoppingCart />} onClick={() => openPurchaseModal(game)} />
+          </FixedIconWrapper>
+          {isDeveloper ? (
+            <PriceContainer onClick={() => setIsEditingPrice(true)} style={{ cursor: "pointer" }}>
+              {isEditingPrice ? (
+                <>
+                  <PriceInput
+                    type="text"
+                    inputMode="decimal"
+                    value={editedLaunchPrice}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (/^\d*\.?\d{0,2}$/.test(value)) {
+                        setEditedLaunchPrice(value);
+                      }
+                    }}
+                    onBlur={handleSavePrices}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();     // Prevent navigation
+                        e.stopPropagation();    // Prevent bubbling up to parent (like <Link>)
+                        e.target.blur();        // Trigger blur so auto-save still runs
+                      }
+                    }
+                    }
+                  />
+                  <PriceLabelDevmode> запуск </PriceLabelDevmode>
+
+                  <PriceInput
+                    type="text"
+                    inputMode="decimal"
+                    value={editedMonthPrice}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (/^\d*\.?\d{0,2}$/.test(value)) {
+                        setEditedMonthPrice(value);
+                      }
+                    }}
+                    onBlur={handleSavePrices}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();     // Prevent navigation
+                        e.stopPropagation();    // Prevent bubbling up to parent (like <Link>)
+                        e.target.blur();        // Trigger blur so auto-save still runs
+                      }
+                    }
+                    }
+                  />
+                  <PriceLabelDevmode>  месяц </PriceLabelDevmode>
+
+
+                </>
+              ) : (
+                <>
+                  <PriceText>
+                    <PriceValue>{editedLaunchPrice}</PriceValue>
+                    <PriceLabel> ₽/запуск</PriceLabel>
+                  </PriceText>
+                  <PriceText>
+                    <PriceValue>{editedMonthPrice}</PriceValue>
+                    <PriceLabel> ₽/месяц</PriceLabel>
+                  </PriceText>
+                </>
+              )}
+            </PriceContainer>
+          ) : (
+            <PriceContainer>
+              <PriceText>
+                <PriceValue>{game.pricePerLaunch}</PriceValue>
+                <PriceLabel> ₽/запуск</PriceLabel>
+              </PriceText>
+              <PriceText>
+                <PriceValue>{game.pricePerMonth}</PriceValue>
+                <PriceLabel> ₽/месяц</PriceLabel>
+              </PriceText>
+            </PriceContainer>
+          )}
+
         </CardContent>
 
         {/* Game Title & Favorite Button */}
@@ -509,51 +686,90 @@ const GameCard = ({ game }) => {
               isFavorite={isFavorite}
             />
           </RowIcon>
-          <Link href={`/games/${game.slug}`}>
-            <GameName>{game.title}</GameName>
-          </Link>
+          {isDeveloper ? (
+            isEditingTitle ? (
+              <input
+                type="text"
+                value={editedTitle}
+                autoFocus
+                onChange={(e) => setEditedTitle(e.target.value)}
+                onBlur={() =>
+                  updateGameFields({ title: editedTitle }, () => setIsEditingTitle(false))
+                }
+
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.target.blur();
+                  }
+                }}
+                style={{
+                  fontSize: "1rem",
+                  fontWeight: 400,
+                  background: "transparent",
+                  color: "#fff",
+                  border: "1px solid rgba(var(--theme-yellow), 0.5)",
+                  borderRadius: "4px",
+                  padding: "4px 8px",
+                  width: "100%",
+                }}
+              />
+            ) : (
+              <GameName onClick={() => setIsEditingTitle(true)}>
+                {editedTitle}
+              </GameName>
+            )
+          ) : (
+            <Link href={`/games/${game.slug}`}>
+              <GameName>{game.title}</GameName>
+            </Link>
+          )}
+
         </Row>
-      </CardWrapper>
+      </CardWrapper >
 
       {/* Game Details Modal */}
-      {isModalOpen && (
-        <ModalOverlay>
-          <ModalContent>
-            <CloseButton onClick={() => setIsModalOpen(false)}>
-              <FaTimes />
-            </CloseButton>
-            <ModalHeader>
-              <ModalImage src={game.image} alt={game.title} />
-              <ModalDetails>
-                <h2>{game.title}</h2>
-                <PriceContainer>
-                  <PriceText>
-                    <PriceValue>{game.pricePerLaunch}</PriceValue>
-                    <PriceLabel> ₽/запуск</PriceLabel>
-                  </PriceText>
-                  <PriceText>
-                    <PriceValue>{game.pricePerMonth}</PriceValue>
-                    <PriceLabel> ₽/месяц</PriceLabel>
-                  </PriceText>
-                </PriceContainer>
-                <ButtonGroup>
-                  <SquareIconButton icon={<LuShoppingCart />} onClick={() => handleModalsBuyClick(game)} />
-                  <SquareIconButton
-                    icon={<CiHeart />}
-                    iconType="stroke"
-                    color={isFavorite ? "rgb(var(--theme-yellow))" : "rgb(var(--theme-grey))"}
-                    onClick={handleFavoriteClick}
-                  />
-                  <Link href={`/games/${game.slug}`}>
-                    <ModalButton>Подробнее</ModalButton>
-                  </Link>
-                </ButtonGroup>
-              </ModalDetails>
-            </ModalHeader>
-            <ModalDescription>{game.description}</ModalDescription>
-          </ModalContent>
-        </ModalOverlay>
-      )}
+      {
+        isModalOpen && (
+          <ModalOverlay>
+            <ModalContent>
+              <CloseButton onClick={() => setIsModalOpen(false)}>
+                <FaTimes />
+              </CloseButton>
+              <ModalHeader>
+                <ModalImage src={game.image} alt={game.title} />
+                <ModalDetails>
+                  <h2>{game.title}</h2>
+                  <PriceContainer>
+                    <PriceText>
+                      <PriceValue>{game.pricePerLaunch}</PriceValue>
+                      <PriceLabel> ₽/запуск</PriceLabel>
+                    </PriceText>
+                    <PriceText>
+                      <PriceValue>{game.pricePerMonth}</PriceValue>
+                      <PriceLabel> ₽/месяц</PriceLabel>
+                    </PriceText>
+                  </PriceContainer>
+                  <ButtonGroup>
+                    <SquareIconButton icon={<LuShoppingCart />} onClick={() => handleModalsBuyClick(game)} />
+                    <SquareIconButton
+                      icon={<CiHeart />}
+                      iconType="stroke"
+                      color={isFavorite ? "rgb(var(--theme-yellow))" : "rgb(var(--theme-grey))"}
+                      onClick={handleFavoriteClick}
+                    />
+                    <Link href={`/games/${game.slug}`}>
+                      <ModalButton>Подробнее</ModalButton>
+                    </Link>
+                  </ButtonGroup>
+                </ModalDetails>
+              </ModalHeader>
+              <ModalDescription>{game.description}</ModalDescription>
+            </ModalContent>
+          </ModalOverlay>
+        )
+      }
     </>
   );
 };

@@ -3,6 +3,8 @@ import React from "react";
 import styled from "styled-components";
 import GameCard from "./GameCard";
 import { useSearch } from "@/context/SearchContext";
+import { useFilters } from "@/context/FiltersContext";
+import { useAuth } from "@/context/AuthContext";
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
 const FALLBACK_IMAGE = "/assets/images/antarctika.webp";
@@ -38,12 +40,16 @@ const NoResults = styled.p`
 
 const GameGallery = ({ games = [] }) => {
     const { searchQuery } = useSearch();
+    const { filters } = useFilters();
+    const { user } = useAuth();
+
+
 
     console.log("GameGallery - Image URLs:", games.map(game => game.image));
 
 
     // Ensure games is an array before filtering
-    const filteredGames = games.map((game) => {
+    const processedGames = games.map((game) => {
         console.log("Before Processing:", game);
         console.log("Game Image Object:", game.image); // Debugging
 
@@ -66,7 +72,17 @@ const GameGallery = ({ games = [] }) => {
     });
 
 
-    console.log("Final Processed Games Array:", filteredGames);
+    const filteredGames = processedGames.filter((game) => {
+        if (filters.onlyMyDevelopedGames && game.developed_by?.id !== user?.id) return false;
+
+        if (
+            filters.searchQuery &&
+            !game.title?.toLowerCase().includes(filters.searchQuery.toLowerCase())
+        ) return false;
+
+        return true;
+    });
+
 
 
 
@@ -74,7 +90,9 @@ const GameGallery = ({ games = [] }) => {
     return (
         <GalleryWrapper>
             {filteredGames.length > 0 ? (
-                filteredGames.map((game) => <GameCard key={game.documentId} game={game} />)
+                filteredGames.map((game) => (
+                    <GameCard key={game.documentId} game={game} />
+                ))
             ) : (
                 <NoResults>Игр не найдено</NoResults>
             )}
