@@ -13,15 +13,15 @@ export default function Providers({ children }) {
 
     return (
         <AuthProvider>
-            <GamesDataProvider>
-                <FiltersProvider>
+            <FiltersProvider>
+                <GamesDataProvider>
                     <SearchProvider>
                         <ModalProvider>
                             {children}
                         </ModalProvider>
                     </SearchProvider>
-                </FiltersProvider>
-            </GamesDataProvider>
+                </GamesDataProvider>
+            </FiltersProvider>
         </AuthProvider>
     );
 }

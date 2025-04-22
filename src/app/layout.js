@@ -32,6 +32,7 @@ export default function RootLayout({ children }) {
               <div className="content">{children}</div>
             </div>
             <PurchaseModal />
+
             <ClientPaymentRedirectHandler />
             <ClientWrapperAuth />
           </Providers>

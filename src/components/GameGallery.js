@@ -5,6 +5,8 @@ import GameCard from "./GameCard";
 import { useSearch } from "@/context/SearchContext";
 import { useFilters } from "@/context/FiltersContext";
 import { useAuth } from "@/context/AuthContext";
+import { useGamesData } from "@/context/GamesDataContext";
+import { useEffect, useState } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
 const FALLBACK_IMAGE = "/assets/images/antarctika.webp";
@@ -38,12 +40,12 @@ const NoResults = styled.p`
   color: rgba(var(--theme-grey), 0.7);
 `;
 
-const GameGallery = ({ games = [] }) => {
+const GameGallery = () => {
     const { searchQuery } = useSearch();
-    const { filters } = useFilters();
+    const { filters, updateFilters } = useFilters();
     const { user } = useAuth();
 
-
+    const { games } = useGamesData();
 
     console.log("GameGallery - Image URLs:", games.map(game => game.image));
 

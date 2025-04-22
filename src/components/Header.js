@@ -10,6 +10,7 @@ import LoginModal from "./LoginModal";
 import { AuthContext, useAuth } from "@/context/AuthContext";
 import { useGamesData } from "@/context/GamesDataContext";
 import { useFilters } from "@/context/FiltersContext";
+import UserProfileModal from "./UserProfileModal";
 
 const HeaderContainer = styled.header`
   display: flex;
@@ -109,6 +110,7 @@ const MenuPopup = styled.div`
 `;
 
 const LoginIconWrapper = styled.div`
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -119,15 +121,29 @@ const LoginIconWrapper = styled.div`
   cursor: pointer;
   transition: background-color 0.3s ease-in-out;
 
-
   svg {
     font-size: 20px;
-    color: rgb(var(--foreground))
+    color: rgb(var(--foreground));
     transition: color 0.3s ease-in-out;
   }
 
   &:hover svg {
-   color: rgb(var(--theme-yellow));
+    color: rgb(var(--theme-yellow));
+  }
+
+  &:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    background: black;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    white-space: nowrap;
+    top: 45px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
   }
 `;
 
@@ -254,14 +270,17 @@ const FlexItemWrapper = styled.div`
 
 
 const LoggedUser = () => {
+  const { user, openProfileModal } = useAuth();
 
-  const { user } = useAuth();
 
   return (
-    <>
+    <div
+      onClick={openProfileModal}
+      style={{ cursor: "pointer", color: "rgb(var(--theme-yellow))" }}
+    >
       {user?.username}
-    </>
-  )
+    </div>
+  );
 }
 
 const Header = () => {
@@ -352,16 +371,20 @@ const Header = () => {
                   </button>
                 </FlexItemWrapper>
               )}
+              <FlexItemWrapper>
+                <LoggedUser></LoggedUser>
 
-              <LoggedUser></LoggedUser>
+              </FlexItemWrapper>
               {/* Login Button (Desktop) */}
               <LoginIconWrapper
+                data-tooltip={isAuthenticated ? "Выйти" : "Войти"}
                 onClick={() => {
-                  console.log("LOGIN BUTTON clicked")
                   isAuthenticated ? handleLogout() : openLoginModal();
-                }}>
+                }}
+              >
                 {isAuthenticated ? <LuLogOut /> : <LuLogIn />}
               </LoginIconWrapper>
+
             </FlexWrapper>
           </RightContainer>
 
@@ -419,6 +442,7 @@ const Header = () => {
           </MobileOffCanvasMenu>
         </>
       )}
+      {isAuthenticated && <UserProfileModal />}
 
       {/* LOGIN MODAL (visible for both desktop and mobile) - removing to Root layout
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />

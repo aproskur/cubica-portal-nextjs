@@ -15,7 +15,7 @@ export default function Home() {
     <main className="main">
       {loading && <p>Игры загружаются...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
-      {!loading && !error && <GameGallery games={games} searchQuery={searchQuery} />}
+      {!loading && !error && <GameGallery searchQuery={searchQuery} />}
       <MobileFooter openFilter={() => setIsFilterOpen(true)} />
       <MobileAside isOpen={isFilterOpen} onClose={() => setIsFilterOpen(false)} />
     </main>

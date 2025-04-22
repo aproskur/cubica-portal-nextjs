@@ -4,9 +4,11 @@
 "use client";
 
 import { createContext, useState, useEffect, useContext } from "react";
-import { fetchGames, fetchUserPurchases } from "@/utils/apiService"; // Import your fetch function
+import { fetchGames, fetchUserPurchases } from "@/utils/apiService";
 import { useAuth } from "./AuthContext";
+import { useFilters } from "./FiltersContext";
 
+//  Safe default values
 export const GamesDataContext = createContext({
     purchasedGames: [],
     setPurchasedGames: () => { },
@@ -21,21 +23,35 @@ export const GamesDataProvider = ({ children }) => {
     const [purchasedGames, setPurchasedGames] = useState([]);
 
     const { isAuthenticated, user, token } = useAuth();
+    const { filters, updateFilters } = useFilters();
 
+
+    // Dynamic fetch when filters or user change
     useEffect(() => {
-        async function loadGames() {
+        // Fix: if user logged out, but dev-only filter is still on - reset it
+        if (filters.onlyMyDevelopedGames && !user) {
+            updateFilters({ onlyMyDevelopedGames: false });
+            return;
+        }
+
+        const loadGames = async () => {
             try {
-                const data = await fetchGames();
+                setLoading(true);
+                setError(null);
+
+                // Fetch with filters and user ( TODO need to modify fetchGames)
+                const data = await fetchGames({ filters, user });
                 setGames(data);
             } catch (err) {
-                setError("Failed to load games. Please try again.");
                 console.error(err);
+                setError("Failed to load games. Please try again.");
             } finally {
                 setLoading(false);
             }
-        }
+        };
+
         loadGames();
-    }, []);
+    }, [filters, user]);
 
     const fetchAndSetPurchasedGames = async () => {
         if (!isAuthenticated && !user) return;
@@ -48,29 +64,24 @@ export const GamesDataProvider = ({ children }) => {
         }
     };
 
+    const updateGameInList = (updatedGame) => {
+        setGames((prevGames) =>
+            prevGames.map((g) =>
+                g.documentId === updatedGame.documentId ? { ...g, ...updatedGame } : g
+            )
+        );
+    };
+
+
 
     useEffect(() => {
         fetchAndSetPurchasedGames();
     }, [isAuthenticated, user, token]);
 
 
-    /*
-    useEffect(() => {
-        async function loadUsersPurchases() {
-            if (!isAuthenticated && !user) return;
-            try {
-                const purchases = await fetchUserPurchases(token); // Fetch purchased games
-                setPurchasedGames(purchases || []);
-                console.log("DATA context, user's purchases", purchases)
-            } catch (err) {
-                console.error("Error fetching user purchases:", err);
-            }
-        }
-        loadUsersPurchases();
-    }, [isAuthenticated, user, token]); */
 
     return (
-        <GamesDataContext.Provider value={{ games, loading, error, purchasedGames, setPurchasedGames, refreshPurchasedGames: fetchAndSetPurchasedGames }}>
+        <GamesDataContext.Provider value={{ games, loading, error, purchasedGames, setPurchasedGames, refreshPurchasedGames: fetchAndSetPurchasedGames, updateGameInList }}>
             {children}
         </GamesDataContext.Provider>
     );

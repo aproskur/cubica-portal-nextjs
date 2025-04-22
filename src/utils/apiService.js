@@ -3,18 +3,26 @@ import qs from "qs";
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
 
 
-export const fetchGames = async () => {
+export const fetchGames = async ({ filters = {}, user = null } = {}) => {
     try {
-        // Query to explicitly populate image and developed_by
         const query = qs.stringify(
             {
+                filters: filters.onlyMyDevelopedGames && user
+                    ? {
+                        developed_by: {
+                            id: {
+                                $eq: user.id,
+                            },
+                        },
+                    }
+                    : {},
                 populate: {
                     image: {
-                        fields: ['url'],
+                        fields: ["url"],
                     },
                     developed_by: {
                         populate: true,
-                        fields: ['username', 'email'],
+                        fields: ["username", "email"],
                     },
                 },
             },
@@ -34,16 +42,12 @@ export const fetchGames = async () => {
         const result = await response.json();
 
         return result.data.map((game, index) => {
-
-            console.log(`Game #${index + 1} - developed_by:`, game.developed_by);
-            // Safe image URL logic
             const imageUrl = game.image?.url
-                ? game.image.url.startsWith('/')
+                ? game.image.url.startsWith("/")
                     ? `${API_URL}${game.image.url}`
                     : game.image.url
                 : null;
 
-            // Safe developer info
             const developer = game.developed_by
                 ? {
                     id: game.developed_by.id,
@@ -66,10 +70,11 @@ export const fetchGames = async () => {
             };
         });
     } catch (error) {
-        console.error("❌ Error fetching games:", error);
+        console.error("Error fetching games:", error);
         return [];
     }
 };
+
 
 
 
@@ -322,6 +327,36 @@ export const handleGameUpdate = async (documentId, data, token) => {
 };
 
 
+export const updateUserPassword = async (currentPassword, newPassword) => {
+    try {
+        const token = localStorage.getItem("jwt");
+        if (!token) throw new Error("Authentication required");
+
+        const response = await fetch(`${API_URL}/api/user/change-password`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                currentPassword,
+                newPassword,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            const errorMessage = data?.error || data?.message || "Password update failed";
+            throw new Error(errorMessage);
+        }
+
+        return { success: true, message: data.message };
+    } catch (error) {
+        console.error("Error updating password:", error);
+        return { success: false, error: error.message };
+    }
+};
 
 
 

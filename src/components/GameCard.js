@@ -4,13 +4,14 @@ import Link from "next/link";
 import styled from "styled-components";
 import SquareIconButton from "./SquareIconButton";
 import { CiHeart } from "react-icons/ci";
-import { LuShoppingCart, LuGamepad2 } from "react-icons/lu";
+import { LuShoppingCart, LuGamepad2, LuLayoutDashboard } from "react-icons/lu";
 import { FaStar, FaInfoCircle, FaEdit, FaCopy, FaCheck, FaArchive, FaTimes } from "react-icons/fa";
 import { useState, useEffect, useDeferredValue } from "react";
 import { toggleFavorite, fetchFavorites } from "../utils/toggleFavourites";
 import { useAuth } from "../context/AuthContext";
 import { useModal } from "../context/ModalContext";
 import { handleGameUpdate } from "@/utils/apiService";
+import { useGamesData } from "@/context/GamesDataContext";
 
 
 const CardWrapper = styled.div`
@@ -62,8 +63,8 @@ const TopRightBadge = styled.div`
 
 const DeveloperRibbon = styled.div`
   position: absolute;
-  bottom: 128px;
-  left: 15px;
+  bottom: 0px;
+  left: 0px;
   background-color: rgba(var(--theme-yellow), 0.8);
   color: #fff;
   font-size: 0.7rem;
@@ -134,8 +135,8 @@ flex-shrink: 0;
 
 const IconButton = styled.div`
   background: rgba(255, 255, 255, 0.8);
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   border-radius: 8px;
   padding: 12px;
   cursor: pointer;
@@ -169,8 +170,8 @@ const IconButton = styled.div`
 `;
 
 const LargeIconButton = styled(IconButton)`
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
 
   &:hover::after {
     top: -30px; /* Move tooltips above for larger buttons */
@@ -395,61 +396,64 @@ const GameCard = ({ game }) => {
   const { isAuthenticated, user, token } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [priceErrors, setPriceErrors] = useState({ launch: "", month: "" });
+
+
 
   const isDeveloper = game.developed_by?.id === user?.id;
 
   const [isEditingPrice, setIsEditingPrice] = useState(false);
-  const [editedLaunchPrice, setEditedLaunchPrice] = useState(game.pricePerLaunch);
-  const [editedMonthPrice, setEditedMonthPrice] = useState(game.pricePerMonth);
+
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editedTitle, setEditedTitle] = useState(game.title);
 
 
-
-  /*
-
-  //TODO
-  const handleSavePrices = async () => {
-    console.log("HANDLE SAVE")
-    console.log("Token:", token);
-    console.log("Document ID:", game.documentId);
-    console.log("Launch Price:", editedLaunchPrice);
-    console.log("Month Price:", editedMonthPrice);
-
-    try {
+  const { updateGameInList } = useGamesData();
 
 
-      await handleGameUpdate({
-        title: editedTitle, // optional — or remove if you don't want title saved here
-        pricePerLaunch: parseFloat(editedLaunchPrice),
-        pricePerMonth: parseFloat(editedMonthPrice),
-      });
+  const formatPrice = (value) => {
+    const number = parseFloat(value);
+    return isNaN(number) ? '—' : `${number}`;
+  };
 
-      console.log("Game prices updated successfully");
-      setIsEditingPrice(false);
-    } catch (error) {
-      console.error("Failed to update prices:", error);
-      alert("Ошибка при сохранении цен. Проверьте соединение или авторизацию.");
-    }
-  }; */
+
 
   const updateGameFields = async (fieldsToUpdate, callback = () => { }) => {
     try {
-      await handleGameUpdate(game.documentId, fieldsToUpdate, token);
-      callback(); // run local cleanup like setIsEditingTitle(false)
+      const updated = await handleGameUpdate(game.documentId, fieldsToUpdate, token);
+      updateGameInList({ ...game, ...fieldsToUpdate }); //  This updates context
+      callback();
     } catch (error) {
       console.error("Failed to update game:", error);
       alert("Ошибка при обновлении данных. Проверьте соединение или авторизацию.");
     }
   };
 
+  const handleSaveLaunchPrice = async (value) => {
+    const parsed = parseFloat(value);
+    if (isNaN(parsed)) {
+      setPriceErrors((prev) => ({ ...prev, launch: "Введите корректную цену за запуск." }));
+      return;
+    }
 
-  const handleSavePrices = () => {
-    updateGameFields(
-      {
-        pricePerLaunch: parseFloat(editedLaunchPrice),
-        pricePerMonth: parseFloat(editedMonthPrice),
-      },
+    setPriceErrors((prev) => ({ ...prev, launch: "" }));
+
+    await updateGameFields(
+      { pricePerLaunch: parsed },
+      () => setIsEditingPrice(false)
+    );
+  };
+
+  const handleSaveMonthPrice = async (value) => {
+    const parsed = parseFloat(value);
+    if (isNaN(parsed)) {
+      setPriceErrors((prev) => ({ ...prev, month: "Введите корректную цену за месяц." }));
+      return;
+    }
+
+    setPriceErrors((prev) => ({ ...prev, month: "" }));
+
+    await updateGameFields(
+      { pricePerMonth: parsed },
       () => setIsEditingPrice(false)
     );
   };
@@ -567,12 +571,15 @@ const GameCard = ({ game }) => {
           <FaStar color="white" /> {game.rating}
         </TopLeftBadge>
 
-        {isDeveloper && <DeveloperRibbon>Вы разработчик</DeveloperRibbon>}
         {/* Top right badge (total reviews) */}
         <TopRightBadge>{game.reviews}</TopRightBadge>
 
         {/* Game Image & Hover Overlay */}
+
+
         <CardImageWrapper onClick={handleOverlayToggle}>
+          {isDeveloper && <DeveloperRibbon>Вы разработчик</DeveloperRibbon>}
+
           <CardImage src={game.image} alt={game.title} />
           <HoverOverlay className="hover-overlay" $isOverlayVisible={isOverlayVisible}>
             <ButtonRow>
@@ -582,13 +589,19 @@ const GameCard = ({ game }) => {
               <LargeIconButton data-tooltip="Демо">
                 <LuGamepad2 />
               </LargeIconButton>
+              <Link href={`/games/${game.slug}`} passHref>
+                <LargeIconButton data-tooltip="Страница Игры">
+                  <LuLayoutDashboard />
+                </LargeIconButton>
+              </Link>
             </ButtonRow>
-            <ButtonRow>
+            {isDeveloper && <ButtonRow>
               <IconButton data-tooltip="Редактировать"><FaEdit /></IconButton>
               <IconButton data-tooltip="Копировать"><FaCopy /></IconButton>
               <IconButton data-tooltip="Публикация"><FaCheck /></IconButton>
               <IconButton data-tooltip="В архив"><FaArchive /></IconButton>
-            </ButtonRow>
+            </ButtonRow>}
+
           </HoverOverlay>
         </CardImageWrapper>
 
@@ -604,70 +617,58 @@ const GameCard = ({ game }) => {
                   <PriceInput
                     type="text"
                     inputMode="decimal"
-                    value={editedLaunchPrice}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (/^\d*\.?\d{0,2}$/.test(value)) {
-                        setEditedLaunchPrice(value);
-                      }
-                    }}
-                    onBlur={handleSavePrices}
+                    defaultValue={game.pricePerLaunch}
+                    onBlur={(e) => handleSaveLaunchPrice(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
-                        e.preventDefault();     // Prevent navigation
-                        e.stopPropagation();    // Prevent bubbling up to parent (like <Link>)
-                        e.target.blur();        // Trigger blur so auto-save still runs
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.target.blur();
                       }
-                    }
-                    }
+                    }}
                   />
                   <PriceLabelDevmode> запуск </PriceLabelDevmode>
 
                   <PriceInput
                     type="text"
                     inputMode="decimal"
-                    value={editedMonthPrice}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (/^\d*\.?\d{0,2}$/.test(value)) {
-                        setEditedMonthPrice(value);
-                      }
-                    }}
-                    onBlur={handleSavePrices}
+                    defaultValue={game.pricePerMonth}
+                    onBlur={(e) => handleSaveMonthPrice(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
-                        e.preventDefault();     // Prevent navigation
-                        e.stopPropagation();    // Prevent bubbling up to parent (like <Link>)
-                        e.target.blur();        // Trigger blur so auto-save still runs
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.target.blur();
                       }
-                    }
-                    }
+                    }}
                   />
-                  <PriceLabelDevmode>  месяц </PriceLabelDevmode>
-
+                  <PriceLabelDevmode> месяц </PriceLabelDevmode>
 
                 </>
+
               ) : (
                 <>
                   <PriceText>
-                    <PriceValue>{editedLaunchPrice}</PriceValue>
+                    <PriceValue>{formatPrice(game.pricePerLaunch)}</PriceValue>
                     <PriceLabel> ₽/запуск</PriceLabel>
                   </PriceText>
                   <PriceText>
-                    <PriceValue>{editedMonthPrice}</PriceValue>
+                    <PriceValue>{formatPrice(game.pricePerMonth)}</PriceValue>
                     <PriceLabel> ₽/месяц</PriceLabel>
                   </PriceText>
                 </>
               )}
+
             </PriceContainer>
+
           ) : (
             <PriceContainer>
               <PriceText>
-                <PriceValue>{game.pricePerLaunch}</PriceValue>
+                <PriceValue>{formatPrice(game.pricePerLaunch)}</PriceValue>
                 <PriceLabel> ₽/запуск</PriceLabel>
               </PriceText>
               <PriceText>
-                <PriceValue>{game.pricePerMonth}</PriceValue>
+                <PriceValue>{formatPrice(game.pricePerMonth)}</PriceValue>
                 <PriceLabel> ₽/месяц</PriceLabel>
               </PriceText>
             </PriceContainer>
@@ -690,13 +691,9 @@ const GameCard = ({ game }) => {
             isEditingTitle ? (
               <input
                 type="text"
-                value={editedTitle}
+                defaultValue={game.title}
                 autoFocus
-                onChange={(e) => setEditedTitle(e.target.value)}
-                onBlur={() =>
-                  updateGameFields({ title: editedTitle }, () => setIsEditingTitle(false))
-                }
-
+                onBlur={(e) => updateGameFields({ title: e.target.value }, () => setIsEditingTitle(false))}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -714,16 +711,31 @@ const GameCard = ({ game }) => {
                   padding: "4px 8px",
                   width: "100%",
                 }}
+
+
               />
+
             ) : (
               <GameName onClick={() => setIsEditingTitle(true)}>
-                {editedTitle}
+                {game.title}
               </GameName>
             )
           ) : (
             <Link href={`/games/${game.slug}`}>
               <GameName>{game.title}</GameName>
             </Link>
+          )}
+
+        </Row>
+        <Row>          {priceErrors.launch && (
+          <div style={{ color: "red", fontSize: "0.8rem", marginTop: "0.75rem" }}>
+            {priceErrors.launch}
+          </div>
+        )}
+          {priceErrors.month && (
+            <div style={{ color: "red", fontSize: "0.8rem", marginTop: "0.75rem" }}>
+              {priceErrors.month}
+            </div>
           )}
 
         </Row>
@@ -743,11 +755,11 @@ const GameCard = ({ game }) => {
                   <h2>{game.title}</h2>
                   <PriceContainer>
                     <PriceText>
-                      <PriceValue>{game.pricePerLaunch}</PriceValue>
+                      <PriceValue>{formatPrice(game.pricePerLaunch)}</PriceValue>
                       <PriceLabel> ₽/запуск</PriceLabel>
                     </PriceText>
                     <PriceText>
-                      <PriceValue>{game.pricePerMonth}</PriceValue>
+                      <PriceValue>{formatPrice(game.pricePerMonth)}</PriceValue>
                       <PriceLabel> ₽/месяц</PriceLabel>
                     </PriceText>
                   </PriceContainer>

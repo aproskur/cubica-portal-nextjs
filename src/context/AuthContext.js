@@ -17,6 +17,10 @@ export const AuthProvider = ({ children }) => {
     const router = useRouter(); // For redirection
     const [isLoginModalOpen, setLoginModalOpen] = useState(false);
     const [pendingPurchase, setPendingPurchase] = useState(false) //for keeping track of gamedata when a guest clicks on buy
+    const [isProfileModalOpen, setProfileModalOpen] = useState(false);
+
+    const openProfileModal = () => setProfileModalOpen(true);
+    const closeProfileModal = () => setProfileModalOpen(false);
 
     // After refreshing the page, React loses state. 
     // To keep the user logged in the following useEffect()  retrieves the token from localStorage:
@@ -210,7 +214,10 @@ export const AuthProvider = ({ children }) => {
             isLoginModalOpen,
             closeLoginModal,
             requestLoginForPurchase,
-            pendingPurchase
+            pendingPurchase,
+            isProfileModalOpen,
+            openProfileModal,
+            closeProfileModal,
         }}>
             {children}
         </AuthContext.Provider>
