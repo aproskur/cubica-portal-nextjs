@@ -65,12 +65,16 @@ export const GamesDataProvider = ({ children }) => {
     };
 
     const updateGameInList = (updatedGame) => {
-        setGames((prevGames) =>
-            prevGames.map((g) =>
-                g.documentId === updatedGame.documentId ? { ...g, ...updatedGame } : g
-            )
-        );
+        setGames((prevGames) => {
+            return prevGames.map((g) => {
+                const match = g.documentId === updatedGame.documentId;
+                return match ? { ...g, ...updatedGame } : g;
+            });
+        });
     };
+
+
+
 
 
 
@@ -81,7 +85,16 @@ export const GamesDataProvider = ({ children }) => {
 
 
     return (
-        <GamesDataContext.Provider value={{ games, loading, error, purchasedGames, setPurchasedGames, refreshPurchasedGames: fetchAndSetPurchasedGames, updateGameInList }}>
+        <GamesDataContext.Provider value={{
+            games,
+            loading,
+            error,
+            purchasedGames,
+            setPurchasedGames,
+            refreshPurchasedGames: fetchAndSetPurchasedGames,
+            updateGameInList,
+
+        }}>
             {children}
         </GamesDataContext.Provider>
     );

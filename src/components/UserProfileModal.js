@@ -107,88 +107,150 @@ const ToggleIcon = styled.div`
   }
 `;
 
+const MessageBox = styled.div`
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 5px;
+  font-size: 14px;
+  color: ${(props) => (props.type === "error" ? "rgb(var(--error))" : "rgb(var(--success))")};
+  background-color: ${(props) =>
+    props.type === "error"
+      ? "rgba(var(--error), 0.1)"
+      : "rgba(var(--success), 0.1)"};
+  border: 1px solid
+    ${(props) =>
+    props.type === "error" ? "rgb(var(--error))" : "rgb(var(--success))"};
+`;
+
+
 const UserProfileModal = () => {
-    const { user, isProfileModalOpen, closeProfileModal } = useAuth();
+  const { user, isProfileModalOpen, closeProfileModal } = useAuth();
 
-    const [username, setUsername] = useState(user?.username || "");
-    const [email, setEmail] = useState(user?.email || "");
-    const [password, setPassword] = useState("");
-    const [currentPassword, setCurrentPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
-
-    useEffect(() => {
-        if (isProfileModalOpen && user) {
-            setUsername(user.username || "");
-            setEmail(user.email || "");
-            setPassword("");
-            setCurrentPassword("");
-        }
-    }, [isProfileModalOpen, user]);
-
-    if (!isProfileModalOpen) return null;
+  const [username, setUsername] = useState(user?.username || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [password, setPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState(null); // 'success' or 'error'
 
 
-    const handleSave = async () => {
-        console.log("Saving updated user info:", {
-            username,
-            email,
-            currentPassword,
-            newPassword: password,
-        });
+  useEffect(() => {
+    if (isProfileModalOpen && user) {
+      setUsername(user.username || "");
+      setEmail(user.email || "");
+      setPassword("");
+      setCurrentPassword("");
+    }
+  }, [isProfileModalOpen, user]);
+
+  if (!isProfileModalOpen) return null;
+
+
+  const handleSave = async () => {
+    setMessage("");
+    setMessageType(null);
+
+    try {
+      const result = await updateUserPassword(currentPassword, password);
+
+      if (!result.success) {
+        let errorMessage = "Ошибка при обновлении пароля";
 
         try {
-            const result = await updateUserPassword(currentPassword, password);
-
-            if (!result.success) {
-                alert(`Ошибка: ${result.error}`);
-                return;
+          if (result.error) {
+            if (typeof result.error === "string") {
+              errorMessage = result.error;
+            } else if (typeof result.error === "object") {
+              // Try several possible places where a useful message might be
+              errorMessage =
+                result.error.message ||
+                result.error.error ||
+                result.error.data?.message ||
+                JSON.stringify(result.error);
             }
-
-            alert("Пароль успешно обновлён");
-            closeProfileModal(); // ✅ Close the modal only after success
-        } catch (err) {
-            console.error("Error saving password:", err);
-            alert("Произошла ошибка при сохранении");
+          }
+        } catch (parseError) {
+          console.error("Error parsing error object", parseError);
         }
-    };
 
-    return (
-        <ModalOverlay>
-            <ModalContent>
-                <CloseButton onClick={closeProfileModal}>&times;</CloseButton>
-                <h2>Личный кабинет</h2>
+        setMessage(errorMessage);
+        setMessageType("error");
+        return;
+      }
 
-                <p style={{ textAlign: "left", padding: ".5rem 0" }}> {username} </p>
-                <p style={{ textAlign: "left", padding: ".5rem 0", marginBottom: "1rem" }}> {email}</p>
+      setMessage("Пароль успешно обновлён");
+      setMessageType("success");
 
-                <PasswordWrapper>
-                    <StyledInput
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Текущий пароль"
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                    />
-                    <ToggleIcon onClick={() => setShowPassword((prev) => !prev)}>
-                        {showPassword ? <FiEyeOff /> : <FiEye />}
-                    </ToggleIcon>
-                </PasswordWrapper>
 
-                <PasswordWrapper>
-                    <StyledInput
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Новый пароль"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                    <ToggleIcon onClick={() => setShowPassword((prev) => !prev)}>
-                        {showPassword ? <FiEyeOff /> : <FiEye />}
-                    </ToggleIcon>
-                </PasswordWrapper>
+      /* if it is needed to close modal after successful password reset
+      setTimeout(() => {
+        closeProfileModal();
+      }, 1500); */
+    } catch (err) {
+      console.error("Unexpected error:", err);
 
-                <StyledButton onClick={handleSave}>Сохранить</StyledButton>
-            </ModalContent>
-        </ModalOverlay>
-    );
+      let fallbackMessage = "Произошла ошибка при сохранении";
+
+      try {
+        if (typeof err === "string") {
+          fallbackMessage = err;
+        } else if (typeof err === "object") {
+          fallbackMessage =
+            err.message ||
+            err.error?.message ||
+            err.data?.message ||
+            JSON.stringify(err);
+        }
+      } catch (innerErr) {
+        console.error("Error parsing catch block error:", innerErr);
+      }
+
+      setMessage(fallbackMessage);
+      setMessageType("error");
+    }
+  };
+
+
+  return (
+    <ModalOverlay>
+      <ModalContent>
+        <CloseButton onClick={closeProfileModal}>&times;</CloseButton>
+        <h2>Личный угол</h2>
+
+        <p style={{ textAlign: "left", padding: ".5rem 0" }}> {username} </p>
+        <p style={{ textAlign: "left", padding: ".5rem 0", marginBottom: "1rem" }}> {email}</p>
+
+        <PasswordWrapper>
+          <StyledInput
+            type={showPassword ? "text" : "password"}
+            placeholder="Текущий пароль"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+          />
+          <ToggleIcon onClick={() => setShowPassword((prev) => !prev)}>
+            {showPassword ? <FiEyeOff /> : <FiEye />}
+          </ToggleIcon>
+        </PasswordWrapper>
+
+        <PasswordWrapper>
+          <StyledInput
+            type={showPassword ? "text" : "password"}
+            placeholder="Новый пароль"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <ToggleIcon onClick={() => setShowPassword((prev) => !prev)}>
+            {showPassword ? <FiEyeOff /> : <FiEye />}
+          </ToggleIcon>
+        </PasswordWrapper>
+
+        <StyledButton onClick={handleSave}>Сохранить</StyledButton>
+        {message && <MessageBox type={messageType}>{message}</MessageBox>}
+
+      </ModalContent>
+    </ModalOverlay>
+  );
 };
 
 export default UserProfileModal;

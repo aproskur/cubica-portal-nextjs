@@ -2,7 +2,6 @@ import qs from "qs";
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
 
-
 export const fetchGames = async ({ filters = {}, user = null } = {}) => {
     try {
         const query = qs.stringify(
@@ -20,15 +19,15 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
                     image: {
                         fields: ["url"],
                     },
+                    images: {
+                        fields: ["url"],
+                    },
                     developed_by: {
-                        populate: true,
-                        fields: ["username", "email"],
+                        fields: ["id", "username", "email"],
                     },
                 },
             },
-            {
-                encodeValuesOnly: true,
-            }
+            { encodeValuesOnly: true }
         );
 
         const url = `${API_URL}/api/games?${query}`;
@@ -41,13 +40,25 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
 
         const result = await response.json();
 
-        return result.data.map((game, index) => {
-            const imageUrl = game.image?.url
+        return result.data.map((game) => {
+            // ✅ cover image
+            const image = game.image?.url
                 ? game.image.url.startsWith("/")
                     ? `${API_URL}${game.image.url}`
                     : game.image.url
                 : null;
 
+            // ✅ swiper gallery
+            const imageArray = Array.isArray(game.images)
+                ? game.images.map((img, index) => ({
+                    id: img.id ?? index,
+                    url: img.url?.startsWith("/")
+                        ? `${API_URL}${img.url}`
+                        : img.url,
+                }))
+                : [];
+
+            // ✅ developer
             const developer = game.developed_by
                 ? {
                     id: game.developed_by.id,
@@ -60,13 +71,15 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
                 documentId: game.documentId || game.id,
                 title: game.title || "Untitled Game",
                 slug: game.slug || "no-slug",
-                image: imageUrl,
+                image, // ✅ this was missing
+                images: imageArray,
                 rating: game.rating || 0,
                 reviews: game.reviews || 0,
                 pricePerLaunch: game.pricePerLaunch || 0,
                 pricePerMonth: game.pricePerMonth || 0,
                 description: game.description || "No description available.",
                 developed_by: developer,
+                is_published: game.is_published,
             };
         });
     } catch (error) {
@@ -78,6 +91,7 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
 
 
 
+/*
 
 //Fetching data for 1 game (by slug)
 export const fetchGameBySlug = async (slug) => {
@@ -123,13 +137,68 @@ export const fetchGameBySlug = async (slug) => {
             about: game.about_author || "",
             support: game.game_support || "",
             reviews: game.reviews_tmp || "",
-            developed_by: game.developed_by || ""
+            developed_by: game.developed_by || "",
+            is_published: game.is_published
         };
     } catch (error) {
         console.error("Error fetching game:", error);
         return null;
     }
 };
+
+*/
+
+export const fetchGameBySlug = async (slug, token) => {
+    const baseUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+    const url = `${baseUrl}/api/games/${slug}`;
+
+    const res = await fetch(url, {
+        headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+        },
+    });
+
+    if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || "Failed to fetch game");
+    }
+
+    const json = await res.json();
+    const game = json.data;
+
+    const baseURL = baseUrl.replace("/api", "");
+
+    // Proper cover image
+    const coverImage = game.image?.url
+        ? game.image.url.startsWith("/")
+            ? `${baseURL}${game.image.url}`
+            : game.image.url
+        : null;
+
+    // Swiper image gallery
+    const imageArray = Array.isArray(game.images)
+        ? game.images.map((img) => ({
+            id: img.id,
+            url: img.url.startsWith("/") ? `${baseURL}${img.url}` : img.url,
+        }))
+        : [];
+
+    return {
+        ...game,
+        image: coverImage,        // correct cover 
+        images: imageArray,       // for Swiper
+        purpose: game.game_purpose || [],
+        plot: game.game_plot || [],
+        about: game.about_author || "",
+        support: game.game_support || "",
+        reviews: game.reviews || "",
+        tab_reviews: game.reviews_tmp || ""
+    };
+};
+
+
+
+
 
 
 
@@ -330,9 +399,9 @@ export const handleGameUpdate = async (documentId, data, token) => {
 export const updateUserPassword = async (currentPassword, newPassword) => {
     try {
         const token = localStorage.getItem("jwt");
-        if (!token) throw new Error("Authentication required");
+        if (!token) throw new Error("Требуется авторизация");
 
-        const response = await fetch(`${API_URL}/api/user/change-password`, {
+        const response = await fetch(`${API_URL}/api/users-permissions/user/change-password`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -344,19 +413,37 @@ export const updateUserPassword = async (currentPassword, newPassword) => {
             }),
         });
 
+        // fetch itself succeeded, but the server may return 4xx/5xx
         const data = await response.json();
 
         if (!response.ok) {
-            const errorMessage = data?.error || data?.message || "Password update failed";
-            throw new Error(errorMessage);
+            const errorMessage =
+                data?.error?.message ||
+                data?.message ||
+                "Ошибка при обновлении пароля";
+            return { success: false, error: errorMessage };
         }
 
-        return { success: true, message: data.message };
+        return {
+            success: true,
+            message: data?.message || "Пароль успешно обновлён",
+        };
     } catch (error) {
-        console.error("Error updating password:", error);
-        return { success: false, error: error.message };
+        // fetch failed — network error, CORS, etc.
+        let fallbackMessage = "Ошибка сети. Проверьте соединение или попробуйте позже.";
+
+        if (error instanceof TypeError && error.message === "Failed to fetch") {
+            fallbackMessage = "Не удалось подключиться к серверу. Проверьте соединение.";
+        }
+
+        return {
+            success: false,
+            error: fallbackMessage,
+        };
     }
 };
+
+
 
 
 

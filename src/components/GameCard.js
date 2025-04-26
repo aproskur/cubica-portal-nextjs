@@ -5,13 +5,14 @@ import styled from "styled-components";
 import SquareIconButton from "./SquareIconButton";
 import { CiHeart } from "react-icons/ci";
 import { LuShoppingCart, LuGamepad2, LuLayoutDashboard } from "react-icons/lu";
-import { FaStar, FaInfoCircle, FaEdit, FaCopy, FaCheck, FaArchive, FaTimes } from "react-icons/fa";
+import { FaStar, FaInfoCircle, FaEdit, FaCopy, FaCheck, FaArchive, FaTimes, FaEyeSlash, FaEye } from "react-icons/fa";
 import { useState, useEffect, useDeferredValue } from "react";
 import { toggleFavorite, fetchFavorites } from "../utils/toggleFavourites";
 import { useAuth } from "../context/AuthContext";
 import { useModal } from "../context/ModalContext";
 import { handleGameUpdate } from "@/utils/apiService";
 import { useGamesData } from "@/context/GamesDataContext";
+import { saveAndUpdateGame } from "@/utils/gameHelpers";
 
 
 const CardWrapper = styled.div`
@@ -21,7 +22,7 @@ position: relative;
   padding: 16px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-
+  border: ${({ $showDashedBorder }) => $showDashedBorder ? '2px dashed grey' : '2px solid rgb(var(--background))'};
 
   &:hover {
     transform: scale(1.02);
@@ -399,7 +400,7 @@ const GameCard = ({ game }) => {
   const [priceErrors, setPriceErrors] = useState({ launch: "", month: "" });
 
 
-
+  const isPublished = game.is_published;
   const isDeveloper = game.developed_by?.id === user?.id;
 
   const [isEditingPrice, setIsEditingPrice] = useState(false);
@@ -407,26 +408,29 @@ const GameCard = ({ game }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
 
-  const { updateGameInList } = useGamesData();
 
+  const { updateGameInList } = useGamesData();
 
   const formatPrice = (value) => {
     const number = parseFloat(value);
     return isNaN(number) ? '—' : `${number}`;
   };
+  const handleTogglePublished = async () => {
+    const newStatus = !game.is_published;
 
+    await saveAndUpdateGame(
+      { is_published: newStatus },
+      {
+        game,
+        token,
+        updateGameInList,
+      }
+    );
 
-
-  const updateGameFields = async (fieldsToUpdate, callback = () => { }) => {
-    try {
-      const updated = await handleGameUpdate(game.documentId, fieldsToUpdate, token);
-      updateGameInList({ ...game, ...fieldsToUpdate }); //  This updates context
-      callback();
-    } catch (error) {
-      console.error("Failed to update game:", error);
-      alert("Ошибка при обновлении данных. Проверьте соединение или авторизацию.");
-    }
+    // No manual setIsPublished — the context will update `game`, which triggers your useEffect
   };
+
+
 
   const handleSaveLaunchPrice = async (value) => {
     const parsed = parseFloat(value);
@@ -435,12 +439,20 @@ const GameCard = ({ game }) => {
       return;
     }
 
+    if (parsed === game.pricePerLaunch) return; // Skip if value is the same
+
     setPriceErrors((prev) => ({ ...prev, launch: "" }));
 
-    await updateGameFields(
+
+    await saveAndUpdateGame(
       { pricePerLaunch: parsed },
-      () => setIsEditingPrice(false)
+      {
+        game,
+        token,
+        onSuccess: () => setIsEditingPrice(false)
+      }
     );
+
   };
 
   const handleSaveMonthPrice = async (value) => {
@@ -449,13 +461,22 @@ const GameCard = ({ game }) => {
       setPriceErrors((prev) => ({ ...prev, month: "Введите корректную цену за месяц." }));
       return;
     }
+    if (parsed === game.pricePerMonth) return; // Skip if unchanged
+
 
     setPriceErrors((prev) => ({ ...prev, month: "" }));
 
-    await updateGameFields(
+
+    await saveAndUpdateGame(
       { pricePerMonth: parsed },
-      () => setIsEditingPrice(false)
+      {
+        game,
+        token,
+        updateGameInList,
+        onSuccess: () => setIsEditingPrice(false),
+      }
     );
+
   };
 
 
@@ -467,18 +488,6 @@ const GameCard = ({ game }) => {
     setIsModalOpen(false);
   }
 
-
-  useEffect(() => {
-    console.log("Component Mounted");
-
-    return () => {
-      console.log("Component Unmounted");
-    };
-  }, []); // Empty dependency array to run this effect only on mount/unmount
-
-  useEffect(() => {
-    console.log("Window object:", typeof window !== "undefined" ? window : "No window");
-  }, []);
 
 
   // Handle favorite status on mount
@@ -494,11 +503,8 @@ const GameCard = ({ game }) => {
     fetchFavorites(user.documentId, token).then((favoriteGameIds) => {
 
       if (isMounted) {
-        console.log("EXiting game id", game.documentId);
         const isFav = favoriteGameIds.includes(game.documentId); // Check if the current game is in the list of favorite games
         setIsFavorite(isFav); // Update the state
-      } else {
-        console.log("Component is unmounted, skipping state update"); // Log when the component is unmounted
       }
     });
 
@@ -511,7 +517,7 @@ const GameCard = ({ game }) => {
 
   // Optimistic update for faster UX
   const handleFavoriteClick = async () => {
-    console.log("Heart clicked!");
+
 
     if (!isAuthenticated) {
       alert("Please log in to add games to favorites.");
@@ -519,16 +525,14 @@ const GameCard = ({ game }) => {
       return;
     }
 
-    console.log("Game ID:", game.documentId);
-    console.log("User ID:", user?.documentId);
-    console.log("Current favorite state:", isFavorite);
+
 
     setLoading(true);
     setIsFavorite((prev) => !prev);
 
     try {
       const result = await toggleFavorite(game.documentId, user.documentId, token, isFavorite);
-      console.log("Toggle favorite result:", result);
+
 
       if (!result) {
         setIsFavorite((prev) => !prev); // Revert if request fails
@@ -565,7 +569,7 @@ const GameCard = ({ game }) => {
   return (
     <>
 
-      <CardWrapper>
+      <CardWrapper $showDashedBorder={!isPublished && isDeveloper}>
         {/* Top left badge (rating) */}
         <TopLeftBadge>
           <FaStar color="white" /> {game.rating}
@@ -598,7 +602,12 @@ const GameCard = ({ game }) => {
             {isDeveloper && <ButtonRow>
               <IconButton data-tooltip="Редактировать"><FaEdit /></IconButton>
               <IconButton data-tooltip="Копировать"><FaCopy /></IconButton>
-              <IconButton data-tooltip="Публикация"><FaCheck /></IconButton>
+              <IconButton
+                data-tooltip={isPublished ? "Скрыть игру" : "Опубликовать игру"}
+                onClick={handleTogglePublished}
+              >
+                {isPublished ? <FaEyeSlash /> : <FaEye />}
+              </IconButton>
               <IconButton data-tooltip="В архив"><FaArchive /></IconButton>
             </ButtonRow>}
 
@@ -693,7 +702,17 @@ const GameCard = ({ game }) => {
                 type="text"
                 defaultValue={game.title}
                 autoFocus
-                onBlur={(e) => updateGameFields({ title: e.target.value }, () => setIsEditingTitle(false))}
+                onBlur={(e) =>
+                  saveAndUpdateGame(
+                    { title: e.target.value },
+                    {
+                      game,
+                      token,
+                      updateGameInList,
+                      onSuccess: () => setIsEditingTitle(false),
+                    }
+                  )
+                }
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();

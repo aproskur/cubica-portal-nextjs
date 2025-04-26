@@ -8,6 +8,11 @@ import InfoContainer from "@/components/InfoContainer";
 import { useParams } from "next/navigation";
 import { fetchGameBySlug } from "@/utils/apiService";
 import { useModal } from "@/context/ModalContext";
+import { useAuth } from "@/context/AuthContext";
+import { saveAndUpdateGame } from "@/utils/gameHelpers";
+import { useGamesData } from "@/context/GamesDataContext";
+
+
 
 
 const GridContainer = styled.div`
@@ -71,25 +76,48 @@ const SecondRow = styled.div`
 
 
 
-
-
 const GamePage = () => {
     const { slug } = useParams(); // Get slug from URL
-    const [game, setGame] = useState(null);
-    const [loading, setLoading] = useState(true);
-
+    const { user, token } = useAuth(); // token might be undefined
     const { openPurchaseModal, setIsModalOpen } = useModal();
+    const { setCurrentGame, updateGameInList, games } = useGamesData();
+    const [fetchedSlugs, setFetchedSlugs] = useState(new Set());
 
+    const game = games.find(g => g.slug === slug);
+
+
+
+    // Fix mutiple rerendering
     useEffect(() => {
-        const fetchGame = async () => {
-            const gameData = await fetchGameBySlug(slug);
-            setGame(gameData);
-            setLoading(false);
-            console.log("Row game data, fetcehed by gamePage", gameData)
-        };
+        if (!slug || !token || !game) return;
 
-        fetchGame();
-    }, [slug]);
+        const isEnrichmentNeeded =
+            !game.game_plot ||
+            !game.game_purpose ||
+            !game.game_support;
+
+        if (isEnrichmentNeeded && !fetchedSlugs.has(slug)) {
+            fetchGameBySlug(slug, token).then((fullGame) => {
+                updateGameInList({ ...game, ...fullGame }); // merge to preserve unsynced fields
+                setFetchedSlugs(prev => new Set(prev).add(slug));
+            });
+        }
+    }, [
+        slug,
+        token,
+        game, // game is enough to track all properties
+        fetchedSlugs,
+    ]);
+
+
+
+
+
+
+    const isDeveloper = user && game?.developed_by?.id === user.id;
+
+
+    const [error, setError] = useState(null);
 
 
     const handleModalsBuyClick = (game) => {
@@ -97,17 +125,25 @@ const GamePage = () => {
 
     }
 
-    if (loading) return <p>Загрузка...</p>;
-    if (!game) return <p>Игра не найдена</p>;
+
+
+    if (error) return <p>{error}</p>;
+
+    if (!games || games.length === 0) return <p>Загрузка игр...</p>;
+    if (!game) {
+        return <p>Загрузка игры...</p>;
+    }
+
+
+
+    const imageUrlArray = game.images?.map(image => ({
+        id: image.id,
+        url: image.url,
+    })) || [];
+
+
 
     const API_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-
-    const imageUrlArray = game.images.map(image => ({
-        id: image.id,
-        url: `${API_URL}${image.url}`,
-    }));
-
-
 
 
     return (
@@ -118,24 +154,44 @@ const GamePage = () => {
             <GridContainer>
                 <FirstRow>
                     <SliderContainer>
-                        <Swiper images={imageUrlArray} />
+                        {imageUrlArray.length > 0 && (
+                            <Swiper images={imageUrlArray} />
+                        )}
                     </SliderContainer>
                     <InfoContainerWrapper>
                         <InfoContainer
-                            title={game.title}
-                            rating={game.rating}
-                            reviews={game.reviews}
-                            priceLaunch={game.pricePerLaunch}
-                            priceMonth={game.pricePerMonth}
-                            description={game.description}
+                            game={game}
+                            token={token}
+                            isDeveloper={isDeveloper}
+                            updateGameInList={updateGameInList}
+                            onUpdate={async (updatedFields) => {
+                                const updated = await saveAndUpdateGame(updatedFields, {
+                                    game,
+                                    token,
+                                });
+
+                                if (updated) {
+                                    updateGameInList(updated); // this updates context and triggers re-render
+                                }
+
+                            }}
+
+
+
+
+
+                            onBuyClick={() => handleModalsBuyClick(game)}
                             details={{
                                 genre: game.genre,
                                 format: game.format,
                                 duration: game.duration,
                                 author: game.author,
                             }}
-                            onBuyClick={() => handleModalsBuyClick(game)}
+
                         />
+
+
+
                     </InfoContainerWrapper>
                 </FirstRow>
                 <SecondRow>

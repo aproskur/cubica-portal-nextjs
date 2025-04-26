@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import styled from "styled-components";
 import { useEffect, useState } from "react";
 import { fetchGameBySlug } from "@/utils/apiService";
-
+import { useAuth } from "@/context/AuthContext";
 
 const BreadcrumbContainer = styled.nav`
   font-size: 16px;
@@ -29,16 +29,15 @@ const ActiveBreadcrumb = styled.span`
   color: rgb(var(--foreground));
 `;
 
+const FlexItemWrapper = styled.div`
+  flex-shrink: 0;
+`;
+
 const breadcrumbTranslations = {
     home: "Магазин игр",
     launch: "Запуск",
-    my: "Мои покупки"
+    my: "Мои покупки",
 };
-
-
-const FlexItemWarapper = styled.div`
-flex-shrink: 0;
-`;
 
 const Breadcrumbs = () => {
     const pathname = usePathname();
@@ -46,6 +45,8 @@ const Breadcrumbs = () => {
     const filteredSegments = pathSegments.filter((segment) => segment !== "games");
 
     const [titles, setTitles] = useState({});
+    const { token } = useAuth(); // get token if available
+
     useEffect(() => {
         const fetchTitles = async () => {
             const updatedTitles = { ...titles };
@@ -60,12 +61,12 @@ const Breadcrumbs = () => {
                 }
 
                 try {
-                    const game = await fetchGameBySlug(segment);
-                    console.log("Game for breadcrumb:", game);
+                    const game = await fetchGameBySlug(segment, token); // ✅ use token here
                     updatedTitles[segment] = game?.title || segment.replace(/-/g, " ");
                 } catch (err) {
-                    console.error("Error fetching game for breadcrumb:", segment, err);
-                    updatedTitles[segment] = segment.replace(/-/g, " ");
+                    console.warn(`Breadcrumb failed for "${segment}":`, err.message);
+                    // fallback for restricted or missing games
+                    updatedTitles[segment] = "Недоступная игра";
                 }
             }
 
@@ -73,14 +74,13 @@ const Breadcrumbs = () => {
         };
 
         fetchTitles();
-    }, [pathname]);
-
+    }, [pathname, token]); // ✅ include token as dependency
 
     return (
         <BreadcrumbContainer>
-            <FlexItemWarapper>
+            <FlexItemWrapper>
                 <BreadcrumbLink href="/">Магазин игр</BreadcrumbLink>
-            </FlexItemWarapper>
+            </FlexItemWrapper>
             {filteredSegments.map((segment, index) => {
                 const path = `/${filteredSegments.slice(0, index + 1).join("/")}`;
                 const name = titles[segment] || segment;

@@ -26,6 +26,9 @@ margin: 0 auto;
 const Swiper = ({ images = [] }) => {
     const [thumbsSwiper, setThumbsSwiper] = useState(null);
 
+
+    console.log("Swiper received images:", images);
+
     return (
         <SwiperWrapper>
             {images.length > 0 ? (

@@ -115,7 +115,7 @@ const Tabs = ({ game }) => {
 
   return (
     <TabContainer>
-      {/* ✅ Desktop layout only */}
+      {/* Desktop layout only */}
       <DesktopOnly>
         <TabHeaders>
           {tabs.map((tab, index) => (
@@ -133,7 +133,7 @@ const Tabs = ({ game }) => {
         </TabContent>
       </DesktopOnly>
 
-      {/* ✅ Mobile stacked layout */}
+      {/* Mobile stacked layout */}
       <MobileOnly>
         {tabs.map((tab, index) => (
           <div key={index}>

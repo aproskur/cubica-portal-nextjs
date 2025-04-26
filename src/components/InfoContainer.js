@@ -1,5 +1,8 @@
+"use client"
 import styled from "styled-components";
 import { FaStar } from "react-icons/fa";
+import { useState } from "react";
+import { saveAndUpdateGame } from "@/utils/gameHelpers";
 
 const InfoWrapper = styled.div`
     display: flex;
@@ -90,6 +93,43 @@ const StarsWrapper = styled.div`
     gap: 5px;
     align-items: center;`;
 
+const PriceInput = styled.input`
+  width: 50px;
+  padding: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background-color: rgb(var(--background));
+  color: rgb(var(--foreground));
+  border: 1px solid rgba(var(--theme-grey), 0.5);
+  border-radius: 4px;
+  text-align: right;
+  appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    display: none;
+  }
+
+  &:focus {
+    border-color: rgb(var(--theme-yellow));
+    box-shadow: 0 0 5px rgba(var(--theme-yellow), 0.5);
+  }
+`;
+
+const PriceLabelDevmode = styled.div`
+  align-self: center;
+  font-size: 0.9rem;
+  color: rgb(var(--theme-grey));
+`;
+
+const PriceEditWrapper = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  cursor: pointer;
+`;
+
+
 
 const Rating = ({ rating }) => {
     return (
@@ -103,18 +143,145 @@ const Rating = ({ rating }) => {
 };
 
 
-const InfoContainer = ({ title, reviews, priceLaunch, priceMonth, description, details, rating, onBuyClick }) => {
+const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, onBuyClick }) => {
+    const {
+        title,
+        rating,
+        reviews,
+        description,
+        pricePerLaunch,
+        pricePerMonth,
+        price_per_day: priceDay,
+        genre,
+        format,
+        duration,
+        author,
+        details,
+    } = game;
+
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [isEditingPrices, setIsEditingPrices] = useState(false);
+
+
+
+
+
+    const updateField = async (fields, onSuccess) => {
+        await saveAndUpdateGame(fields, {
+            game,
+            token,
+            updateGameInList,
+            setLocalGame: onUpdate, // passed setGame via onUpdate
+            onSuccess
+        });
+    };
+
+
+
     return (
         <InfoWrapper>
-            <Title>{title}</Title>
+            {isDeveloper && isEditingTitle ? (
+                <input
+                    defaultValue={game.title}
+                    autoFocus
+                    onBlur={(e) => {
+                        updateField({ title: e.target.value.trim() });
+                        setIsEditingTitle(false);
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.target.blur();
+                        }
+                    }}
+                    style={{
+                        fontSize: "1.8rem",
+                        fontWeight: "bold",
+                        background: "transparent",
+                        color: "#fff",
+                        border: "1px solid rgba(var(--theme-yellow), 0.5)",
+                        borderRadius: "4px",
+                        padding: "4px 8px",
+                        marginBottom: "4px",
+                    }}
+                />
+            ) : (
+                <Title onClick={() => isDeveloper && setIsEditingTitle(true)} style={{ cursor: isDeveloper ? "pointer" : "default" }}>
+                    {game.title}
+                </Title>
+            )}
+
+            {isDeveloper && (
+                <div style={{
+                    fontSize: "0.75rem",
+                    fontWeight: 500,
+                    color: "rgb(var(--theme-grey))",
+
+                }}>
+                    Вы разработчик этой игры
+                </div>
+            )}
+
             <Reviews>
-                <Rating rating={rating} />
-                <span>{reviews} отзывов </span>
+                <Rating rating={game.rating} />
+                <span>{game.reviews} отзывов </span>
             </Reviews>
-            <PriceWrapper>
-                <span>{priceLaunch} ₽/запуск</span>
-                <span>{priceMonth} ₽/месяц</span>
-            </PriceWrapper>
+            {isDeveloper && isEditingPrices ? (
+                <PriceEditWrapper>
+                    <PriceInput
+                        type="text"
+                        inputMode="decimal"
+                        defaultValue={pricePerLaunch}
+                        onBlur={(e) => {
+                            updateField({ pricePerLaunch: parseFloat(e.target.value) }, () => setIsEditingPrices(false));
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") e.target.blur();
+                        }}
+                    />
+                    <PriceLabelDevmode>₽ / запуск</PriceLabelDevmode>
+
+                    <PriceInput
+                        type="text"
+                        inputMode="decimal"
+                        defaultValue={priceDay}
+                        onBlur={(e) => {
+                            updateField({ price_per_day: parseFloat(e.target.value) }, () => setIsEditingPrices(false));
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") e.target.blur();
+                        }}
+                    />
+                    <PriceLabelDevmode>₽ / день</PriceLabelDevmode>
+
+                    <PriceInput
+                        type="text"
+                        inputMode="decimal"
+                        defaultValue={pricePerMonth}
+                        onBlur={(e) => {
+                            updateField({ pricePerMonth: parseFloat(e.target.value) }, () => setIsEditingPrices(false));
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") e.target.blur();
+                        }}
+                    />
+                    <PriceLabelDevmode>₽ / месяц</PriceLabelDevmode>
+                </PriceEditWrapper>
+            ) : (
+                <PriceWrapper onClick={() => isDeveloper && setIsEditingPrices(true)}>
+                    <div style={{ color: "rgb(var(--theme-yellow))" }}>
+                        {pricePerLaunch} <span style={{ color: "rgb(var(--theme-grey))", fontWeight: "normal" }}>₽ / запуск</span>
+                    </div>
+                    <div style={{ color: "rgb(var(--theme-yellow))" }}>
+                        {priceDay} <span style={{ color: "rgb(var(--theme-grey))", fontWeight: "normal" }}>₽ / день</span>
+                    </div>
+                    <div style={{ color: "rgb(var(--theme-yellow))" }}>
+                        {pricePerMonth} <span style={{ color: "rgb(var(--theme-grey))", fontWeight: "normal" }}>₽ / месяц</span>
+                    </div>
+                </PriceWrapper>
+            )}
+
             <ButtonGroup>
                 <button>Демо</button>
                 <button onClick={onBuyClick}>Купить</button>
@@ -125,16 +292,16 @@ const InfoContainer = ({ title, reviews, priceLaunch, priceMonth, description, d
             <Delimeter />
             <GameDetails>
                 <div>
-                    <span>Жанр:</span> {details.genre}
+                    <span>Жанр:</span> {genre}
                 </div>
                 <div>
-                    <span>Формат:</span> {details.format}
+                    <span>Формат:</span> {format}
                 </div>
                 <div>
-                    <span>Продолжительность:</span> {details.duration}
+                    <span>Продолжительность:</span> {duration}
                 </div>
                 <div>
-                    <span>Автор:</span> {details.author}
+                    <span>Автор:</span> {author}
                 </div>
             </GameDetails>
 

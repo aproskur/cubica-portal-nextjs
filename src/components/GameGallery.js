@@ -6,7 +6,7 @@ import { useSearch } from "@/context/SearchContext";
 import { useFilters } from "@/context/FiltersContext";
 import { useAuth } from "@/context/AuthContext";
 import { useGamesData } from "@/context/GamesDataContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
 const FALLBACK_IMAGE = "/assets/images/antarctika.webp";
@@ -49,34 +49,36 @@ const GameGallery = () => {
 
     console.log("GameGallery - Image URLs:", games.map(game => game.image));
 
+    console.log("Rendering GameGallery with games:", games.map(g => g.title));
 
-    // Ensure games is an array before filtering
     const processedGames = games.map((game) => {
-        console.log("Before Processing:", game);
-        console.log("Game Image Object:", game.image); // Debugging
+        let imageUrl = FALLBACK_IMAGE;
 
-        let imageUrl = FALLBACK_IMAGE; // Default fallback image
-
-        if (game.image && typeof game.image === "object" && game.image.url) {
-            // Ensure we prepend API_URL if the URL is relative
+        if (typeof game.image === "object" && game.image.url) {
             imageUrl = game.image.url.startsWith("/") ? `${API_URL}${game.image.url}` : game.image.url;
         } else if (typeof game.image === "string") {
-            // If the image is a string (not an object), handle it correctly
             imageUrl = game.image.startsWith("/") ? `${API_URL}${game.image}` : game.image;
-        } else {
-            console.warn(`Game ID ${game.documentId} has an invalid image format:`, game.image);
         }
 
-        return {
-            ...game,
-            image: imageUrl,
-        };
+        // 🔥 Only clone if image changed
+        if (game.image !== imageUrl) {
+            return { ...game, image: imageUrl };
+        }
+
+        return game;
     });
 
 
+
+
     const filteredGames = processedGames.filter((game) => {
+        // 1. Hide unpublished games if user is NOT the developer
+        if (!game.is_published && game.developed_by?.id !== user?.id) return false;
+
+        // 2. If onlyMyDevelopedGame is active, filter to developer's games only
         if (filters.onlyMyDevelopedGames && game.developed_by?.id !== user?.id) return false;
 
+        // 3. Apply search filter
         if (
             filters.searchQuery &&
             !game.title?.toLowerCase().includes(filters.searchQuery.toLowerCase())
@@ -84,6 +86,7 @@ const GameGallery = () => {
 
         return true;
     });
+
 
 
 
