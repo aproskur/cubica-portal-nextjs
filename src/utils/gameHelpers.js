@@ -21,7 +21,11 @@ export const saveAndUpdateGame = async (
 
         // Update global context
         if (updateGameInList) {
-            updateGameInList(updated);;
+            updateGameInList({
+                ...updated,
+                pricePerDay: updated.price_per_day ?? updated.pricePerDay,
+            });
+
         }
 
         // Update local state (optional)

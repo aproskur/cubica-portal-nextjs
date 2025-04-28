@@ -449,6 +449,7 @@ const GameCard = ({ game }) => {
       {
         game,
         token,
+        updateGameInList,
         onSuccess: () => setIsEditingPrice(false)
       }
     );

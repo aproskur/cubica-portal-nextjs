@@ -151,7 +151,7 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
         description,
         pricePerLaunch,
         pricePerMonth,
-        price_per_day: priceDay,
+        pricePerDay,
         genre,
         format,
         duration,
@@ -245,7 +245,7 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
                     <PriceInput
                         type="text"
                         inputMode="decimal"
-                        defaultValue={priceDay}
+                        defaultValue={pricePerDay}
                         onBlur={(e) => {
                             updateField({ price_per_day: parseFloat(e.target.value) }, () => setIsEditingPrices(false));
                         }}
@@ -274,7 +274,7 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
                         {pricePerLaunch} <span style={{ color: "rgb(var(--theme-grey))", fontWeight: "normal" }}>₽ / запуск</span>
                     </div>
                     <div style={{ color: "rgb(var(--theme-yellow))" }}>
-                        {priceDay} <span style={{ color: "rgb(var(--theme-grey))", fontWeight: "normal" }}>₽ / день</span>
+                        {pricePerDay} <span style={{ color: "rgb(var(--theme-grey))", fontWeight: "normal" }}>₽ / день</span>
                     </div>
                     <div style={{ color: "rgb(var(--theme-yellow))" }}>
                         {pricePerMonth} <span style={{ color: "rgb(var(--theme-grey))", fontWeight: "normal" }}>₽ / месяц</span>

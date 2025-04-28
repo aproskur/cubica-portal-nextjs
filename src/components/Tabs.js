@@ -4,8 +4,6 @@ import styled from "styled-components";
 import RichTextBlockRenderer from './RichTextBlockRenderer';
 
 
-
-
 const DesktopOnly = styled.div`
   display: none;
 
@@ -157,4 +155,3 @@ const Tabs = ({ game }) => {
 };
 
 export default Tabs;
-

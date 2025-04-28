@@ -80,7 +80,7 @@ const GamePage = () => {
     const { slug } = useParams(); // Get slug from URL
     const { user, token } = useAuth(); // token might be undefined
     const { openPurchaseModal, setIsModalOpen } = useModal();
-    const { setCurrentGame, updateGameInList, games } = useGamesData();
+    const { updateGameInList, games } = useGamesData();
     const [fetchedSlugs, setFetchedSlugs] = useState(new Set());
 
     const game = games.find(g => g.slug === slug);
@@ -195,7 +195,16 @@ const GamePage = () => {
                     </InfoContainerWrapper>
                 </FirstRow>
                 <SecondRow>
-                    <Tabs game={game} />
+                    <Tabs
+                        game={game}
+                        isEditable={isDeveloper}
+                        onUpdate={async (updatedFields) => {
+                            const updated = await saveAndUpdateGame(updatedFields, { game, token });
+                            if (updated) updateGameInList(updated);
+                        }}
+                    />
+
+
                 </SecondRow>
             </GridContainer>
         </>

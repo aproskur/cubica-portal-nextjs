@@ -41,14 +41,14 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
         const result = await response.json();
 
         return result.data.map((game) => {
-            // ✅ cover image
+            // cover image
             const image = game.image?.url
                 ? game.image.url.startsWith("/")
                     ? `${API_URL}${game.image.url}`
                     : game.image.url
                 : null;
 
-            // ✅ swiper gallery
+            // swiper gallery
             const imageArray = Array.isArray(game.images)
                 ? game.images.map((img, index) => ({
                     id: img.id ?? index,
@@ -58,7 +58,7 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
                 }))
                 : [];
 
-            // ✅ developer
+            // developer
             const developer = game.developed_by
                 ? {
                     id: game.developed_by.id,
@@ -66,20 +66,30 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
                     email: game.developed_by.email,
                 }
                 : null;
-
+            console.log("fetch all")
             return {
                 documentId: game.documentId || game.id,
                 title: game.title || "Untitled Game",
                 slug: game.slug || "no-slug",
-                image, // ✅ this was missing
+                image, // this was missing
                 images: imageArray,
                 rating: game.rating || 0,
                 reviews: game.reviews || 0,
                 pricePerLaunch: game.pricePerLaunch || 0,
                 pricePerMonth: game.pricePerMonth || 0,
+                pricePerDay: game.price_per_day || 0,
                 description: game.description || "No description available.",
                 developed_by: developer,
                 is_published: game.is_published,
+                purpose: game.game_purpose || null,
+                plot: game.plot,
+                genre: game.genre || "Unknown Genre",
+                format: game.format || "Unknown Format",
+                duration: game.duration || "Unknown Duration",
+                author: game.author || "Unknown Author",
+                about: game.about_author || "",
+                support: game.game_support || "",
+                reviews: game.reviews_tmp || "",
             };
         });
     } catch (error) {
@@ -162,6 +172,8 @@ export const fetchGameBySlug = async (slug, token) => {
         const errorText = await res.text();
         throw new Error(errorText || "Failed to fetch game");
     }
+
+    console.log("FETCH GAME BY SLUG")
 
     const json = await res.json();
     const game = json.data;
