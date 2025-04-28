@@ -82,7 +82,7 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
                 developed_by: developer,
                 is_published: game.is_published,
                 purpose: game.game_purpose || null,
-                plot: game.plot,
+                plot: game.game_plot,
                 genre: game.genre || "Unknown Genre",
                 format: game.format || "Unknown Format",
                 duration: game.duration || "Unknown Duration",
