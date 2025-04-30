@@ -577,7 +577,7 @@ const GameCard = ({ game }) => {
         </TopLeftBadge>
 
         {/* Top right badge (total reviews) */}
-        <TopRightBadge>{game.reviews}</TopRightBadge>
+        <TopRightBadge>{game.totalPlayed}</TopRightBadge>
 
         {/* Game Image & Hover Overlay */}
 

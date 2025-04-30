@@ -74,7 +74,7 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
                 image, // this was missing
                 images: imageArray,
                 rating: game.rating || 0,
-                reviews: game.reviews || 0,
+                totalPlayed: game.total_played || 0,
                 pricePerLaunch: game.pricePerLaunch || 0,
                 pricePerMonth: game.pricePerMonth || 0,
                 pricePerDay: game.price_per_day || 0,
@@ -203,8 +203,8 @@ export const fetchGameBySlug = async (slug, token) => {
         plot: game.game_plot || [],
         about: game.about_author || "",
         support: game.game_support || "",
-        reviews: game.reviews || "",
-        tab_reviews: game.reviews_tmp || ""
+        totalPlayed: game.total_played || "",
+        reviews: game.reviews_tmp || ""
     };
 };
 

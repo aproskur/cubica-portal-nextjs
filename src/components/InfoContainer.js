@@ -4,6 +4,7 @@ import { FaStar } from "react-icons/fa";
 import { useState } from "react";
 import { saveAndUpdateGame } from "@/utils/gameHelpers";
 
+
 const InfoWrapper = styled.div`
     display: flex;
     width: 100%;
@@ -147,7 +148,7 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
     const {
         title,
         rating,
-        reviews,
+        totalPlayed,
         description,
         pricePerLaunch,
         pricePerMonth,
@@ -225,7 +226,7 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
 
             <Reviews>
                 <Rating rating={game.rating} />
-                <span>{game.reviews} отзывов </span>
+                <span>{game.totalPlayed} запусков </span>
             </Reviews>
             {isDeveloper && isEditingPrices ? (
                 <PriceEditWrapper>
