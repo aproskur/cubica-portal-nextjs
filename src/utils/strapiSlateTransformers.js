@@ -136,33 +136,35 @@ export const htmlToSlate = (html) => {
         : [{ type: "paragraph", children: [{ text: "" }] }];
 };
 
+const normalizeTextChildren = (children = []) => {
+    const cleaned = children
+        .filter(
+            (child) =>
+                typeof child.text === "string" && child.text.trim() !== "" ||
+                child.bold || child.italic || child.underline || child.strikethrough
+        )
+        .map((child) => ({
+            type: "text",
+            text: child.text || "",
+            ...(child.bold ? { bold: true } : {}),
+            ...(child.italic ? { italic: true } : {}),
+            ...(child.underline ? { underline: true } : {}),
+            ...(child.strikethrough ? { strikethrough: true } : {})
+        }));
+
+    return cleaned.length > 0 ? cleaned : [{ type: "text", text: "" }];
+};
+
 export const normalizeSlateForStrapi = (nodes) => {
     if (!Array.isArray(nodes)) return [];
 
     const normalizedNodes = [];
-    let pendingListItems = [];
-
-    const flushPendingList = (format = 'unordered') => {
-        if (pendingListItems.length > 0) {
-            normalizedNodes.push({
-                type: 'list',
-                format,
-                children: [...pendingListItems],
-            });
-            pendingListItems = [];
-        }
-    };
+    let consecutiveEmptyBlocks = 0;
 
     for (const node of nodes) {
-        const originalType = node.type;
         let normalized = { ...node };
+        const originalType = node.type;
 
-        // Assign format early and store it directly
-        let formatFromType = null;
-        if (originalType === 'ol') formatFromType = 'ordered';
-        if (originalType === 'ul') formatFromType = 'unordered';
-
-        // Map HTML-like tags to Strapi block types
         const tagMap = {
             'p': 'paragraph',
             'h1': 'heading',
@@ -170,51 +172,71 @@ export const normalizeSlateForStrapi = (nodes) => {
             'h3': 'heading',
             'ol': 'list',
             'ul': 'list',
-            'li': 'list-item'
+            'li': 'list-item',
         };
 
         if (tagMap[originalType]) {
             normalized.type = tagMap[originalType];
         }
 
-        // Set heading level if heading
         if (/^h[1-6]$/.test(originalType)) {
             normalized.level = parseInt(originalType[1], 10);
         }
 
-        // Explicitly assign format
-        if (normalized.type === 'list' && formatFromType) {
-            normalized.format = formatFromType;
+        // ✅ Handle list blocks directly
+        if (normalized.type === 'list' && Array.isArray(normalized.children)) {
+            const format = normalized.format || 'unordered';
+
+            const listItems = normalized.children
+                .filter((item) => item.type === 'list-item')
+                .map((item) => ({
+                    type: 'list-item',
+                    children: normalizeTextChildren(item.children)
+                }));
+
+            if (listItems.length > 0) {
+                normalizedNodes.push({
+                    type: 'list',
+                    format,
+                    children: listItems
+                });
+            }
+
+            continue; // move to next block
         }
 
-        // Normalize and clean children
-        if (Array.isArray(normalized.children)) {
-            normalized.children = normalized.children
-                .map((child) => {
-                    if (
-                        typeof child.text === "string" &&
-                        child.text.trim() === "" &&
-                        !child.bold &&
-                        !child.italic &&
-                        !child.underline &&
-                        !child.strikethrough
-                    ) {
-                        return null;
-                    }
-                    return child;
-                })
-                .filter(Boolean);
-        }
+        // ✅ Normalize all other block types
+        normalized.children = normalizeTextChildren(normalized.children);
 
-        if (normalized.type === 'list-item') {
-            pendingListItems.push(normalized);
+        const firstChild = normalized.children[0] || {};
+        const isEmptyBlock =
+            normalized.children.length === 1 &&
+            typeof firstChild.text === "string" &&
+            firstChild.text.trim() === "" &&
+            !firstChild.bold &&
+            !firstChild.italic &&
+            !firstChild.underline &&
+            !firstChild.strikethrough;
+
+        if (isEmptyBlock) {
+            consecutiveEmptyBlocks++;
+            if (consecutiveEmptyBlocks <= 2) {
+                normalizedNodes.push({
+                    type: 'paragraph',
+                    children: [{ type: "text", text: "" }]
+                });
+            }
+            continue;
         } else {
-            flushPendingList(); // Flush any pending list-items
-            normalizedNodes.push(normalized);
+            consecutiveEmptyBlocks = 0;
         }
-    }
 
-    flushPendingList(); // Final flush
+        normalizedNodes.push(normalized);
+    }
 
     return normalizedNodes;
 };
+
+
+
+

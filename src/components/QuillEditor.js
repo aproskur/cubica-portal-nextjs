@@ -51,41 +51,41 @@ const StyledEditor = styled.div`
 `;
 
 export default function QuillEditor({ initialValue = "", onSave }) {
-    const [value, setValue] = useState(initialValue);
+  const [value, setValue] = useState(initialValue);
 
-    const modules = useMemo(() => ({
-        toolbar: [
-            [{ header: [1, 2, 3, false] }],
-            ["bold", "italic", "underline", "strike"],
-            [{ list: "ordered" }, { list: "bullet" }],
-            [{ indent: "-1" }, { indent: "+1" }],
-            ["link"],
-            ["clean"],
-        ],
-    }), []);
+  const modules = useMemo(() => ({
+    toolbar: [
+      [{ header: [1, 2, 3, false] }],
+      ["bold", "italic", "underline", "strike"],
+      [{ list: "ordered" }, { list: "bullet" }],
+      [{ indent: "-1" }, { indent: "+1" }],
+      ["link"],
+      ["clean"],
+    ],
+  }), []);
 
-    useEffect(() => {
-        setValue(initialValue);
-    }, [initialValue]);
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
 
-    return (
-        <StyledEditor>
-            <ReactQuill
-                value={value}
-                onChange={setValue}
-                theme="snow"
-                modules={modules}
-            />
-            <button
-                className="save-btn"
-                onClick={() => {
-                    console.log("Button clicked. Saving value:", value);
-                    onSave(value);
-                }}
-            >
-                Сохранить
-            </button>
+  return (
+    <StyledEditor>
+      <ReactQuill
+        value={value}
+        onChange={setValue}
+        theme="snow"
+        modules={modules}
+      />
+      <button
+        className="save-btn"
+        onClick={() => {
+          console.log("Quill's HTML", value);
+          onSave(value);
+        }}
+      >
+        Сохранить
+      </button>
 
-        </StyledEditor>
-    );
+    </StyledEditor>
+  );
 }

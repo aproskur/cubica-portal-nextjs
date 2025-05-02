@@ -6,6 +6,7 @@ import QuillEditor from "./QuillEditor";
 import { useAuth } from "@/context/AuthContext";
 import { handleGameUpdate } from "@/utils/apiService";
 import { htmlToSlate, slateToHtml, normalizeSlateForStrapi } from "@/utils/strapiSlateTransformers";
+import { saveAndUpdateGame } from "@/utils/gameHelpers";
 
 //import { htmlToSlate } from 'slate-serializers';
 
@@ -105,6 +106,10 @@ const Tabs = ({ game }) => {
   const isDeveloper = user?.id === game?.developed_by?.id;
 
 
+  console.log("game support", game.gameSuppot)
+  console.log("game author", game.aboutAuthor)
+  console.log("game itself", game);
+
   const tabs = [
     { label: "Для чего и кого" },
     { label: "Сюжет игры" },
@@ -134,7 +139,47 @@ const Tabs = ({ game }) => {
           ))}
         </TabHeaders>
         <TabContent>
-          {activeTab === 0 && <RichTextBlockRenderer blocks={game.purpose} />}
+          {activeTab === 0 &&
+            (isDeveloper ? (
+              <QuillEditor
+                key={`quill-tab-${activeTab}`}
+                initialValue={slateToHtml(game.purpose)}
+                onSave={async (htmlString) => {
+                  try {
+                    const token = localStorage.getItem("jwt");
+                    if (!token) {
+                      alert("Пользователь не авторизован");
+                      return;
+                    }
+
+                    const slateLike = htmlToSlate(htmlString);
+                    console.log("Slate-like:", JSON.stringify(slateLike, null, 2));
+
+
+
+
+
+                    const normalized = normalizeSlateForStrapi(slateLike);
+                    console.log("Normalized:", JSON.stringify(normalized, null, 2));
+
+
+
+
+                    await handleGameUpdate(game.documentId, {
+                      game_purpose: normalized,
+                    }, token);
+
+                    alert("Цель игры успешно сохранена");
+                  } catch (error) {
+                    console.error("Ошибка при сохранении цели:", error);
+                    alert("Не удалось сохранить цель");
+                  }
+                }}
+              />
+            ) : (
+              <RichTextBlockRenderer blocks={game.purpose} />
+            ))}
+
           {activeTab === 1 &&
             (isDeveloper ? (
               <QuillEditor
@@ -174,8 +219,83 @@ const Tabs = ({ game }) => {
               <RichTextBlockRenderer blocks={game.plot} />
             ))}
           {activeTab === 2 && game.reviews}
-          {activeTab === 3 && game.about}
-          {activeTab === 4 && game.support}
+          {activeTab === 3 &&
+            (isDeveloper ? (
+              <textarea
+                defaultValue={game.about_author}
+                onBlur={(e) =>
+                  saveAndUpdateGame(
+                    { about: e.target.value },
+                    {
+                      game,
+                      token: localStorage.getItem("jwt"),
+                      updateGameInList: () => { }, // no-op or pass your updater here
+                      onSuccess: () => alert("Об авторе успешно обновлено"),
+                    }
+                  )
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.target.blur();
+                  }
+                }}
+                style={{
+                  width: "100%",
+                  minHeight: "120px",
+                  padding: "10px",
+                  fontSize: "14px",
+                  backgroundColor: "#1c1c1c",
+                  color: "#fff",
+                  border: "1px solid #444",
+                  borderRadius: "5px",
+                  resize: "vertical",
+                }}
+              />
+            ) : (
+              <div dangerouslySetInnerHTML={{ __html: game.about_author }} />
+            ))}
+
+
+          {activeTab === 4 &&
+            (isDeveloper ? (
+              <textarea
+                defaultValue={game.game_support}
+                onBlur={(e) =>
+                  saveAndUpdateGame(
+                    { support: e.target.value },
+                    {
+                      game,
+                      token: localStorage.getItem("jwt"),
+                      updateGameInList: () => { }, // optional
+                      onSuccess: () => alert("Информация поддержки обновлена"),
+                    }
+                  )
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.target.blur();
+                  }
+                }}
+                style={{
+                  width: "100%",
+                  minHeight: "120px",
+                  padding: "10px",
+                  fontSize: "14px",
+                  backgroundColor: "#1c1c1c",
+                  color: "#fff",
+                  border: "1px solid #444",
+                  borderRadius: "5px",
+                  resize: "vertical",
+                }}
+              />
+            ) : (
+              <div dangerouslySetInnerHTML={{ __html: game.game_support }} />
+            ))}
+
         </TabContent>
 
       </DesktopOnly>

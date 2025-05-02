@@ -39,7 +39,7 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
         }
 
         const result = await response.json();
-
+        console.log("FETCH ALL!!!")
         return result.data.map((game) => {
             // cover image
             const image = game.image?.url
@@ -159,6 +159,7 @@ export const fetchGameBySlug = async (slug) => {
 */
 
 export const fetchGameBySlug = async (slug, token) => {
+    console.log("FETCH BY SLUG!!!!")
     const baseUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
     const url = `${baseUrl}/api/games/${slug}`;
 

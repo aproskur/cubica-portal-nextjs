@@ -1,8 +1,9 @@
 "use client"
 import styled from "styled-components";
-import { FaStar } from "react-icons/fa";
 import { useState } from "react";
 import { saveAndUpdateGame } from "@/utils/gameHelpers";
+import { FaEdit, FaCopy, FaArchive, FaEyeSlash, FaEye, FaStar } from "react-icons/fa";
+import { LuShoppingCart, LuMonitorPlay } from "react-icons/lu";
 
 
 const InfoWrapper = styled.div`
@@ -130,6 +131,43 @@ const PriceEditWrapper = styled.div`
   cursor: pointer;
 `;
 
+const IconButton = styled.div`
+  background: inherit;
+  border: 1px solid rgb(var(--theme-grey));
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: background 0.3s;
+  color: rgb(var(--theme-grey));
+ font-size: 20px;
+
+  &:hover {
+    background: rgba(var(--theme-grey), 0.7);
+     color: rgb(var(--foreground));
+  }
+
+  &:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    background: black;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    white-space: nowrap;
+     bottom: 45px; 
+    z-index: 999;
+
+  }
+
+`;
+
 
 
 const Rating = ({ rating }) => {
@@ -157,13 +195,17 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
         format,
         duration,
         author,
+        about_author: aboutAuthor,
+        game_support: gameSupport,
         details,
+        is_published: gameIsPublished
     } = game;
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [isEditingPrices, setIsEditingPrices] = useState(false);
 
-
+    const isPublished = gameIsPublished;
+    console.log("GAME PAGE, isPublished", isPublished);
 
 
 
@@ -177,13 +219,28 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
         });
     };
 
+    const handleTogglePublished = async () => {
+        const newStatus = !game.is_published;
+
+        await saveAndUpdateGame(
+            { is_published: newStatus },
+            {
+                game,
+                token,
+                updateGameInList,
+            }
+        );
+
+        // No manual setIsPublished — the context will update `game`, which triggers useEffect
+    };
+
 
 
     return (
         <InfoWrapper>
             {isDeveloper && isEditingTitle ? (
                 <input
-                    defaultValue={game.title}
+                    defaultValue={title}
                     autoFocus
                     onBlur={(e) => {
                         updateField({ title: e.target.value.trim() });
@@ -209,7 +266,7 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
                 />
             ) : (
                 <Title onClick={() => isDeveloper && setIsEditingTitle(true)} style={{ cursor: isDeveloper ? "pointer" : "default" }}>
-                    {game.title}
+                    {title}
                 </Title>
             )}
 
@@ -225,8 +282,8 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
             )}
 
             <Reviews>
-                <Rating rating={game.rating} />
-                <span>{game.totalPlayed} запусков </span>
+                <Rating rating={rating} />
+                <span>{totalPlayed} запусков </span>
             </Reviews>
             {isDeveloper && isEditingPrices ? (
                 <PriceEditWrapper>
@@ -284,10 +341,38 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
             )}
 
             <ButtonGroup>
-                <button>Демо</button>
-                <button onClick={onBuyClick}>Купить</button>
+                {/* Always shown */}
+                <IconButton data-tooltip="Демо">
+                    <LuMonitorPlay />
+                </IconButton>
+                <IconButton data-tooltip="Купить" onClick={onBuyClick}>
+                    <LuShoppingCart />
+                </IconButton>
 
+                {/* Only for developers */}
+                {isDeveloper && (
+                    <>
+                        <IconButton data-tooltip="Редактировать">
+                            <FaEdit />
+                        </IconButton>
+
+                        <IconButton
+                            data-tooltip={isPublished ? "Скрыть игру" : "Опубликовать игру"}
+                            onClick={handleTogglePublished}
+                            style={{
+                                border: `1px solid rgb(var(--theme-${isPublished ? "yellow" : "grey"}))`
+                            }}
+                        >
+                            {isPublished ? <FaEyeSlash /> : <FaEye />}
+                        </IconButton>
+
+                        <IconButton data-tooltip="В архив">
+                            <FaArchive />
+                        </IconButton>
+                    </>
+                )}
             </ButtonGroup>
+
             <Delimeter />
             <Description>{description}</Description>
             <Delimeter />

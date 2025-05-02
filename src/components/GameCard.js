@@ -415,6 +415,8 @@ const GameCard = ({ game }) => {
     const number = parseFloat(value);
     return isNaN(number) ? '—' : `${number}`;
   };
+
+
   const handleTogglePublished = async () => {
     const newStatus = !game.is_published;
 
@@ -427,7 +429,7 @@ const GameCard = ({ game }) => {
       }
     );
 
-    // No manual setIsPublished — the context will update `game`, which triggers your useEffect
+    // No manual setIsPublished — the context will update game, which triggers useEffect
   };
 
 
