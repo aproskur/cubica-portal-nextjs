@@ -56,20 +56,31 @@ export const htmlToSlate = (html) => {
                     results.push({ text, ...inheritedMarks });
                 }
             } else if (child.nodeType === Node.ELEMENT_NODE) {
-                const newMarks = { ...inheritedMarks };
                 const tag = child.nodeName;
+                const unsupportedTags = [
+                    "CODE", "SPAN", "PRE", "MARK", "KBD",
+                    "BLOCKQUOTE", "TABLE", "IMG", "SCRIPT", "IFRAME", "A"
+                ];
+
+                if (unsupportedTags.includes(tag)) {
+                    return; //  block this child and its subtree
+                }
+
+                const newMarks = { ...inheritedMarks };
 
                 if (["STRONG", "B"].includes(tag)) newMarks.bold = true;
                 if (["EM", "I"].includes(tag)) newMarks.italic = true;
                 if (tag === "U") newMarks.underline = true;
                 if (["S", "DEL"].includes(tag)) newMarks.strikethrough = true;
 
-                results.push(...deserializeChildren(child, newMarks));
+                const deserialized = deserializeChildren(child, newMarks);
+                results.push(...deserialized);
             }
         });
 
         return results.length > 0 ? results : [{ text: "" }];
     };
+
 
     const deserializeElement = (node) => {
         if (node.nodeType !== Node.ELEMENT_NODE) return null;
@@ -183,7 +194,7 @@ export const normalizeSlateForStrapi = (nodes) => {
             normalized.level = parseInt(originalType[1], 10);
         }
 
-        // ✅ Handle list blocks directly
+        // Handle list blocks directly
         if (normalized.type === 'list' && Array.isArray(normalized.children)) {
             const format = normalized.format || 'unordered';
 
