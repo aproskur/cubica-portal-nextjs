@@ -374,7 +374,44 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
             </ButtonGroup>
 
             <Delimeter />
-            <Description>{description}</Description>
+
+            {isDeveloper ? (
+                <textarea
+                    defaultValue={description}
+                    onBlur={(e) =>
+                        saveAndUpdateGame(
+                            { description: e.target.value },
+                            {
+                                game,
+                                token,
+                                updateGameInList,
+                                onSuccess: () => alert("Описание успешно обновлено"),
+                            }
+                        )
+                    }
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.target.blur();
+                        }
+                    }}
+                    style={{
+                        width: "100%",
+                        minHeight: "100px",
+                        padding: "10px",
+                        fontSize: "14px",
+                        backgroundColor: "#1c1c1c",
+                        color: "#fff",
+                        border: "1px solid #444",
+                        borderRadius: "5px",
+                        resize: "vertical",
+                    }}
+                />
+            ) : (
+                <Description>{description}</Description>
+            )}
+
             <Delimeter />
             <GameDetails>
                 <div>

@@ -106,8 +106,8 @@ const Tabs = ({ game }) => {
   const isDeveloper = user?.id === game?.developed_by?.id;
 
 
-  console.log("game support", game.gameSuppot)
-  console.log("game author", game.aboutAuthor)
+  console.log("game support", game.game_support)
+  console.log("game author", game.about_author)
   console.log("game itself", game);
 
   const tabs = [
@@ -225,11 +225,11 @@ const Tabs = ({ game }) => {
                 defaultValue={game.about_author}
                 onBlur={(e) =>
                   saveAndUpdateGame(
-                    { about: e.target.value },
+                    { about_author: e.target.value },
                     {
                       game,
                       token: localStorage.getItem("jwt"),
-                      updateGameInList: () => { }, // no-op or pass your updater here
+                      updateGameInList: () => { },
                       onSuccess: () => alert("Об авторе успешно обновлено"),
                     }
                   )
@@ -264,7 +264,7 @@ const Tabs = ({ game }) => {
                 defaultValue={game.game_support}
                 onBlur={(e) =>
                   saveAndUpdateGame(
-                    { support: e.target.value },
+                    { game_support: e.target.value },
                     {
                       game,
                       token: localStorage.getItem("jwt"),

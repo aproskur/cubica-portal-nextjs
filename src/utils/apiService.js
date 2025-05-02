@@ -87,8 +87,8 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
                 format: game.format || "Unknown Format",
                 duration: game.duration || "Unknown Duration",
                 author: game.author || "Unknown Author",
-                about: game.about_author || "",
-                support: game.game_support || "",
+                about_author: game.about_author || "",
+                game_support: game.game_support || "",
                 reviews: game.reviews_tmp || "",
             };
         });
@@ -98,65 +98,6 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
     }
 };
 
-
-
-
-/*
-
-//Fetching data for 1 game (by slug)
-export const fetchGameBySlug = async (slug) => {
-    try {
-        const response = await fetch(`${API_URL}/api/games?filters[slug][$eq]=${slug}&populate=*`);
-
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-
-        if (!data || !data.data || !data.data.length) {
-            throw new Error("Game not found");
-        }
-
-        const game = data.data[0]
-        console.log("Game full entry:", data.data[0]);
-
-
-        let baseURL = API_URL.endsWith('/api') ? API_URL.replace('/api', '') : API_URL;
-        let imageUrl = game.image?.url ? `${baseURL}${game.image.url}` : "/default.jpg";
-
-        return {
-            documentId: game.documentId || 0,
-            title: game.title || "Untitled Game",
-            slug: game.slug || "no-slug",
-            image: imageUrl,
-            rating: game.rating || 0,
-            reviews: game.reviews || 0,
-            pricePerLaunch: game.pricePerLaunch || 0,
-            pricePerMonth: game.pricePerMonth || 0,
-            description: game.description || "No description available.",
-            genre: game.genre || "Unknown Genre",
-            format: game.format || "Unknown Format",
-            duration: game.duration || "Unknown Duration",
-            author: game.author || "Unknown Author",
-            images: game.images || [],
-            purpose: game.game_purpose || [],
-            plot: game.game_plot || [],
-            about: game.about_author || "",
-            support: game.game_support || "",
-            reviews: game.reviews_tmp || "",
-            developed_by: game.developed_by || "",
-            is_published: game.is_published
-        };
-    } catch (error) {
-        console.error("Error fetching game:", error);
-        return null;
-    }
-};
-
-*/
 
 export const fetchGameBySlug = async (slug, token) => {
     console.log("FETCH BY SLUG!!!!")
@@ -202,8 +143,8 @@ export const fetchGameBySlug = async (slug, token) => {
         images: imageArray,       // for Swiper
         purpose: game.game_purpose || [],
         plot: game.game_plot || [],
-        about: game.about_author || "",
-        support: game.game_support || "",
+        about_author: game.about_author || "",      // FIXED
+        game_support: game.game_support || "",
         totalPlayed: game.total_played || "",
         reviews: game.reviews_tmp || ""
     };

@@ -1,4 +1,8 @@
 export const slateToHtml = (nodes = []) => {
+    if (!Array.isArray(nodes)) {
+        console.warn("Invalid nodes passed to slateToHtml:", nodes);
+        return "";
+    }
     let html = "";
 
     const applyInlineStyles = (child) => {
