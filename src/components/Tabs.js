@@ -5,12 +5,21 @@ import RichTextBlockRenderer from './RichTextBlockRenderer';
 import QuillEditor from "./QuillEditor";
 import { useAuth } from "@/context/AuthContext";
 import { handleGameUpdate } from "@/utils/apiService";
-import { htmlToSlate, slateToHtml, normalizeSlateForStrapi } from "@/utils/strapiSlateTransformers";
+import { normalizeSlateForStrapi } from "@/utils/strapiSlateTransformers";
 import { saveAndUpdateGame } from "@/utils/gameHelpers";
 
 //import { htmlToSlate } from 'slate-serializers';
+//import { htmlToSlate } from "@slate-serializers/html";
+import { customHtmlToSlateConfig } from "@/utils/slateHtmlConfig";
+import { slateToHtml, htmlToSlate } from "@/utils/strapiSlateTransformers";
+//import { customSlateToHtmlConfig } from "@/utils/slateHtmlConfig";
 
 
+//console.log("customSlateToHtmlConfig:", customSlateToHtmlConfig);
+
+//console.log("CONFIG:", customSlateToHtmlConfig);
+//console.log("CONFIG.elementMap:", customSlateToHtmlConfig?.elementMap);
+//console.log("CONFIG.paragraph type:", customSlateToHtmlConfig?.elementMap?.paragraph);
 
 
 
@@ -104,6 +113,10 @@ const Tabs = ({ game }) => {
   const [activeTab, setActiveTab] = useState(0); // 1st tab opened initially
   const { user } = useAuth();
   const isDeveloper = user?.id === game?.developed_by?.id;
+    // local copies of the  text fields
+
+    const [aboutAuthorText, setAboutAuthorText] = useState(game.about_author || "");
+    const [supportText,     setSupportText]     = useState(game.game_support|| "");
 
 
   console.log("game support", game.game_support)
@@ -123,6 +136,8 @@ const Tabs = ({ game }) => {
     setActiveTab(activeTab === index ? null : index);
   };
 
+  console.log("GamePurpose", game.purpose);
+  console.log("GAME Purpose:", JSON.stringify(game.purpose, null, 2));
   return (
     <TabContainer>
       {/* Desktop layout only */}
@@ -151,19 +166,11 @@ const Tabs = ({ game }) => {
                       alert("Пользователь не авторизован");
                       return;
                     }
-
+                    console.log("html string", JSON.stringify(htmlString));
                     const slateLike = htmlToSlate(htmlString);
                     console.log("Slate-like:", JSON.stringify(slateLike, null, 2));
-
-
-
-
-
                     const normalized = normalizeSlateForStrapi(slateLike);
                     console.log("Normalized:", JSON.stringify(normalized, null, 2));
-
-
-
 
                     await handleGameUpdate(game.documentId, {
                       game_purpose: normalized,
@@ -222,18 +229,26 @@ const Tabs = ({ game }) => {
           {activeTab === 3 &&
             (isDeveloper ? (
               <textarea
-                defaultValue={game.about_author}
-                onBlur={(e) =>
-                  saveAndUpdateGame(
-                    { about_author: e.target.value },
-                    {
-                      game,
-                      token: localStorage.getItem("jwt"),
-                      updateGameInList: () => { },
-                      onSuccess: () => alert("Об авторе успешно обновлено"),
-                    }
-                  )
-                }
+                defaultValue={aboutAuthorText}
+                onChange={e => setAboutAuthorText(e.target.value)}
+                onBlur={async () => {
+                       try {
+                       const token = localStorage.getItem("jwt");
+                        if (!token) throw new Error("Пользователь не авторизован");
+                  
+                       await handleGameUpdate(
+                           game.documentId,
+                          { about_author: aboutAuthorText },
+                           token
+                        );
+                  
+
+                        alert("Об авторе успешно обновлено");
+                      } catch (err) {
+                       console.error(err);
+                        alert("Не удалось сохранить Об авторе");
+                       }
+                     }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
@@ -261,18 +276,26 @@ const Tabs = ({ game }) => {
           {activeTab === 4 &&
             (isDeveloper ? (
               <textarea
-                defaultValue={game.game_support}
-                onBlur={(e) =>
-                  saveAndUpdateGame(
-                    { game_support: e.target.value },
-                    {
-                      game,
-                      token: localStorage.getItem("jwt"),
-                      updateGameInList: () => { }, // optional
-                      onSuccess: () => alert("Информация поддержки обновлена"),
-                    }
-                  )
-                }
+              defaultValue={supportText}
+              onChange={e => setSupportText(e.target.value)}
+              onBlur={async () => {
+                     try {
+                     const token = localStorage.getItem("jwt");
+                      if (!token) throw new Error("Пользователь не авторизован");
+                
+                     await handleGameUpdate(
+                         game.documentId,
+                        { game_support: supportText },
+                         token
+                      );
+                
+
+                      alert("support успешно обновлено");
+                    } catch (err) {
+                     console.error(err);
+                      alert("Не удалось сохранить support");
+                     }
+                   }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();

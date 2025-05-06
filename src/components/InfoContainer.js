@@ -4,6 +4,7 @@ import { useState } from "react";
 import { saveAndUpdateGame } from "@/utils/gameHelpers";
 import { FaEdit, FaCopy, FaArchive, FaEyeSlash, FaEye, FaStar } from "react-icons/fa";
 import { LuShoppingCart, LuMonitorPlay } from "react-icons/lu";
+import { handleGameUpdate } from "@/utils/apiService";
 
 
 const InfoWrapper = styled.div`
@@ -195,14 +196,17 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
         format,
         duration,
         author,
-        about_author: aboutAuthor,
-        game_support: gameSupport,
         details,
         is_published: gameIsPublished
     } = game;
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [isEditingPrices, setIsEditingPrices] = useState(false);
+    const [descriptionText,  setDescriptionText]  = useState(game.description  || "");
+    const [genreText, setGenreText] = useState(genre);
+    const [formatText, setFormatText] = useState(format);
+    const [durationText, setDurationText] = useState(duration);
+    const [authorText, setAuthorText] = useState(author);
 
     const isPublished = gameIsPublished;
     console.log("GAME PAGE, isPublished", isPublished);
@@ -374,21 +378,28 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
             </ButtonGroup>
 
             <Delimeter />
-
             {isDeveloper ? (
                 <textarea
-                    defaultValue={description}
-                    onBlur={(e) =>
-                        saveAndUpdateGame(
-                            { description: e.target.value },
-                            {
-                                game,
-                                token,
-                                updateGameInList,
-                                onSuccess: () => alert("Описание успешно обновлено"),
-                            }
-                        )
-                    }
+                    defaultValue={descriptionText}
+                    onChange={e => setDescriptionText(e.target.value)}
+                 onBlur={async () => {
+                                   try {
+                                   const token = localStorage.getItem("jwt");
+                                    if (!token) throw new Error("Пользователь не авторизован");
+                              
+                                   await handleGameUpdate(
+                                       game.documentId,
+                                      { description: descriptionText },
+                                       token
+                                    );
+                              
+            
+                                    alert("game description updated");
+                                  } catch (err) {
+                                   console.error(err);
+                                    alert("Не удалось сохранить game description");
+                                   }
+                                 }}
                     onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
@@ -413,20 +424,108 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
             )}
 
             <Delimeter />
-            <GameDetails>
-                <div>
-                    <span>Жанр:</span> {genre}
-                </div>
-                <div>
-                    <span>Формат:</span> {format}
-                </div>
-                <div>
-                    <span>Продолжительность:</span> {duration}
-                </div>
-                <div>
-                    <span>Автор:</span> {author}
-                </div>
-            </GameDetails>
+     {/* Editable Game Details */}
+     <GameDetails>
+        {isDeveloper ? (
+          <>
+            <div>
+              <span>Жанр:</span>
+              <textarea
+                value={genreText}
+                onChange={e => setGenreText(e.target.value)}
+                onBlur={() => updateField({ genre: genreText })}
+                style={{
+                    width: "100%",
+                    minHeight: "40px",
+                    padding: "10px",
+                    fontSize: "14px",
+                    backgroundColor: "#1c1c1c",
+                    color: "#fff",
+                    border: "1px solid #444",
+                    borderRadius: "5px",
+                    resize: "vertical",
+                    marginTop: "15px"
+                }}
+              />
+            </div>
+            <div>
+              <span>Формат:</span>
+              <textarea
+                value={formatText}
+                onChange={e => setFormatText(e.target.value)}
+                onBlur={() => updateField({ format: formatText })}
+                style={{
+                    width: "100%",
+                    minHeight: "40px",
+                    padding: "10px",
+                    fontSize: "14px",
+                    backgroundColor: "#1c1c1c",
+                    color: "#fff",
+                    border: "1px solid #444",
+                    borderRadius: "5px",
+                    resize: "vertical",
+                    marginTop: "15px"
+                }}
+              />
+            </div>
+            <div>
+              <span>Продолжительность:</span>
+              <textarea
+                value={durationText}
+                onChange={e => setDurationText(e.target.value)}
+                onBlur={() => updateField({ duration: durationText })}
+                style={{
+                    width: "100%",
+                    minHeight: "40px",
+                    padding: "10px",
+                    fontSize: "14px",
+                    backgroundColor: "#1c1c1c",
+                    color: "#fff",
+                    border: "1px solid #444",
+                    borderRadius: "5px",
+                    resize: "vertical",
+                    marginTop: "15px"
+                }}
+              />
+            </div>
+            <div>
+              <span>Автор:</span>
+              <textarea
+                value={authorText}
+                onChange={e => setAuthorText(e.target.value)}
+                onBlur={() => updateField({ author: authorText })}
+                style={{
+                    width: "100%",
+                    minHeight: "40px",
+                    padding: "10px",
+                    fontSize: "14px",
+                    backgroundColor: "#1c1c1c",
+                    color: "#fff",
+                    border: "1px solid #444",
+                    borderRadius: "5px",
+                    resize: "vertical",
+                    marginTop: "15px"
+                }}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <div>
+              <span>Жанр:</span> {genre}
+            </div>
+            <div>
+              <span>Формат:</span> {format}
+            </div>
+            <div>
+              <span>Продолжительность:</span> {duration}
+            </div>
+            <div>
+              <span>Автор:</span> {author}
+            </div>
+          </>
+        )}
+      </GameDetails>
 
         </InfoWrapper>
     );

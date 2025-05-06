@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@slate-serializers/html": "^2.2.3",
     "axios": "^1.7.9",
     "dom-serializer": "^2.0.0",
     "html-react-parser": "^5.2.3",

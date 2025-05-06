@@ -78,7 +78,7 @@ z-index: 1;
 
 const CardImage = styled.img`
   width: 100%;
-  height: 200px;
+  height: 250px;
   object-fit: cover;
   border-radius: 5px;
   margin-bottom: 12px;
@@ -89,7 +89,7 @@ const CardImage = styled.img`
 const CardImageWrapper = styled.div`
   position: relative;
   width: 100%;
-  height: 200px;
+  height: 250px;
   margin-bottom: 1rem;
 `;
 

@@ -5,6 +5,7 @@ import styled from "styled-components";
 import { useEffect, useState } from "react";
 import { fetchGameBySlug } from "@/utils/apiService";
 import { useAuth } from "@/context/AuthContext";
+import AboutPlatform from "@/app/about-platform/page";
 
 const BreadcrumbContainer = styled.nav`
   font-size: 16px;
@@ -37,6 +38,8 @@ const breadcrumbTranslations = {
     home: "Магазин игр",
     launch: "Запуск",
     my: "Мои покупки",
+    support: "Поддержка",
+    "about-platform": "О платформе"
 };
 
 const Breadcrumbs = () => {
