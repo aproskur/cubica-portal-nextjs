@@ -456,7 +456,8 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
     {isCompetencyModalOpen && (
  <CompetencyModal
  gameId={game.documentId}
- currentCompetencies={localCompetencies.map((c) => c.documentId)}
+ currentCompetencies={localCompetencies.map((c) => c.documentId || c.id)}
+
  onClose={() => setCompetencyModalOpen(false)}
  onSave={(newCompetencies) => {
     updateField({ competencies: newCompetencies.map(c => c.id) }); // backend update
