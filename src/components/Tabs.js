@@ -7,12 +7,10 @@ import { useAuth } from "@/context/AuthContext";
 import { handleGameUpdate } from "@/utils/apiService";
 import { normalizeSlateForStrapi } from "@/utils/strapiSlateTransformers";
 import { saveAndUpdateGame } from "@/utils/gameHelpers";
+import { htmlToSlateConfig } from "@/utils/htmlToSlateConfig";
+import { slateToHtmlConfig } from "@/utils/slateToHtmlConfig";
 
-//import { htmlToSlate } from 'slate-serializers';
-//import { htmlToSlate } from "@slate-serializers/html";
-import { customHtmlToSlateConfig } from "@/utils/slateHtmlConfig";
-import { slateToHtml, htmlToSlate } from "@/utils/strapiSlateTransformers";
-//import { customSlateToHtmlConfig } from "@/utils/slateHtmlConfig";
+import { htmlToSlate, slateDemoSlateToHtmlConfig, slateToHtml } from "@slate-serializers/html";
 
 
 //console.log("customSlateToHtmlConfig:", customSlateToHtmlConfig);
@@ -119,9 +117,7 @@ const Tabs = ({ game }) => {
     const [supportText,     setSupportText]     = useState(game.game_support|| "");
 
 
-  console.log("game support", game.game_support)
-  console.log("game author", game.about_author)
-  console.log("game itself", game);
+
 
   const tabs = [
     { label: "Для чего и кого" },
@@ -136,8 +132,31 @@ const Tabs = ({ game }) => {
     setActiveTab(activeTab === index ? null : index);
   };
 
+  function cleanQuillHtml(html) {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+  
+    // Fix incorrect use of <ol> for bullets
+    doc.querySelectorAll('li[data-list="bullet"]').forEach((li) => {
+      const ol = li.closest('ol');
+      if (ol) {
+        const ul = document.createElement('ul');
+        [...ol.children].forEach((item) => ul.appendChild(item));
+        ol.replaceWith(ul);
+      }
+    });
+  
+    // Remove Quill's UI spans
+    doc.querySelectorAll('span.ql-ui').forEach((span) => {
+      span.remove();
+    });
+  
+    return doc.body.innerHTML;
+  }
+  
+
   console.log("GamePurpose", game.purpose);
   console.log("GAME Purpose:", JSON.stringify(game.purpose, null, 2));
+
   return (
     <TabContainer>
       {/* Desktop layout only */}
@@ -158,7 +177,7 @@ const Tabs = ({ game }) => {
             (isDeveloper ? (
               <QuillEditor
                 key={`quill-tab-${activeTab}`}
-                initialValue={slateToHtml(game.purpose)}
+                initialValue={slateToHtml(game.purpose, slateToHtmlConfig)}
                 onSave={async (htmlString) => {
                   try {
                     const token = localStorage.getItem("jwt");
@@ -166,14 +185,13 @@ const Tabs = ({ game }) => {
                       alert("Пользователь не авторизован");
                       return;
                     }
+
+                    const fixedHtml = cleanQuillHtml(htmlString);
                     console.log("html string", JSON.stringify(htmlString));
-                    const slateLike = htmlToSlate(htmlString);
-                    console.log("Slate-like:", JSON.stringify(slateLike, null, 2));
-                    const normalized = normalizeSlateForStrapi(slateLike);
-                    console.log("Normalized:", JSON.stringify(normalized, null, 2));
+                    const slate = htmlToSlate(fixedHtml, htmlToSlateConfig);
 
                     await handleGameUpdate(game.documentId, {
-                      game_purpose: normalized,
+                      game_purpose: slate,
                     }, token);
 
                     alert("Цель игры успешно сохранена");
@@ -191,7 +209,7 @@ const Tabs = ({ game }) => {
             (isDeveloper ? (
               <QuillEditor
                 key={`quill-tab-${activeTab}`}
-                initialValue={slateToHtml(game.plot)}
+                initialValue={slateToHtml(game.plot, slateToHtmlConfig)}
                 onSave={async (htmlString) => {
                   try {
                     const token = localStorage.getItem("jwt");
@@ -201,8 +219,9 @@ const Tabs = ({ game }) => {
                     }
 
                     // Step 1: Convert HTML back to Slate-style JSON
-                    console.log("HTML", htmlString)
-                    const slateLike = htmlToSlate(htmlString);
+                    console.log("HTML", htmlString);
+                    const fixedHtml = cleanQuillHtml(htmlString);
+                    const slate = htmlToSlate(fixedHtml, htmlToSlateConfig);
                     console.log("SLATE FROM HTML:", JSON.stringify(slateLike, null, 2));
 
                     // Step 2: Normalize it to match Strapi Blocks schema
@@ -210,7 +229,7 @@ const Tabs = ({ game }) => {
 
                     // Step 3: Save to Strapi
                     await handleGameUpdate(game.documentId, {
-                      game_plot: normalized,
+                      game_plot: slate,
                     }, token);
 
                     alert("Сюжет успешно сохранён");

@@ -5,6 +5,7 @@ import { saveAndUpdateGame } from "@/utils/gameHelpers";
 import { FaEdit, FaCopy, FaArchive, FaEyeSlash, FaEye, FaStar } from "react-icons/fa";
 import { LuShoppingCart, LuMonitorPlay } from "react-icons/lu";
 import { handleGameUpdate } from "@/utils/apiService";
+import CompetencyModal from "./CompetencyModal";
 
 
 const InfoWrapper = styled.div`
@@ -197,8 +198,11 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
         duration,
         author,
         details,
+        competencies,
         is_published: gameIsPublished
     } = game;
+
+    if (!game || !game.competencies) return null;
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [isEditingPrices, setIsEditingPrices] = useState(false);
@@ -207,6 +211,13 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
     const [formatText, setFormatText] = useState(format);
     const [durationText, setDurationText] = useState(duration);
     const [authorText, setAuthorText] = useState(author);
+    const [isCompetencyModalOpen, setCompetencyModalOpen] = useState(false);
+    const [localCompetencies, setLocalCompetencies] = useState(competencies);
+
+    console.log("InfoContainer - localCompetencies:", localCompetencies);
+
+
+
 
     const isPublished = gameIsPublished;
     console.log("GAME PAGE, isPublished", isPublished);
@@ -428,6 +439,40 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
      <GameDetails>
         {isDeveloper ? (
           <>
+        {isDeveloper && (
+  <>
+  {console.log("competencies after reload", competencies)}
+    <span>Тренируемые компетенции: </span>
+    <span
+  onClick={() => setCompetencyModalOpen(true)}
+  style={{ cursor: "pointer", textDecoration: "underline", fontWeight: "normal" }}
+>
+{localCompetencies.map((comp) => comp.name.charAt(0).toUpperCase() + comp.name.slice(1)).join(", ")}
+
+
+</span>
+
+
+    {isCompetencyModalOpen && (
+ <CompetencyModal
+ gameId={game.documentId}
+ currentCompetencies={localCompetencies.map((c) => c.documentId)}
+ onClose={() => setCompetencyModalOpen(false)}
+ onSave={(newCompetencies) => {
+    updateField({ competencies: newCompetencies.map(c => c.id) }); // backend update
+    setLocalCompetencies(newCompetencies); // frontend update
+  }}
+  
+ updateField={updateField}
+/>
+
+
+
+)}
+
+  </>
+)}
+
             <div>
               <span>Жанр:</span>
               <textarea
@@ -511,6 +556,12 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
           </>
         ) : (
           <>
+          <div>
+          <span>Тренируемые компетенции: </span>
+            <span style={{fontWeight: "normal"}}> {competencies.map((comp) => comp.name.charAt(0).toUpperCase() + comp.name.slice(1)).join(", ")}
+
+            </span>
+            </div>
             <div>
               <span>Жанр:</span> {genre}
             </div>

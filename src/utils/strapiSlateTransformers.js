@@ -220,7 +220,7 @@ export const normalizeSlateForStrapi = (nodes) => {
             continue; // move to next block
         }
 
-        // ✅ Normalize all other block types
+        // Normalize all other block types
         normalized.children = normalizeTextChildren(normalized.children);
 
         const firstChild = normalized.children[0] || {};

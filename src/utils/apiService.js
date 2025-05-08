@@ -25,6 +25,9 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
                     developed_by: {
                         fields: ["id", "username", "email"],
                     },
+                    competencies: {
+                        fields: ["competency_name", "documentId"],
+                    },
                 },
             },
             { encodeValuesOnly: true }
@@ -66,7 +69,18 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
                     email: game.developed_by.email,
                 }
                 : null;
+
+                const competencies = Array.isArray(game.competencies)
+                ? game.competencies.map((comp) => ({
+                    id: comp.id,
+                    name: comp.competency_name,
+                    documentId: comp.documentId, 
+                  }))
+                : [];
+              
+
             console.log("fetch all")
+            console.log("Fetch all. COMP", competencies);
             return {
                 documentId: game.documentId || game.id,
                 title: game.title || "Untitled Game",
@@ -90,6 +104,7 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
                 about_author: game.about_author || "",
                 game_support: game.game_support || "",
                 reviews: game.reviews_tmp || "",
+                competencies: competencies || [],
             };
         });
     } catch (error) {
@@ -120,6 +135,15 @@ export const fetchGameBySlug = async (slug, token) => {
     const json = await res.json();
     const game = json.data;
 
+    const competencies = Array.isArray(game.competencies)
+    ? game.competencies.map((comp) => ({
+        id: comp.id,
+        name: comp.competency_name,
+        documentId: comp.documentId, 
+      }))
+    : [];
+  
+
     const baseURL = baseUrl.replace("/api", "");
 
     // Proper cover image
@@ -137,6 +161,8 @@ export const fetchGameBySlug = async (slug, token) => {
         }))
         : [];
 
+        console.log("Fetch by slug. COMP", competencies);
+
     return {
         ...game,
         image: coverImage,        // correct cover 
@@ -146,7 +172,8 @@ export const fetchGameBySlug = async (slug, token) => {
         about_author: game.about_author || "",      // FIXED
         game_support: game.game_support || "",
         totalPlayed: game.total_played || "",
-        reviews: game.reviews_tmp || ""
+        reviews: game.reviews_tmp || "",
+        competencies: competencies || [],
     };
 };
 

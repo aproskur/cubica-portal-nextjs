@@ -11,6 +11,8 @@ export default function Home() {
   const { games, loading, error } = useGamesData();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
+
+
   return (
     <main className="main">
       {loading && <p>Игры загружаются...</p>}
