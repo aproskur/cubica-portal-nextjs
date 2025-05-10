@@ -424,8 +424,24 @@ export const updateUserPassword = async (currentPassword, newPassword) => {
     }
 };
 
-
-
+export const fetchAllCompetencies = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/competencies`);
+      const json = await res.json();
+  
+      const result = json.data.map((item) => ({
+        id: item.id, // numeric ID
+        documentId: item.documentId, // external ID
+        name: item.competency_name,
+      }));
+  
+      return result;
+    } catch (err) {
+      console.error("Failed to fetch competencies", err);
+      return [];
+    }
+  };
+  
 
 
 

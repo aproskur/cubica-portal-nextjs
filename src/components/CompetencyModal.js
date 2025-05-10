@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { FaTimes } from "react-icons/fa";
+import { fetchAllCompetencies } from "@/utils/apiService";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -61,33 +62,18 @@ const CompetencyModal = ({ gameId, currentCompetencies, onClose, onSave, updateF
 
   useEffect(() => {
     if (Array.isArray(currentCompetencies)) {
-      setSelected(currentCompetencies.map(String)); // ensure all are strings
+      setSelected(currentCompetencies.map(String)); 
     }
   }, [currentCompetencies]);
   
-  
-  
-
+ 
 
   useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/competencies`);
-        const json = await res.json();
-  
-        const result = json.data.map((item) => ({
-          id: item.documentId, // use documentId instead
-          name: item.competency_name,
-        }));
-        
-  console.log("ALl fetched competencies", )
-        setAllCompetencies(result);
-      } catch (err) {
-        console.error("Failed to fetch competencies", err);
-      }
+    const loadCompetencies = async () => {
+      const fetchedCompetencies = await fetchAllCompetencies();
+      setAllCompetencies(fetchedCompetencies);
     };
-  
-    fetchAll();
+    loadCompetencies();
   }, []);
   
 

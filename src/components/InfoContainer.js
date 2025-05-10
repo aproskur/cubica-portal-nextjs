@@ -258,9 +258,13 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
                     defaultValue={title}
                     autoFocus
                     onBlur={(e) => {
-                        updateField({ title: e.target.value.trim() });
+                        const newTitle = e.target.value.trim();
+                        if (newTitle !== game.title) {
+                          updateField({ title: newTitle });
+                        }
                         setIsEditingTitle(false);
-                    }}
+                      }}
+                      
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
                             e.preventDefault();
@@ -439,7 +443,7 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
      <GameDetails>
         {isDeveloper ? (
           <>
-        {isDeveloper && (
+        {isDeveloper && localCompetencies && (
   <>
   {console.log("competencies after reload", competencies)}
     <span>Тренируемые компетенции: </span>
@@ -453,7 +457,7 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
 </span>
 
 
-    {isCompetencyModalOpen && (
+    {isCompetencyModalOpen && localCompetencies && (
  <CompetencyModal
  gameId={game.documentId}
  currentCompetencies={localCompetencies.map((c) => c.documentId || c.id)}

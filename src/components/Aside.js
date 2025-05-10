@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { FiChevronDown, FiChevronUp, FiFilter, FiSearch } from "react-icons/fi";
-import { useSearch } from "@/context/SearchContext";
 import { usePathname } from "next/navigation";
-
+import { fetchAllCompetencies } from "@/utils/apiService";
+import { useFilters, updateFilters } from "@/context/FiltersContext";
 
 const AsideContainer = styled.aside`
   width: 300px;
@@ -119,7 +119,15 @@ const stopPropagation = (event) => {
 
 
 // Reusable Dropdown Component
-const Dropdown = ({ title, icon, items, type, stateKey, dropdownState, setDropdownState }) => {
+const Dropdown = ({ title, 
+                    icon, 
+                    items, 
+                    type, 
+                    stateKey, 
+                    dropdownState, 
+                    setDropdownState,
+                    onCheckboxToggle,     
+                    selectedValues = [], }) => {
     const isOpen = dropdownState[stateKey];
 
 
@@ -133,8 +141,15 @@ const Dropdown = ({ title, icon, items, type, stateKey, dropdownState, setDropdo
             <DropdownList $isOpen={isOpen}>
                 {items.map((item, index) => (
                     <DropdownListItem key={index}>
-                        <input type={type} name={stateKey} value={item.value} onClick={stopPropagation} />
+                        <input type={type} 
+                                name={stateKey}
+                                value={item.value} 
+                                onClick={stopPropagation}
+                                checked={selectedValues.includes(item.value)}
+                                onChange={() => onCheckboxToggle?.(item.value)}     
+                                 />
                         {item.label}
+
                     </DropdownListItem>
                 ))}
             </DropdownList>
@@ -151,7 +166,8 @@ const Aside = () => {
     });
 
     const [isMobile, setIsMobile] = useState(false);
-    const { setSearchQuery } = useSearch(); // Get function to update search
+    const [competencies, setCompetencies] = useState([]);
+    const { filters, updateFilters } = useFilters();
 
     const pathname = usePathname();
     let asideType = "game-page"; // Default type
@@ -172,6 +188,28 @@ const Aside = () => {
         return () => window.removeEventListener("resize", checkScreenSize);
     }, []);
 
+
+    useEffect(() => {
+        const loadCompetencies = async () => {
+            const fetchedCompetencies = await fetchAllCompetencies();
+            setCompetencies(fetchedCompetencies);
+        }       
+        loadCompetencies();
+    },[]
+
+    );
+
+    const handleToggleCompetency = (id) => {
+        console.log("Toggled competency:", id);
+        const isActive = filters.competencies.includes(id); // Is it already selected?
+        const updated = isActive
+          ? filters.competencies.filter((val) => val !== id) // Remove if already selected
+          : [...filters.competencies, id]; // Add if not selected
+      
+        updateFilters({ competencies: updated }); // Update the global filter state
+      };
+      
+
     if (isMobile) return null;
 
     if (asideType === 'main') {
@@ -181,10 +219,11 @@ const Aside = () => {
                 <SearchContainer>
                     <SearchIcon />
                     <SearchInput
-                        type="text"
-                        placeholder="Введите название игры..."
-                        onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
-                    />
+  type="text"
+  placeholder="Введите название игры..."
+  onChange={(e) => updateFilters({ searchQuery: e.target.value.toLowerCase() })}
+/>
+
                 </SearchContainer>
                 <FilterGroup>
                     <SectionTitle>Сортировка</SectionTitle>
@@ -207,35 +246,27 @@ const Aside = () => {
                 </FilterGroup>
                 <SectionTitle>Фильтры</SectionTitle>
                 <FilterGroup>
-                    <Dropdown
+                    {console.log("Competencies from aside", competencies)}
+                    {   
+                        competencies.length > 0 && 
+                        <Dropdown
                         title="Компетенции"
                         icon={<FiFilter />}
                         type="checkbox"
                         stateKey="filter"
                         dropdownState={dropdownState}
                         setDropdownState={setDropdownState}
-                        items={[
-                            { label: "Стратегическое мышление", value: "strategic-thinking" },
-                            { label: "Лидерство", value: "leadership" },
-                            { label: "Работа в команде", value: "teamwork" },
-                            { label: "Коммуникация", value: "communication" }
-                        ]}
+                        items = {
+                            competencies.map((c) => ({
+                                label: c.name.charAt(0).toUpperCase() + c.name.slice(1),
+                                value: c.documentId
+                            }))
+                        }
+                        onCheckboxToggle={handleToggleCompetency} 
+                        selectedValues={filters.competencies}     // <-- for rendering checked state
+                   
                     />
-                </FilterGroup>
-                <FilterGroup>
-                    <Dropdown
-                        title="Жанр игры"
-                        icon={<FiFilter />}
-                        type="checkbox"
-                        stateKey="gameGenre"
-                        dropdownState={dropdownState}
-                        setDropdownState={setDropdownState}
-                        items={[
-                            { label: "Настольная игра", value: "board-game" },
-                            { label: "Квест", value: "quest" },
-                            { label: "Чат бот", value: "chat-bot" }
-                        ]}
-                    />
+                    }
                 </FilterGroup>
 
             </AsideContainer>

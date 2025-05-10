@@ -74,10 +74,6 @@ export const GamesDataProvider = ({ children }) => {
     };
 
 
-
-
-
-
     useEffect(() => {
         fetchAndSetPurchasedGames();
     }, [isAuthenticated, user, token]);

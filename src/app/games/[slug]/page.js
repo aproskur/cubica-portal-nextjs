@@ -114,7 +114,9 @@ const GamePage = () => {
 
 
 
-    const isDeveloper = user && game?.developed_by?.id === user.id;
+    //const isDeveloper = user && game?.developed_by?.id === user.id;
+    const isDeveloper = !!user && !!game.developed_by && game.developed_by.id === user.id;
+
 
 
     const [error, setError] = useState(null);

@@ -2,7 +2,6 @@
 import React from "react";
 import styled from "styled-components";
 import GameCard from "./GameCard";
-import { useSearch } from "@/context/SearchContext";
 import { useFilters } from "@/context/FiltersContext";
 import { useAuth } from "@/context/AuthContext";
 import { useGamesData } from "@/context/GamesDataContext";
@@ -41,7 +40,6 @@ const NoResults = styled.p`
 `;
 
 const GameGallery = () => {
-    const { searchQuery } = useSearch();
     const { filters, updateFilters } = useFilters();
     const { user } = useAuth();
 
@@ -60,7 +58,7 @@ const GameGallery = () => {
             imageUrl = game.image.startsWith("/") ? `${API_URL}${game.image}` : game.image;
         }
 
-        // 🔥 Only clone if image changed
+        // Only clone if image changed
         if (game.image !== imageUrl) {
             return { ...game, image: imageUrl };
         }
@@ -83,12 +81,25 @@ const GameGallery = () => {
             filters.searchQuery &&
             !game.title?.toLowerCase().includes(filters.searchQuery.toLowerCase())
         ) return false;
+        
+        // 4. Filter by selected competencies
+
+        console.log(`🔍 Game: ${game.title}`);
+        console.log("Game competencies:", game.competencies?.map(c => c.id));
+        console.log("Selected filters:", filters.competencies);
+
+if (
+    filters.competencies.length > 0 &&
+    !game.competencies?.some((c) => filters.competencies.includes(c.documentId))
+  ) {
+    return false;
+  }
 
         return true;
     });
 
 
-
+    console.log("🧠 Current filters:", filters);
 
 
 

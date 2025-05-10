@@ -7,9 +7,8 @@ export const FiltersProvider = ({ children }) => {
     const [filters, setFilters] = useState({
         searchQuery: "",
         onlyMyDevelopedGames: false,
-        categories: [],    // later: array of selected category IDs
         priceRange: null,  // later: { min: 0, max: 100 }
-        // more filters
+        competencies: [],
     });
 
     const updateFilters = (newFilters) => {
@@ -20,8 +19,8 @@ export const FiltersProvider = ({ children }) => {
         setFilters({
             searchQuery: "",
             onlyMyDevelopedGames: false,
-            categories: [],
             priceRange: null,
+            competencies: [],
         });
     };
 
