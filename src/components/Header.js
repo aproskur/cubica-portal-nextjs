@@ -11,6 +11,7 @@ import { AuthContext, useAuth } from "@/context/AuthContext";
 import { useGamesData } from "@/context/GamesDataContext";
 import { useFilters } from "@/context/FiltersContext";
 import UserProfileModal from "./UserProfileModal";
+import { usePathname } from "next/navigation";
 
 const HeaderContainer = styled.header`
   display: flex;
@@ -24,7 +25,7 @@ const HeaderContainer = styled.header`
 `;
 
 const LeftContainer = styled.div`
-width: 285px;
+width: 350px;
 display: flex;
   justify-content: space-between;
   align-items: center;
@@ -288,11 +289,12 @@ const Header = () => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const { isAuthenticated, handleLogout, openLoginModal } = useContext(AuthContext);
-
   const { purchasedGames } = useGamesData();
-
-
   const { filters, updateFilters } = useFilters();
+
+
+  const pathname = usePathname();
+const isGameGalleryPage = pathname === "/"; 
 
   const toggleMyGames = () => {
     updateFilters({ onlyMyGames: !filters.onlyMyGames });
@@ -332,10 +334,10 @@ const Header = () => {
                 <MenuPopup $isVisible={menuVisible}
                   onMouseEnter={() => setMenuVisible(true)}
                   onMouseLeave={() => setMenuVisible(false)}>
-                  <Link href="/option1">
+                  <Link href="/about-platform">
                     О платформе
                   </Link>
-                  <Link href="/option2">
+                  <Link href="/support">
                     Поддержка
                   </Link>
                 </MenuPopup>
@@ -351,26 +353,33 @@ const Header = () => {
               <FlexItemWrapper>
                 {isAuthenticated && purchasedGames.length > 0 && <Link href="/games/my">Мои покупки</Link>}
               </FlexItemWrapper>
-              {isAuthenticated && (
-                <FlexItemWrapper>
-                  <button
-                    onClick={() =>
-                      updateFilters({
-                        onlyMyDevelopedGames: !filters.onlyMyDevelopedGames,
-                      })
-                    }
-                    style={{
-                      all: "unset",
-                      cursor: "pointer",
-                      color: "inherit",
-                      textDecoration: "none",
-                      font: "inherit",
-                    }}
-                  >
-                    {filters.onlyMyDevelopedGames ? "Все игры" : "Мои игры"}
-                  </button>
-                </FlexItemWrapper>
-              )}
+              <FlexItemWrapper>
+  {pathname === "/" ? (
+    isAuthenticated && (
+      <button
+        onClick={() =>
+          updateFilters({
+            onlyMyDevelopedGames: !filters.onlyMyDevelopedGames,
+          })
+        }
+        style={{
+          all: "unset",
+          cursor: "pointer",
+          color: "inherit",
+          textDecoration: "none",
+          font: "inherit",
+        }}
+      >
+        {filters.onlyMyDevelopedGames ? "Все игры" : "Мои игры"}
+      </button>
+    )
+  ) : (
+    <Link href="/" style={{ textDecoration: "none", color: "inherit" }}>
+      Каталог игр
+    </Link>
+  )}
+</FlexItemWrapper>
+
               <FlexItemWrapper>
                 <LoggedUser></LoggedUser>
 

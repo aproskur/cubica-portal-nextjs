@@ -5,9 +5,10 @@ import { FiChevronDown, FiChevronUp, FiFilter, FiSearch } from "react-icons/fi";
 import { usePathname } from "next/navigation";
 import { fetchAllCompetencies } from "@/utils/apiService";
 import { useFilters, updateFilters } from "@/context/FiltersContext";
+import { BiSortAlt2 } from "react-icons/bi";
 
 const AsideContainer = styled.aside`
-  width: 300px;
+  width: 350px;
   flex-shrink: 0;
   background-color: inherit;
   color: inherit;
@@ -94,19 +95,43 @@ const DropdownList = styled.div`
   margin-top: 10px;
   display: ${({ $isOpen }) => ($isOpen ? "block" : "none")};
   padding: .25em .5em;
+
 `;
+
 
 const DropdownListItem = styled.div`
   display: flex;
   align-items: center;
   padding: 5px 0;
   cursor: pointer;
+  gap: 5px;
+
 
   input {
     margin-right: 10px;
     accent-color: rgb(var(--theme-yellow));
   }
 `;
+
+const ResetDropdownButton = styled.button`
+  background: transparent;
+  border: none;
+  color: rgba(var(--theme-grey), 0.8);
+  font-size: 14px;
+  padding: 5px 0;
+  margin-top: 5px;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    color: rgb(var(--theme-yellow));
+    text-decoration: underline;
+  }
+`;
+
+
+
+
 
 
 
@@ -127,7 +152,9 @@ const Dropdown = ({ title,
                     dropdownState, 
                     setDropdownState,
                     onCheckboxToggle,     
-                    selectedValues = [], }) => {
+                    selectedValues = [],
+                    sortOrder,            
+                    setSortOrder  }) => {
     const isOpen = dropdownState[stateKey];
 
 
@@ -139,31 +166,77 @@ const Dropdown = ({ title,
                 {isOpen ? <FiChevronUp /> : <FiChevronDown />}
             </DropdownHeader>
             <DropdownList $isOpen={isOpen}>
-                {items.map((item, index) => (
-                    <DropdownListItem key={index}>
-                        <input type={type} 
-                                name={stateKey}
-                                value={item.value} 
-                                onClick={stopPropagation}
-                                checked={selectedValues.includes(item.value)}
-                                onChange={() => onCheckboxToggle?.(item.value)}     
-                                 />
-                        {item.label}
+            {Array.isArray(items) &&
+ items.map((item, index) => {
+    if (!item || !item.value) return null; // defensive guard
 
-                    </DropdownListItem>
-                ))}
+    const isSelected = selectedValues.includes(item.value);
+    const isSortDropdown = stateKey === "sort";
+
+    return (
+        <DropdownListItem key={index}>
+        <div className="label-content">
+          <input
+            type={type}
+            name={stateKey}
+            value={item.value}
+            onClick={stopPropagation}
+            checked={isSelected}
+            onChange={() => onCheckboxToggle?.(item.value)}
+          />
+          {item.label}
+        </div>
+      
+        {isSortDropdown && isSelected && (
+          <BiSortAlt2
+            className="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSortOrder?.(sortOrder === 'asc' ? 'desc' : 'asc');
+            }}
+          />
+        )}
+      </DropdownListItem>
+      
+    );
+ })}
             </DropdownList>
+            {isOpen && stateKey === "sort" && (
+  <ResetDropdownButton
+    onClick={(e) => {
+      e.stopPropagation();
+      onCheckboxToggle?.("");
+      setSortOrder?.("asc");
+    }}
+  >
+    Сбросить сортировку
+  </ResetDropdownButton>
+)}
+
+{isOpen && type === "checkbox" && stateKey === "filter" && (
+  <ResetDropdownButton
+    onClick={(e) => {
+      e.stopPropagation();
+      onCheckboxToggle?.("RESET_ALL");
+    }}
+  >
+    Сбросить фильтры
+  </ResetDropdownButton>
+)}
+
+
         </DropdownContainer>
     );
 };
 
 const Aside = () => {
     const [dropdownState, setDropdownState] = useState({
-        sort: false,
-        filter: false,
+        sort: true,
+        filter: true,
         gameGenre: false,
         showLinks: true,
-    });
+      });
+      
 
     const [isMobile, setIsMobile] = useState(false);
     const [competencies, setCompetencies] = useState([]);
@@ -199,8 +272,20 @@ const Aside = () => {
 
     );
 
+    const handleToggleSort = (value) => {
+        if (value === "RESET_ALL" || value === "") {
+          updateFilters({ sort: "", sortOrder: "asc" });
+        } else {
+          updateFilters({ sort: value });
+        }
+      };
+      
+
     const handleToggleCompetency = (id) => {
-        console.log("Toggled competency:", id);
+        if (id === "RESET_ALL") {
+            updateFilters({ competencies: [] });
+            return;
+          }
         const isActive = filters.competencies.includes(id); // Is it already selected?
         const updated = isActive
           ? filters.competencies.filter((val) => val !== id) // Remove if already selected
@@ -228,21 +313,27 @@ const Aside = () => {
                 <FilterGroup>
                     <SectionTitle>Сортировка</SectionTitle>
                     <Dropdown
-                        title="Тип сортировки"
-                        icon={<FiFilter />}
-                        type="radio"
-                        stateKey="sort"
-                        dropdownState={dropdownState}
-                        setDropdownState={setDropdownState}
-                        items={[
-                            { label: "По алфавиту", value: "alphabet" },
-                            { label: "По популярности", value: "popularity" },
-                            { label: "По рейтингу", value: "rating" },
-                            { label: "По длительности", value: "duration" },
-                            { label: "По стоимости", value: "price" },
-                            { label: "По дате публикации", value: "date" }
-                        ]}
-                    />
+  title="Тип сортировки"
+  icon={<FiFilter />}
+  type="radio"
+  stateKey="sort"
+  dropdownState={dropdownState}
+  setDropdownState={setDropdownState}
+  selectedValues={[filters.sort]}
+  onCheckboxToggle={handleToggleSort}
+  sortOrder={filters.sortOrder}
+  setSortOrder={(order) => updateFilters({ sortOrder: order })}
+  items={[
+    { label: "По алфавиту", value: "alphabet" },
+    { label: "По популярности", value: "popularity" },
+    { label: "По рейтингу", value: "rating" },
+    { label: "По длительности", value: "duration" },
+    { label: "По стоимости", value: "price" },
+    { label: "По дате публикации", value: "date" }
+  ]}
+/>
+
+
                 </FilterGroup>
                 <SectionTitle>Фильтры</SectionTitle>
                 <FilterGroup>

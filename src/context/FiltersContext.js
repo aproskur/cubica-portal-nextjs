@@ -7,8 +7,10 @@ export const FiltersProvider = ({ children }) => {
     const [filters, setFilters] = useState({
         searchQuery: "",
         onlyMyDevelopedGames: false,
-        priceRange: null,  // later: { min: 0, max: 100 }
+        priceRange: null,
         competencies: [],
+        sort: "",           // e.g. "alphabet", "date", etc.
+        sortOrder: "asc",   // or "desc"
     });
 
     const updateFilters = (newFilters) => {
@@ -21,9 +23,11 @@ export const FiltersProvider = ({ children }) => {
             onlyMyDevelopedGames: false,
             priceRange: null,
             competencies: [],
+            sort: "",
+            sortOrder: "asc",
         });
     };
-
+    
     return (
         <FiltersContext.Provider value={{ filters, updateFilters, resetFilters }}>
             {children}

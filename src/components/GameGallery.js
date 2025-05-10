@@ -42,12 +42,18 @@ const NoResults = styled.p`
 const GameGallery = () => {
     const { filters, updateFilters } = useFilters();
     const { user } = useAuth();
-
     const { games } = useGamesData();
 
-    console.log("GameGallery - Image URLs:", games.map(game => game.image));
-
-    console.log("Rendering GameGallery with games:", games.map(g => g.title));
+    const sortKeyMap = {
+        alphabet: "title",
+        popularity: "rating",
+        rating: "rating",
+        duration: "durationMinutes",
+        price: "pricePerDay",
+        date: "publishedAt",
+      };
+      
+console.log("games", games);
 
     const processedGames = games.map((game) => {
         let imageUrl = FALLBACK_IMAGE;
@@ -69,51 +75,58 @@ const GameGallery = () => {
 
 
 
-    const filteredGames = processedGames.filter((game) => {
-        // 1. Hide unpublished games if user is NOT the developer
-        if (!game.is_published && game.developed_by?.id !== user?.id) return false;
-
-        // 2. If onlyMyDevelopedGame is active, filter to developer's games only
-        if (filters.onlyMyDevelopedGames && game.developed_by?.id !== user?.id) return false;
-
-        // 3. Apply search filter
-        if (
+    const finalGames = useMemo(() => {
+        const filtered = processedGames.filter((game) => {
+          if (!game.is_published && game.developed_by?.id !== user?.id) return false;
+          if (filters.onlyMyDevelopedGames && game.developed_by?.id !== user?.id) return false;
+          if (
             filters.searchQuery &&
             !game.title?.toLowerCase().includes(filters.searchQuery.toLowerCase())
-        ) return false;
-        
-        // 4. Filter by selected competencies
+          ) return false;
+          if (
+            filters.competencies.length > 0 &&
+            !game.competencies?.some((c) => filters.competencies.includes(c.documentId))
+          ) return false;
+      
+          return true;
+        });
+      
+        const sortField = sortKeyMap[filters.sort];
+        const direction = filters.sortOrder === "desc" ? -1 : 1;
+      
+        const sorted = sortField
+          ? [...filtered].sort((a, b) => {
+              let aVal = a[sortField];
+              let bVal = b[sortField];
+      
+              if (aVal === undefined || bVal === undefined) return 0;
+      
+              if (typeof aVal === "string") aVal = aVal.toLowerCase();
+              if (typeof bVal === "string") bVal = bVal.toLowerCase();
+      
+              if (aVal > bVal) return direction;
+              if (aVal < bVal) return -direction;
+              return 0;
+            })
+          : filtered;
+      
+        return sorted;
+      }, [processedGames, filters, user]);
+      
 
-        console.log(`🔍 Game: ${game.title}`);
-        console.log("Game competencies:", game.competencies?.map(c => c.id));
-        console.log("Selected filters:", filters.competencies);
 
-if (
-    filters.competencies.length > 0 &&
-    !game.competencies?.some((c) => filters.competencies.includes(c.documentId))
-  ) {
-    return false;
-  }
-
-        return true;
-    });
-
-
-    console.log("🧠 Current filters:", filters);
-
-
-
-    return (
+      return (
         <GalleryWrapper>
-            {filteredGames.length > 0 ? (
-                filteredGames.map((game) => (
-                    <GameCard key={game.documentId} game={game} />
-                ))
-            ) : (
-                <NoResults>Игр не найдено</NoResults>
-            )}
+          {finalGames.length > 0 ? (
+            finalGames.map((game) => (
+              <GameCard key={game.documentId} game={game} />
+            ))
+          ) : (
+            <NoResults>Игр не найдено</NoResults>
+          )}
         </GalleryWrapper>
-    );
+      );
+      
 };
 
 export default GameGallery;

@@ -78,10 +78,14 @@ const CompetencyModal = ({ gameId, currentCompetencies, onClose, onSave, updateF
   
 
   const handleToggle = (id) => {
+    const stringId = String(id);
     setSelected((prev) =>
-      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
+      prev.includes(stringId)
+        ? prev.filter((v) => v !== stringId)
+        : [...prev, stringId]
     );
   };
+  
   
 
   const handleSave = async () => {

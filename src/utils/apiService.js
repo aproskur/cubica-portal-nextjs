@@ -105,6 +105,7 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
                 game_support: game.game_support || "",
                 reviews: game.reviews_tmp || "",
                 competencies: competencies || [],
+                publishedAt: game.game_published_at || null,
             };
         });
     } catch (error) {
@@ -173,6 +174,7 @@ export const fetchGameBySlug = async (slug, token) => {
         game_support: game.game_support || "",
         totalPlayed: game.total_played || "",
         reviews: game.reviews_tmp || "",
+        publishedAt: game.game_published_at || null,
         competencies: competencies || [],
     };
 };
@@ -430,11 +432,10 @@ export const fetchAllCompetencies = async () => {
       const json = await res.json();
   
       const result = json.data.map((item) => ({
-        id: item.id, // numeric ID
-        documentId: item.documentId, // external ID
+        id: String(item.documentId), // ← treat all IDs as string
         name: item.competency_name,
       }));
-  
+      
       return result;
     } catch (err) {
       console.error("Failed to fetch competencies", err);
