@@ -170,7 +170,7 @@ const Dropdown = ({ title,
  items.map((item, index) => {
     if (!item || !item.value) return null; // defensive guard
 
-    const isSelected = selectedValues.includes(item.value);
+    const isSelected = selectedValues.includes(String(item.value));
     const isSortDropdown = stateKey === "sort";
 
     return (
@@ -286,10 +286,11 @@ const Aside = () => {
             updateFilters({ competencies: [] });
             return;
           }
-        const isActive = filters.competencies.includes(id); // Is it already selected?
-        const updated = isActive
-          ? filters.competencies.filter((val) => val !== id) // Remove if already selected
-          : [...filters.competencies, id]; // Add if not selected
+          const isActive = filters.competencies.includes(String(id));
+          const updated = isActive
+          ? filters.competencies.filter((val) => String(val) !== String(id))
+          : [...filters.competencies.map(String), String(id)];
+          
       
         updateFilters({ competencies: updated }); // Update the global filter state
       };
@@ -350,7 +351,7 @@ const Aside = () => {
                         items = {
                             competencies.map((c) => ({
                                 label: c.name.charAt(0).toUpperCase() + c.name.slice(1),
-                                value: c.documentId
+                                value: c.id
                             }))
                         }
                         onCheckboxToggle={handleToggleCompetency} 

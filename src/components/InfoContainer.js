@@ -443,24 +443,27 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
      <GameDetails>
         {isDeveloper ? (
           <>
-        {isDeveloper && localCompetencies && (
+{isDeveloper && Array.isArray(localCompetencies) && (
   <>
-  {console.log("competencies after reload", competencies)}
     <span>Тренируемые компетенции: </span>
     <span
-  onClick={() => setCompetencyModalOpen(true)}
-  style={{ cursor: "pointer", textDecoration: "underline", fontWeight: "normal" }}
->
-{localCompetencies.map((comp) => comp.name.charAt(0).toUpperCase() + comp.name.slice(1)).join(", ")}
+      onClick={() => setCompetencyModalOpen(true)}
+      style={{ cursor: "pointer", textDecoration: "underline", fontWeight: "normal" }}
+    >
+      {localCompetencies
+        .filter((comp) => comp && typeof comp === "object" && comp.name)
+        .map((comp) => comp.name.charAt(0).toUpperCase() + comp.name.slice(1))
+        .join(", ")}
+    </span>
 
+    {isCompetencyModalOpen && (
+      <CompetencyModal 
 
-</span>
-
-
-    {isCompetencyModalOpen && localCompetencies && (
- <CompetencyModal
  gameId={game.documentId}
- currentCompetencies={localCompetencies.map((c) => c.documentId || c.id)}
+ currentCompetencies={localCompetencies
+    .filter((c) => c && (c.documentId || c.id))
+    .map((c) => c.documentId || c.id)}
+  
 
  onClose={() => setCompetencyModalOpen(false)}
  onSave={(newCompetencies) => {
@@ -563,9 +566,13 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
           <>
           <div>
           <span>Тренируемые компетенции: </span>
-            <span style={{fontWeight: "normal"}}> {competencies.map((comp) => comp.name.charAt(0).toUpperCase() + comp.name.slice(1)).join(", ")}
+          <span style={{ fontWeight: "normal" }}>
+  {competencies
+    .filter((comp) => comp && comp.name)
+    .map((comp) => comp.name.charAt(0).toUpperCase() + comp.name.slice(1))
+    .join(", ")}
+</span>
 
-            </span>
             </div>
             <div>
               <span>Жанр:</span> {genre}

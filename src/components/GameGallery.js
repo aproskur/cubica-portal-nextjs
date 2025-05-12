@@ -85,7 +85,10 @@ console.log("games", games);
           ) return false;
           if (
             filters.competencies.length > 0 &&
-            !game.competencies?.some((c) => filters.competencies.includes(c.documentId))
+            !game.competencies?.some((c) =>
+              filters.competencies.includes(String(c.documentId))
+            )
+            
           ) return false;
       
           return true;

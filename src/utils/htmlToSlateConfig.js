@@ -9,17 +9,8 @@ export const htmlToSlateConfig = {
     h4: () => ({ type: 'heading', level: 4 }),
     h5: () => ({ type: 'heading', level: 5 }),
     h6: () => ({ type: 'heading', level: 6 }),
-    ul: () => ({ type: 'list', format: 'unordered' }),
-    ol: (el) => {
-      // Quill sometimes uses <ol><li data-list="bullet">...
-      const isBulletList = Array.from(el.children || []).some(
-        (li) => getAttributeValue(li, 'data-list') === 'bullet'
-      );
-      return {
-        type: 'list',
-        format: isBulletList ? 'unordered' : 'ordered',
-      };
-    },
+    ol: () => ({ type: 'list', format: 'ordered' }),
+    ul: () => ({ type: 'list', format: 'unordered' }),    
     li: () => ({ type: 'list-item' }),
     blockquote: () => ({ type: 'quote' }),
     a: (el) => ({
@@ -43,7 +34,6 @@ export const htmlToSlateConfig = {
     // Clean up weird Quill spans and ensure proper <ul> for bullets
     return html
       .replace(/<span class="ql-ui"[^>]*><\/span>/g, '') // remove Quill UI spans
-      .replace(/<ol([^>]*)data-list="bullet"([^>]*)>/gi, '<ul$1$2>'); // fix bullets
   },
   filterWhitespaceNodes: true,
   convertBrToLineBreak: true,

@@ -9,8 +9,7 @@ import { normalizeSlateForStrapi } from "@/utils/strapiSlateTransformers";
 import { saveAndUpdateGame } from "@/utils/gameHelpers";
 import { htmlToSlateConfig } from "@/utils/htmlToSlateConfig";
 import { slateToHtmlConfig } from "@/utils/slateToHtmlConfig";
-
-import { htmlToSlate, slateDemoSlateToHtmlConfig, slateToHtml } from "@slate-serializers/html";
+import { htmlToSlate, slateToHtml } from "@slate-serializers/html";
 
 
 //console.log("customSlateToHtmlConfig:", customSlateToHtmlConfig);
@@ -135,27 +134,108 @@ const Tabs = ({ game }) => {
   function cleanQuillHtml(html) {
     const doc = new DOMParser().parseFromString(html, 'text/html');
   
-    // Fix incorrect use of <ol> for bullets
-    doc.querySelectorAll('li[data-list="bullet"]').forEach((li) => {
-      const ol = li.closest('ol');
-      if (ol) {
-        const ul = document.createElement('ul');
-        [...ol.children].forEach((item) => ul.appendChild(item));
-        ol.replaceWith(ul);
+    const fixMixedList = (parentList) => {
+      const newListBlocks = [];
+      let currentList = null;
+      let currentFormat = null;
+  
+      Array.from(parentList.children).forEach((li) => {
+        const listType = li.getAttribute("data-list") || "ordered"; // default fallback
+  
+        if (listType !== currentFormat) {
+          // Start a new list block
+          currentFormat = listType;
+          currentList = document.createElement(listType === "bullet" ? "ul" : "ol");
+          newListBlocks.push(currentList);
+        }
+  
+        li.removeAttribute("data-list");
+        currentList.appendChild(li);
+      });
+  
+      // Replace old parentList with new split lists
+      newListBlocks.forEach((newList) => {
+        parentList.parentNode.insertBefore(newList, parentList);
+      });
+      parentList.remove();
+    };
+  
+    // Fix all <ol> or <ul> that contain mixed data-list
+    doc.querySelectorAll("ol, ul").forEach((list) => {
+      const hasMixedTypes = new Set(
+        Array.from(list.children).map((li) => li.getAttribute("data-list") || "ordered")
+      );
+      if (hasMixedTypes.size > 1) {
+        fixMixedList(list);
+      } else {
+        // Simple case: all same type
+        const correctTag = hasMixedTypes.has("bullet") ? "ul" : "ol";
+        if (list.tagName.toLowerCase() !== correctTag) {
+          const replacement = document.createElement(correctTag);
+          Array.from(list.children).forEach((li) => {
+            li.removeAttribute("data-list");
+            replacement.appendChild(li);
+          });
+          list.replaceWith(replacement);
+        }
       }
     });
   
-    // Remove Quill's UI spans
-    doc.querySelectorAll('span.ql-ui').forEach((span) => {
-      span.remove();
-    });
+    // Remove ql-ui spans
+    doc.querySelectorAll("span.ql-ui").forEach((el) => el.remove());
   
     return doc.body.innerHTML;
   }
   
 
+  function normalizeSlateForStrapi(blocks) {
+    const normalized = [];
+  
+    for (let i = 0; i < blocks.length; i++) {
+      const current = blocks[i];
+      const prev = normalized[normalized.length - 1];
+  
+      if (
+        current.type === "list" &&
+        prev?.type === "list"
+      ) {
+        normalized.push({
+          type: "paragraph",
+          children: [{ type: "text", text: "" }]
+        });
+      }
+  
+      normalized.push(current);
+    }
+  
+    return normalized;
+  }
+
+  function ensureTextNodesHaveType(nodes) {
+    return nodes.map((node) => {
+      if (node.text !== undefined) {
+        return {
+          type: "text", // required by Strapi's internal Slate
+          ...node,
+        };
+      }
+  
+      if (node.children) {
+        return {
+          ...node,
+          children: ensureTextNodesHaveType(node.children),
+        };
+      }
+  
+      return node;
+    });
+  }
+  
+  
+  
   console.log("GamePurpose", game.purpose);
   console.log("GAME Purpose:", JSON.stringify(game.purpose, null, 2));
+  console.log("slate to html", slateToHtml(game.purpose, slateToHtmlConfig))
 
   return (
     <TabContainer>
@@ -185,13 +265,17 @@ const Tabs = ({ game }) => {
                       alert("Пользователь не авторизован");
                       return;
                     }
-
+                    console.log("Quill", htmlString)
                     const fixedHtml = cleanQuillHtml(htmlString);
-                    console.log("html string", JSON.stringify(htmlString));
+                    console.log("clean Quill html",fixedHtml)
                     const slate = htmlToSlate(fixedHtml, htmlToSlateConfig);
-
+                    console.log("NPM's htmlToSlate output", JSON.stringify(slate, null, 2))
+     //const normalizeForStrapi = normalizeSlateForStrapi(slate);
+     const sendToStrapi = ensureTextNodesHaveType(slate);
+     console.log("Send to strapi", sendToStrapi)
+     console.log("send to strapi:", JSON.stringify(sendToStrapi, null, 2));
                     await handleGameUpdate(game.documentId, {
-                      game_purpose: slate,
+                      game_purpose: sendToStrapi,
                     }, token);
 
                     alert("Цель игры успешно сохранена");
@@ -222,14 +306,12 @@ const Tabs = ({ game }) => {
                     console.log("HTML", htmlString);
                     const fixedHtml = cleanQuillHtml(htmlString);
                     const slate = htmlToSlate(fixedHtml, htmlToSlateConfig);
-                    console.log("SLATE FROM HTML:", JSON.stringify(slateLike, null, 2));
+                    const sendToStrapi = normalizeSlateForStrapi(slate);
 
-                    // Step 2: Normalize it to match Strapi Blocks schema
-                    const normalized = normalizeSlateForStrapi(slateLike);
 
                     // Step 3: Save to Strapi
                     await handleGameUpdate(game.documentId, {
-                      game_plot: slate,
+                      game_plot: sendToStrapi,
                     }, token);
 
                     alert("Сюжет успешно сохранён");
