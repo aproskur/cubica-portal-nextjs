@@ -30,7 +30,6 @@ export default function MyGamesPage() {
         const loadPurchases = async () => {
             try {
                 const data = await fetchUserPurchases();
-                console.log("Purchases API Response:", data);
 
                 if (!data || !Array.isArray(data)) {
                     setGames([]);

@@ -7,6 +7,7 @@ import Aside from "@/components/Aside";
 import PurchaseModal from "@/components/PurchaseModal";
 import ClientWrapperAuth from "@/components/ClientWrapperAuth";
 import ClientPaymentRedirectHandler from "@/components/ClientPaymentRedirectHandler";
+import { Suspense } from "react";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -33,7 +34,9 @@ export default function RootLayout({ children }) {
             </div>
             <PurchaseModal />
 
+            <Suspense fallback={null}>
             <ClientPaymentRedirectHandler />
+            </Suspense>
             <ClientWrapperAuth />
           </Providers>
         </StyledComponentsRegistry>
