@@ -8,9 +8,11 @@ export const FiltersProvider = ({ children }) => {
         searchQuery: "",
         onlyMyDevelopedGames: false,
         priceRange: null,
+        duration: "",
         competencies: [],
         sort: "",           // e.g. "alphabet", "date", etc.
         sortOrder: "asc",   // or "desc"
+        totalPlayed: null
     });
 
     const updateFilters = (newFilters) => {
@@ -25,6 +27,8 @@ export const FiltersProvider = ({ children }) => {
             competencies: [],
             sort: "",
             sortOrder: "asc",
+            duration: "",
+            totalPlayed: null
         });
     };
     

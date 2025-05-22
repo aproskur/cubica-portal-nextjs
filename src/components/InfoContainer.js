@@ -193,7 +193,6 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
         pricePerLaunch,
         pricePerMonth,
         pricePerDay,
-        genre,
         format,
         duration,
         author,
@@ -202,12 +201,13 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
         is_published: gameIsPublished
     } = game;
 
+    console.log("Duration enum", duration)
+
     if (!game || !game.competencies) return null;
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [isEditingPrices, setIsEditingPrices] = useState(false);
     const [descriptionText,  setDescriptionText]  = useState(game.description  || "");
-    const [genreText, setGenreText] = useState(genre);
     const [formatText, setFormatText] = useState(format);
     const [durationText, setDurationText] = useState(duration);
     const [authorText, setAuthorText] = useState(author);
@@ -250,7 +250,28 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
     };
 
 
+    const durationLabels = {
+        "d30_min": "30 минут",
+        "d1_hr": "1 час",
+        "d2_hr": "2 часа",
+        "d3_hr": "3 часа",
+        "d4_hr": "4 часа",
+        "d5_hr": "5 часов",
+        "d6_hr": "6 часов",
+        "d8_hr": "8 часов"
+      };
 
+      const durationOptions = {
+        "d30_min": "30 минут",
+        "d1_hr": "1 час",
+        "d2_hr": "2 часа",
+        "d3_hr": "3 часа",
+        "d4_hr": "4 часа",
+        "d5_hr": "5 часов",
+        "d6_hr": "6 часов",
+        "d8_hr": "8 часов"
+      };
+      
     return (
         <InfoWrapper>
             {isDeveloper && isEditingTitle ? (
@@ -482,26 +503,6 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
 )}
 
             <div>
-              <span>Жанр:</span>
-              <textarea
-                value={genreText}
-                onChange={e => setGenreText(e.target.value)}
-                onBlur={() => updateField({ genre: genreText })}
-                style={{
-                    width: "100%",
-                    minHeight: "40px",
-                    padding: "10px",
-                    fontSize: "14px",
-                    backgroundColor: "#1c1c1c",
-                    color: "#fff",
-                    border: "1px solid #444",
-                    borderRadius: "5px",
-                    resize: "vertical",
-                    marginTop: "15px"
-                }}
-              />
-            </div>
-            <div>
               <span>Формат:</span>
               <textarea
                 value={formatText}
@@ -522,25 +523,30 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
               />
             </div>
             <div>
-              <span>Продолжительность:</span>
-              <textarea
-                value={durationText}
-                onChange={e => setDurationText(e.target.value)}
-                onBlur={() => updateField({ duration: durationText })}
-                style={{
-                    width: "100%",
-                    minHeight: "40px",
-                    padding: "10px",
-                    fontSize: "14px",
-                    backgroundColor: "#1c1c1c",
-                    color: "#fff",
-                    border: "1px solid #444",
-                    borderRadius: "5px",
-                    resize: "vertical",
-                    marginTop: "15px"
-                }}
-              />
-            </div>
+  <span>Продолжительность:</span>
+  <select
+    value={durationText}
+    onChange={e => setDurationText(e.target.value)}
+    onBlur={() => updateField({ duration: durationText })}
+    style={{
+      width: "100%",
+      padding: "10px",
+      fontSize: "14px",
+      backgroundColor: "#1c1c1c",
+      color: "#fff",
+      border: "1px solid #444",
+      borderRadius: "5px",
+      marginTop: "15px"
+    }}
+  >
+    <option value="">Выберите продолжительность</option>
+    {Object.entries(durationOptions).map(([value, label]) => (
+      <option key={value} value={value}>
+        {label}
+      </option>
+    ))}
+  </select>
+</div>
             <div>
               <span>Автор:</span>
               <textarea
@@ -575,13 +581,10 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
 
             </div>
             <div>
-              <span>Жанр:</span> {genre}
-            </div>
-            <div>
               <span>Формат:</span> {format}
             </div>
             <div>
-              <span>Продолжительность:</span> {duration}
+              <span>Продолжительность:</span>  {durationLabels[duration] || duration}
             </div>
             <div>
               <span>Автор:</span> {author}

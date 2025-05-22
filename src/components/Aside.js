@@ -314,7 +314,7 @@ const Aside = () => {
                 <FilterGroup>
                     <SectionTitle>Сортировка</SectionTitle>
                     <Dropdown
-  title="Тип сортировки"
+  title="Сортировка"
   icon={<FiFilter />}
   type="radio"
   stateKey="sort"

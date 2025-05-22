@@ -6,6 +6,9 @@ import { useEffect, useState } from "react";
 import { fetchGameBySlug } from "@/utils/apiService";
 import { useAuth } from "@/context/AuthContext";
 import AboutPlatform from "@/app/about-platform/page";
+import { useFilters} from "@/context/FiltersContext";
+
+
 
 const BreadcrumbContainer = styled.nav`
   font-size: 16px;
@@ -49,6 +52,7 @@ const Breadcrumbs = () => {
 
     const [titles, setTitles] = useState({});
     const { token } = useAuth(); // get token if available
+    const { updateFilters } = useFilters();
 
     useEffect(() => {
         const fetchTitles = async () => {
@@ -64,7 +68,7 @@ const Breadcrumbs = () => {
                 }
 
                 try {
-                    const game = await fetchGameBySlug(segment, token); // ✅ use token here
+                    const game = await fetchGameBySlug(segment, token); 
                     updatedTitles[segment] = game?.title || segment.replace(/-/g, " ");
                 } catch (err) {
                     console.warn(`Breadcrumb failed for "${segment}":`, err.message);
@@ -77,12 +81,17 @@ const Breadcrumbs = () => {
         };
 
         fetchTitles();
-    }, [pathname, token]); // ✅ include token as dependency
+    }, [pathname, token]); 
+
+    const handleClick = () => {
+        updateFilters({ onlyMyDevelopedGames: false });
+      };
+    
 
     return (
         <BreadcrumbContainer>
             <FlexItemWrapper>
-                <BreadcrumbLink href="/">Магазин игр</BreadcrumbLink>
+                <BreadcrumbLink onClick={handleClick} href="/">Магазин игр</BreadcrumbLink>
             </FlexItemWrapper>
             {filteredSegments.map((segment, index) => {
                 const path = `/${filteredSegments.slice(0, index + 1).join("/")}`;

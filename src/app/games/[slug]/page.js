@@ -184,7 +184,6 @@ const GamePage = () => {
 
                             onBuyClick={() => handleModalsBuyClick(game)}
                             details={{
-                                genre: game.genre,
                                 format: game.format,
                                 duration: game.duration,
                                 author: game.author,

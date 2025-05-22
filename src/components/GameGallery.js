@@ -46,12 +46,24 @@ const GameGallery = () => {
 
     const sortKeyMap = {
         alphabet: "title",
-        popularity: "rating",
+        popularity: "totalPlayed",
         rating: "rating",
         duration: "durationMinutes",
-        price: "pricePerDay",
+        price: "pricePerLaunch",
         date: "publishedAt",
       };
+
+      const durationToMinutes = {
+        d30_min: 30,
+        d1_hr: 60,
+        d2_hr: 120,
+        d3_hr: 180,
+        d4_hr: 240,
+        d5_hr: 300,
+        d6_hr: 360,
+        d8_hr: 480
+      };
+      
       
 console.log("games", games);
 
@@ -97,21 +109,42 @@ console.log("games", games);
         const sortField = sortKeyMap[filters.sort];
         const direction = filters.sortOrder === "desc" ? -1 : 1;
       
+        const durationToMinutes = {
+          d30_min: 30,
+          d1_hr: 60,
+          d2_hr: 120,
+          d3_hr: 180,
+          d4_hr: 240,
+          d5_hr: 300,
+          d6_hr: 360,
+          d8_hr: 480
+        };
+        
         const sorted = sortField
           ? [...filtered].sort((a, b) => {
-              let aVal = a[sortField];
-              let bVal = b[sortField];
-      
-              if (aVal === undefined || bVal === undefined) return 0;
-      
-              if (typeof aVal === "string") aVal = aVal.toLowerCase();
-              if (typeof bVal === "string") bVal = bVal.toLowerCase();
-      
+              let aVal, bVal;
+        
+              if (filters.sort === "duration") {
+                // Custom logic for duration
+                aVal = durationToMinutes[a.duration] ?? 0;
+                bVal = durationToMinutes[b.duration] ?? 0;
+              } else {
+                // Standard field-based sorting
+                aVal = a[sortField];
+                bVal = b[sortField];
+        
+                if (aVal === undefined || bVal === undefined) return 0;
+        
+                if (typeof aVal === "string") aVal = aVal.toLowerCase();
+                if (typeof bVal === "string") bVal = bVal.toLowerCase();
+              }
+        
               if (aVal > bVal) return direction;
               if (aVal < bVal) return -direction;
               return 0;
             })
           : filtered;
+        
       
         return sorted;
       }, [processedGames, filters, user]);

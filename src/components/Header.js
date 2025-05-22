@@ -346,8 +346,11 @@ const isGameGalleryPage = pathname === "/";
 
           </LeftContainer>
           <RightContainer>
-            {/* Breadcrumbs */}
-            <Breadcrumbs />
+<FlexWrapper style={{gap: "0px"}}>
+<Breadcrumbs />
+            {filters.onlyMyDevelopedGames ? <p style={{textAlign: "left", marginLeft: "10px"}}>&gt; Мои игры</p> : <p></p> }
+
+</FlexWrapper>
 
             <FlexWrapper>
               <FlexItemWrapper>
