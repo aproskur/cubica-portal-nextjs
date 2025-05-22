@@ -58,7 +58,6 @@ export const GamesDataProvider = ({ children }) => {
         try {
             const purchases = await fetchUserPurchases(token);
             setPurchasedGames(purchases || []);
-            console.log("DATA context, user's purchases", purchases);
         } catch (err) {
             console.error("Error fetching user purchases:", err);
         }

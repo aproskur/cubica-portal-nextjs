@@ -79,7 +79,6 @@ export default function QuillEditor({ initialValue = "", onSave }) {
       <button
         className="save-btn"
         onClick={() => {
-          console.log("Quill's HTML", value);
           onSave(value);
         }}
       >

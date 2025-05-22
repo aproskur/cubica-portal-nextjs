@@ -201,7 +201,6 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
         is_published: gameIsPublished
     } = game;
 
-    console.log("Duration enum", duration)
 
     if (!game || !game.competencies) return null;
 
@@ -214,14 +213,8 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
     const [isCompetencyModalOpen, setCompetencyModalOpen] = useState(false);
     const [localCompetencies, setLocalCompetencies] = useState(competencies);
 
-    console.log("InfoContainer - localCompetencies:", localCompetencies);
-
-
-
 
     const isPublished = gameIsPublished;
-    console.log("GAME PAGE, isPublished", isPublished);
-
 
 
     const updateField = async (fields, onSuccess) => {

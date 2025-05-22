@@ -65,8 +65,6 @@ const GameGallery = () => {
       };
       
       
-console.log("games", games);
-
     const processedGames = games.map((game) => {
         let imageUrl = FALLBACK_IMAGE;
 

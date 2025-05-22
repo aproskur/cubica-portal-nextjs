@@ -231,7 +231,6 @@ const PurchaseModal = () => {
     
     
     
-                console.log("Frontend recieved following new order", orderResponse);
                 if (!orderResponse.success) {
                     setError(mapOrderError(orderResponse.error));
                     setLoading(false);
@@ -299,7 +298,6 @@ const PurchaseModal = () => {
                 price
             );
 
-            console.log("Frontend received following new order", orderResponse);
             if (!orderResponse.success) {
                 setError(mapOrderError(orderResponse.error));
                 setLoading(false);

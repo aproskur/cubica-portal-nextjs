@@ -28,18 +28,15 @@ export const AuthProvider = ({ children }) => {
         const storedToken = localStorage.getItem("jwt");
 
         if (storedToken) {
-            console.log("Found stored JWT token:", storedToken);
             setToken(storedToken);
             fetchUser(storedToken); // Ensure fetchUser() is always called
         } else {
-            console.log("No token found in local storage. User is not authenticated.");
             setIsLoading(false);
         }
     }, []);
 
 
     useEffect(() => {
-        console.log("Auth State Updated:", { isAuthenticated, user, token }); // Debug UI updates
     }, [isAuthenticated, user, token]);
 
 
@@ -47,14 +44,12 @@ export const AuthProvider = ({ children }) => {
     // If a user has a valid JWT token, this function fetches their details from the Strapi API.
     const fetchUser = async (token) => {
         try {
-            console.log("Fetching user with token:", token); // Debug token
 
             const response = await fetch(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/users/me`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
             const responseData = await response.json();
-            console.log("Fetch User API Response:", responseData); // Debug user response
 
             if (!response.ok || !responseData.id) {
                 throw new Error("Failed to fetch user");
@@ -73,7 +68,6 @@ export const AuthProvider = ({ children }) => {
 
             setIsAuthenticated(true);
 
-            console.log("User stored in context:", user); // Debug user state
         } catch (error) {
             console.error("Error fetching user:", error);
             handleLogout();
@@ -100,19 +94,16 @@ export const AuthProvider = ({ children }) => {
             });
 
             const responseData = await response.json();
-            console.log("Login API Response:", responseData); // DEBUG
 
             if (!response.ok || !responseData.jwt) {
                 throw new Error(responseData?.error?.message || "Invalid credentials");
             }
 
-            console.log("Storing new JWT:", responseData.jwt);
             localStorage.setItem("jwt", responseData.jwt);
             setToken(responseData.jwt);
 
             await fetchUser(responseData.jwt); // Ensure fetchUser() is awaited
 
-            console.log("User after login:", user); // DEBUG
         } catch (error) {
             console.error("Login error:", error);
             alert(error.message || "Login failed. Please check your credentials.");
@@ -124,13 +115,11 @@ export const AuthProvider = ({ children }) => {
 
 
     const handleLogout = () => {
-        console.log("Logging out, clearing JWT token");
         localStorage.removeItem("jwt"); // Remove token from storage
         setIsAuthenticated(false);
         setUser(null);
         setToken(null);
 
-        console.log("JWT Cleared. Redirecting to home.");
 
         router.push("/"); // Redirect to homepage after logout
     };
@@ -152,38 +141,31 @@ export const AuthProvider = ({ children }) => {
             });
 
             const responseData = await response.json();
-            console.log("Register API Response:", responseData); // Debug response
 
             if (!response.ok || !responseData.jwt) {
                 throw new Error(responseData?.error?.message || "Registration failed.");
             }
 
-            console.log("Storing JWT after registration:", responseData.jwt);
             localStorage.setItem("jwt", responseData.jwt);
             setToken(responseData.jwt);
 
             await fetchUser(responseData.jwt); // Ensure the new user data is fetched
 
-            console.log("User after registration:", user);
             //router.push("/games/my");
         } catch (error) {
-            console.error("Registration error:", error);
             alert(error.message || "Registration failed. Please try again.");
         }
     };
 
     // Functions to control login modal
     const openLoginModal = () => {
-        console.log("openLoginModal() called (message from state)")
         setLoginModalOpen(true);
     }
     const closeLoginModal = () => {
-        console.log("Cloelogin modal called (msg from state)");
         setLoginModalOpen(false);
     }
 
     useEffect(() => {
-        console.log("Auth context: isLoginModalOpen=", isLoginModalOpen);
     }, [isLoginModalOpen]);
 
 
@@ -196,7 +178,6 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         if (isAuthenticated && isLoginModalOpen) {
-            console.log("User authenticated — closing login modal automatically.");
             setLoginModalOpen(false);
         }
     }, [isAuthenticated, isLoginModalOpen]);
@@ -230,10 +211,7 @@ export const AuthProvider = ({ children }) => {
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {
-        console.log("useAuth() called, context =", context); //
-        console.log("ERROR: useAuth() is called outside of AuthProvider")
         throw new Error("useAuth must be used within an AuthProvider");
     }
-    console.log("useAuth() called, context =", context); //
     return context;
 };

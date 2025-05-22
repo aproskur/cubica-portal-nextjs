@@ -18,7 +18,6 @@ export const saveAndUpdateGame = async (
         // Call API and get the full updated game object back
         const response = await handleGameUpdate(game.documentId, fieldsToUpdate, token);
         const updated = response.data; // unwrap it
-        console.log("Updated game from backend:", updated);
 
         // Update global context
         if (updateGameInList) {

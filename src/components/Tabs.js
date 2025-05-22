@@ -16,15 +16,6 @@ import {
 } from '@/utils/slateTransformHelpers';
 
 
-
-//console.log("customSlateToHtmlConfig:", customSlateToHtmlConfig);
-
-//console.log("CONFIG:", customSlateToHtmlConfig);
-//console.log("CONFIG.elementMap:", customSlateToHtmlConfig?.elementMap);
-//console.log("CONFIG.paragraph type:", customSlateToHtmlConfig?.elementMap?.paragraph);
-
-
-
 const DesktopOnly = styled.div`
   display: none;
 
@@ -111,7 +102,6 @@ width: 100%;
 `;
 
 const Tabs = ({ game }) => {
-  console.log("Tabs got a game purpose", game.purpose);
   const [activeTab, setActiveTab] = useState(0); // 1st tab opened initially
   const { user } = useAuth();
   const isDeveloper = user?.id === game?.developed_by?.id;
@@ -137,9 +127,6 @@ const Tabs = ({ game }) => {
   };
 
   
-  console.log("GamePurpose", game.purpose);
-  console.log("GAME Purpose:", JSON.stringify(game.purpose, null, 2));
-  console.log("slate to html", slateToHtml(game.purpose, slateToHtmlConfig))
 
   return (
     <TabContainer>
@@ -169,15 +156,10 @@ const Tabs = ({ game }) => {
                       alert("Пользователь не авторизован");
                       return;
                     }
-                    console.log("Quill", htmlString)
                     const fixedHtml = cleanQuillHtml(htmlString);
-                    console.log("clean Quill html",fixedHtml)
                     const slate = htmlToSlate(fixedHtml, htmlToSlateConfig);
-                    console.log("NPM's htmlToSlate output", JSON.stringify(slate, null, 2))
      //const normalizeForStrapi = normalizeSlateForStrapi(slate);
      const sendToStrapi = ensureTextNodesHaveType(slate);
-     console.log("Send to strapi", sendToStrapi)
-     console.log("send to strapi:", JSON.stringify(sendToStrapi, null, 2));
                     await handleGameUpdate(game.documentId, {
                       game_purpose: sendToStrapi,
                     }, token);
@@ -207,7 +189,6 @@ const Tabs = ({ game }) => {
                     }
 
                     // Step 1: Convert HTML back to Slate-style JSON
-                    console.log("HTML", htmlString);
                     const fixedHtml = cleanQuillHtml(htmlString);
                     const slate = htmlToSlate(fixedHtml, htmlToSlateConfig);
                     const sendToStrapi = normalizeSlateForStrapi(slate);

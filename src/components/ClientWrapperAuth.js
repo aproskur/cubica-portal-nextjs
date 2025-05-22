@@ -6,8 +6,6 @@ import LoginModal from "@/components/LoginModal";
 const ClientWrapperAuth = () => {
     const { isLoginModalOpen, closeLoginModal } = useAuth();
 
-    console.log("ClientWrapperAuth RENDERED, isLoginModalOpen =", isLoginModalOpen); // DEBUG
-
     return <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />;
 };
 

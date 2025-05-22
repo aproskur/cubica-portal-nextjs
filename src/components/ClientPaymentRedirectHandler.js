@@ -15,6 +15,10 @@ export default function ClientPaymentRedirectHandler() {
         const outSum = searchParams.get("OutSum");
         const isSuccess = searchParams.get("IsSuccess");
         const status = searchParams.get("Status");
+
+            // Only run if any Robokassa param is present
+    if (!invId && !outSum && !isSuccess && !status) return;
+    
         console.log("Robokassa redirect detected", { invId, outSum, isSuccess, status });
         // Handle success
         if (invId && outSum && (isSuccess === "true" || status !== "fail")) {

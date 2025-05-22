@@ -338,7 +338,6 @@ const Aside = () => {
                 </FilterGroup>
                 <SectionTitle>Фильтры</SectionTitle>
                 <FilterGroup>
-                    {console.log("Competencies from aside", competencies)}
                     {   
                         competencies.length > 0 && 
                         <Dropdown

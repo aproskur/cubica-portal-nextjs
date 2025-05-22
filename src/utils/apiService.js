@@ -34,7 +34,6 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
         );
 
         const url = `${API_URL}/api/games?${query}`;
-        console.log("Fetching games from:", url);
 
         const response = await fetch(url);
         if (!response.ok) {
@@ -42,7 +41,6 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
         }
 
         const result = await response.json();
-        console.log("FETCH ALL!!!")
         return result.data.map((game) => {
             // cover image
             const image = game.image?.url
@@ -79,8 +77,6 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
                 : [];
               
 
-            console.log("fetch all")
-            console.log("Fetch all. COMP", competencies);
             return {
                 documentId: game.documentId || game.id,
                 title: game.title || "Untitled Game",
@@ -116,7 +112,6 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
 
 
 export const fetchGameBySlug = async (slug, token) => {
-    console.log("FETCH BY SLUG!!!!")
     const baseUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
     const url = `${baseUrl}/api/games/${slug}`;
 
@@ -131,7 +126,6 @@ export const fetchGameBySlug = async (slug, token) => {
         throw new Error(errorText || "Failed to fetch game");
     }
 
-    console.log("FETCH GAME BY SLUG")
 
     const json = await res.json();
     const game = json.data;
@@ -161,8 +155,6 @@ export const fetchGameBySlug = async (slug, token) => {
             url: img.url.startsWith("/") ? `${baseURL}${img.url}` : img.url,
         }))
         : [];
-
-        console.log("Fetch by slug. COMP", competencies);
 
     return {
         ...game,
@@ -195,7 +187,6 @@ export const fetchUserPurchases = async () => {
             return null;
         }
 
-        console.log("Fetching user purchases with token:", token);
 
         const response = await fetch(`${API_URL}/api/purchases`, {
             method: "GET",
@@ -205,10 +196,8 @@ export const fetchUserPurchases = async () => {
             }
         });
 
-        console.log("Response Status:", response.status);
 
         const data = await response.json();
-        console.log("Purchases API Response:", JSON.stringify(data, null, 2));
 
         if (!response.ok) {
             console.error("API Error:", data || "No error message in response");
@@ -316,7 +305,6 @@ export const testRobokassaLink = async () => {
         });
 
         const data = await res.json();
-        console.log("Backend response:", data);
     } catch (err) {
         console.error("Error fetching robokassa link:", err);
     }

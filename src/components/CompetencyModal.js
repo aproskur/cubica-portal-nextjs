@@ -58,8 +58,6 @@ const CompetencyModal = ({ gameId, currentCompetencies, onClose, onSave, updateF
   const [allCompetencies, setAllCompetencies] = useState([]);
   const [selected, setSelected] = useState([]);
 
-  console.log("Modal currentCompetencies (props):", currentCompetencies);
-
   useEffect(() => {
     if (Array.isArray(currentCompetencies)) {
       setSelected(currentCompetencies.map(String)); 
@@ -102,8 +100,6 @@ onSave(updatedCompetencies); // send full objects like { id, name }
     }
   };
   
-
-  console.log("currentCompetencies", currentCompetencies);
 
   return (
     <ModalOverlay>
