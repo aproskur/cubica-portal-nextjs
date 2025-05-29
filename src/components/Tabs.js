@@ -14,21 +14,8 @@ import {
   normalizeSlateForStrapi,
   ensureTextNodesHaveType
 } from '@/utils/slateTransformHelpers';
+import { useIsMobile } from "@/app/hooks/useIsMobile";
 
-
-const DesktopOnly = styled.div`
-  display: none;
-
-  @media (min-width: 875px) {
-    display: block;
-  }
-`;
-
-const MobileOnly = styled.div`
-  @media (min-width: 875px) {
-    display: none;
-  }
-`;
 
 
 const TabContainer = styled.div`
@@ -102,16 +89,23 @@ width: 100%;
 `;
 
 const Tabs = ({ game }) => {
-  const [activeTab, setActiveTab] = useState(0); // 1st tab opened initially
   const { user } = useAuth();
   const isDeveloper = user?.id === game?.developed_by?.id;
-    // local copies of the  text fields
+  const isMobile = useIsMobile();
 
-    const [aboutAuthorText, setAboutAuthorText] = useState(game.about_author || "");
-    const [supportText,     setSupportText]     = useState(game.game_support|| "");
+  return isMobile ? (
+    <MobileTabs game={game} isDeveloper={isDeveloper} />
+  ) : (
+    <DesktopTabs game={game} isDeveloper={isDeveloper} />
+  );
+};
 
 
 
+const DesktopTabs = ({isDeveloper, game}) => {
+    const [supportText,setSupportText] = useState(game.game_support|| "");
+    const [originalSupportText, setOriginalSupportText] = useState(game.game_support || "");
+    const [activeTab, setActiveTab] = useState(0);
 
   const tabs = [
     { label: "Для чего и кого" },
@@ -121,7 +115,6 @@ const Tabs = ({ game }) => {
     { label: "Поддержка" },
   ];
 
-
   const toggleTab = (index) => {
     setActiveTab(activeTab === index ? null : index);
   };
@@ -130,8 +123,6 @@ const Tabs = ({ game }) => {
 
   return (
     <TabContainer>
-      {/* Desktop layout only */}
-      <DesktopOnly>
         <TabHeaders>
           {tabs.map((tab, index) => (
             <TabHeader
@@ -177,7 +168,7 @@ const Tabs = ({ game }) => {
 
           {activeTab === 1 &&
             (isDeveloper ? (
-              <QuillEditor
+            <QuillEditor
                 key={`quill-tab-${activeTab}`}
                 initialValue={slateToHtml(game.plot, slateToHtmlConfig)}
                 onSave={async (htmlString) => {
@@ -187,75 +178,54 @@ const Tabs = ({ game }) => {
                       alert("Пользователь не авторизован");
                       return;
                     }
-
-                    // Step 1: Convert HTML back to Slate-style JSON
                     const fixedHtml = cleanQuillHtml(htmlString);
                     const slate = htmlToSlate(fixedHtml, htmlToSlateConfig);
-                    const sendToStrapi = normalizeSlateForStrapi(slate);
-
-
-                    // Step 3: Save to Strapi
+     //const normalizeForStrapi = normalizeSlateForStrapi(slate);
+     const sendToStrapi = ensureTextNodesHaveType(slate);
                     await handleGameUpdate(game.documentId, {
                       game_plot: sendToStrapi,
                     }, token);
 
-                    alert("Сюжет успешно сохранён");
+                    alert("Сюжет игры успешно сохранён");
                   } catch (error) {
                     console.error("Ошибка при сохранении сюжета:", error);
                     alert("Не удалось сохранить сюжет");
                   }
                 }}
-
               />
-
-            ) : (
+            ): (
               <RichTextBlockRenderer blocks={game.plot} />
             ))}
           {activeTab === 2 && game.reviews}
           {activeTab === 3 &&
-            (isDeveloper ? (
-              <textarea
-                defaultValue={aboutAuthorText}
-                onChange={e => setAboutAuthorText(e.target.value)}
-                onBlur={async () => {
-                       try {
-                       const token = localStorage.getItem("jwt");
-                        if (!token) throw new Error("Пользователь не авторизован");
-                  
-                       await handleGameUpdate(
-                           game.documentId,
-                          { about_author: aboutAuthorText },
-                           token
-                        );
-                  
+          (isDeveloper ? (
+            <QuillEditor
+                key={`quill-tab-${activeTab}`}
+                initialValue={slateToHtml(game.about_author, slateToHtmlConfig)}
+                onSave={async (htmlString) => {
+                  try {
+                    const token = localStorage.getItem("jwt");
+                    if (!token) {
+                      alert("Пользователь не авторизован");
+                      return;
+                    }
+                    const fixedHtml = cleanQuillHtml(htmlString);
+                    const slate = htmlToSlate(fixedHtml, htmlToSlateConfig);
+     //const normalizeForStrapi = normalizeSlateForStrapi(slate);
+     const sendToStrapi = ensureTextNodesHaveType(slate);
+                    await handleGameUpdate(game.documentId, {
+                      about_author: sendToStrapi,
+                    }, token);
 
-                        alert("Об авторе успешно обновлено");
-                      } catch (err) {
-                       console.error(err);
-                        alert("Не удалось сохранить Об авторе");
-                       }
-                     }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.target.blur();
+                    alert("Информация об авторе игры успешно сохранена");
+                  } catch (error) {
+                    console.error("Ошибка при сохранении об авторе:", error);
+                    alert("Не удалось сохранить информацию об авторе");
                   }
                 }}
-                style={{
-                  width: "100%",
-                  minHeight: "120px",
-                  padding: "10px",
-                  fontSize: "14px",
-                  backgroundColor: "#1c1c1c",
-                  color: "#fff",
-                  border: "1px solid #444",
-                  borderRadius: "5px",
-                  resize: "vertical",
-                }}
               />
-            ) : (
-              <div dangerouslySetInnerHTML={{ __html: game.about_author }} />
+            ): (
+              <RichTextBlockRenderer blocks={game.about_author} />
             ))}
 
 
@@ -264,24 +234,22 @@ const Tabs = ({ game }) => {
               <textarea
               defaultValue={supportText}
               onChange={e => setSupportText(e.target.value)}
-              onBlur={async () => {
-                     try {
-                     const token = localStorage.getItem("jwt");
-                      if (!token) throw new Error("Пользователь не авторизован");
-                
-                     await handleGameUpdate(
-                         game.documentId,
-                        { game_support: supportText },
-                         token
-                      );
-                
+       onBlur={async () => {
+  if (supportText.trim() === originalSupportText.trim()) return;
 
-                      alert("support успешно обновлено");
-                    } catch (err) {
-                     console.error(err);
-                      alert("Не удалось сохранить support");
-                     }
-                   }}
+  try {
+    const token = localStorage.getItem("jwt");
+    if (!token) throw new Error("Пользователь не авторизован");
+
+    await handleGameUpdate(game.documentId, { game_support: supportText }, token);
+    setOriginalSupportText(supportText); // sync state after successful save
+    alert("successful support update");
+  } catch (err) {
+    console.error(err);
+    alert("not successful");
+  }
+}}
+
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
@@ -305,31 +273,128 @@ const Tabs = ({ game }) => {
               <div dangerouslySetInnerHTML={{ __html: game.game_support }} />
             ))}
 
-        </TabContent>
-
-      </DesktopOnly>
-
-      {/* Mobile stacked layout */}
-      <MobileOnly>
-        {tabs.map((tab, index) => (
-          <div key={index}>
-            <TabHeader
-              $active={activeTab === index}
-              onClick={() => setActiveTab(index === activeTab ? null : index)}
-            >
-              {tab.label}
-            </TabHeader>
-            {activeTab === index && (
-              <TabContent>
-                {tab.content}
-              </TabContent>
-            )}
-          </div>
-        ))}
-      </MobileOnly>
+      </TabContent>
     </TabContainer>
-
   );
 };
 
-export default Tabs;
+
+const MobileTabs = ({ game, isDeveloper }) => {
+  const [activeTab, setActiveTab] = useState(0);
+  const [supportText, setSupportText] = useState(game.game_support || "");
+  const [originalSupportText, setOriginalSupportText] = useState(game.game_support || "");
+
+  const tabs = [
+    { label: "Для чего и кого" },
+    { label: "Сюжет игры" },
+    { label: "Отзывы" },
+    { label: "Об авторе" },
+    { label: "Поддержка" },
+  ];
+
+  return (
+    <TabContainer>
+      {tabs.map((tab, index) => (
+        <div key={index}>
+          <TabHeader
+            $active={activeTab === index}
+            onClick={() => setActiveTab(activeTab === index ? null : index)}
+          >
+            {tab.label}
+          </TabHeader>
+          {activeTab === index && (
+            <TabContent>
+              {index === 0 &&
+                (isDeveloper ? (
+                  <QuillEditor
+                    initialValue={slateToHtml(game.purpose, slateToHtmlConfig)}
+                    onSave={async (htmlString) => {
+                      const token = localStorage.getItem("jwt");
+                      if (!token) return alert("Пользователь не авторизован");
+                      const fixedHtml = cleanQuillHtml(htmlString);
+                      const slate = htmlToSlate(fixedHtml, htmlToSlateConfig);
+                      const sendToStrapi = ensureTextNodesHaveType(slate);
+                      await handleGameUpdate(game.documentId, { game_purpose: sendToStrapi }, token);
+                      alert("Цель обновлена");
+                    }}
+                  />
+                ) : (
+                  <RichTextBlockRenderer blocks={game.purpose} />
+                ))}
+
+              {index === 1 &&
+                (isDeveloper ? (
+                  <QuillEditor
+                    initialValue={slateToHtml(game.plot, slateToHtmlConfig)}
+                    onSave={async (htmlString) => {
+                      const token = localStorage.getItem("jwt");
+                      if (!token) return alert("Пользователь не авторизован");
+                      const fixedHtml = cleanQuillHtml(htmlString);
+                      const slate = htmlToSlate(fixedHtml, htmlToSlateConfig);
+                      const sendToStrapi = ensureTextNodesHaveType(slate);
+                      await handleGameUpdate(game.documentId, { game_plot: sendToStrapi }, token);
+                      alert("Сюжет обновлён");
+                    }}
+                  />
+                ) : (
+                  <RichTextBlockRenderer blocks={game.plot} />
+                ))}
+
+              {index === 2 && game.reviews}
+
+              {index === 3 &&
+                (isDeveloper ? (
+                  <QuillEditor
+                    initialValue={slateToHtml(game.about_author, slateToHtmlConfig)}
+                    onSave={async (htmlString) => {
+                      const token = localStorage.getItem("jwt");
+                      if (!token) return alert("Пользователь не авторизован");
+                      const fixedHtml = cleanQuillHtml(htmlString);
+                      const slate = htmlToSlate(fixedHtml, htmlToSlateConfig);
+                      const sendToStrapi = ensureTextNodesHaveType(slate);
+                      await handleGameUpdate(game.documentId, { about_author: sendToStrapi }, token);
+                      alert("Об авторе обновлено");
+                    }}
+                  />
+                ) : (
+                  <RichTextBlockRenderer blocks={game.about_author} />
+                ))}
+
+              {index === 4 &&
+                (isDeveloper ? (
+                  <textarea
+                    value={supportText}
+                    onChange={(e) => setSupportText(e.target.value)}
+                    onBlur={async () => {
+                      if (supportText.trim() === originalSupportText.trim()) return;
+                      const token = localStorage.getItem("jwt");
+                      if (!token) return alert("Пользователь не авторизован");
+                      await handleGameUpdate(game.documentId, { game_support: supportText }, token);
+                      setOriginalSupportText(supportText);
+                      alert("Поддержка обновлена");
+                    }}
+                    style={{
+                      width: "100%",
+                      minHeight: "120px",
+                      padding: "10px",
+                      fontSize: "14px",
+                      backgroundColor: "#1c1c1c",
+                      color: "#fff",
+                      border: "1px solid #444",
+                      borderRadius: "5px",
+                      resize: "vertical",
+                    }}
+                  />
+                ) : (
+                  <div dangerouslySetInnerHTML={{ __html: game.game_support }} />
+                ))}
+            </TabContent>
+          )}
+        </div>
+      ))}
+    </TabContainer>
+  );
+};
+
+
+export default Tabs

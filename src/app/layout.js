@@ -33,9 +33,8 @@ export default function RootLayout({ children }) {
               <div className="content">{children}</div>
             </div>
             <PurchaseModal />
-
             <Suspense fallback={null}>
-            <ClientPaymentRedirectHandler />
+              <ClientPaymentRedirectHandler />
             </Suspense>
             <ClientWrapperAuth />
           </Providers>

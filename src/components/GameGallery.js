@@ -29,7 +29,11 @@ const GalleryWrapper = styled.div`
 
     @media(max-width: 500px ){
    grid-template-columns: repeat(1, minmax(300px, 1fr));
+   padding: 5px;
   }
+
+   
+}
 `;
 
 

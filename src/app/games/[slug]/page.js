@@ -38,6 +38,7 @@ const GridContainer = styled.div`
             "slider"
             "tabs";
         gap: 15px;
+        padding: 0;
     }
 `;
 

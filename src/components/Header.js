@@ -373,12 +373,12 @@ const isGameGalleryPage = pathname === "/";
           font: "inherit",
         }}
       >
-        {filters.onlyMyDevelopedGames ? "Все игры" : "Мои игры"}
+        Мои игры
       </button>
     )
   ) : (
     <Link href="/" style={{ textDecoration: "none", color: "inherit" }}>
-      Каталог игр
+      Мои игры
     </Link>
   )}
 </FlexItemWrapper>
@@ -446,9 +446,16 @@ const isGameGalleryPage = pathname === "/";
               <StyledNextLink href="#">О платформе</StyledNextLink>
               <StyledNextLink href="#">Поддержка</StyledNextLink>
               {/* Mobile Login Button */}
-              <LoginButton onClick={() => setIsLoginOpen(true)}>
-                <LuLogIn size={20} /> Вход
-              </LoginButton>
+        {isAuthenticated ? (
+  <LoginButton onClick={handleLogout}>
+    <LuLogOut size={20} /> Выход
+  </LoginButton>
+) : (
+  <LoginButton onClick={openLoginModal}>
+    <LuLogIn size={20} /> Вход
+  </LoginButton>
+)}
+
             </MobileOffCanavasMenuContainer>
 
           </MobileOffCanvasMenu>

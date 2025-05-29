@@ -212,6 +212,10 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
     const [authorText, setAuthorText] = useState(author);
     const [isCompetencyModalOpen, setCompetencyModalOpen] = useState(false);
     const [localCompetencies, setLocalCompetencies] = useState(competencies);
+    const [originalDescriptionText, setOriginalDescriptionText] = useState(game.description || "");
+const [originalFormatText, setOriginalFormatText] = useState(format || "");
+const [originalAuthorText, setOriginalAuthorText] = useState(author || "");
+
 
 
     const isPublished = gameIsPublished;
@@ -239,7 +243,6 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
             }
         );
 
-        // No manual setIsPublished — the context will update `game`, which triggers useEffect
     };
 
 
@@ -411,24 +414,22 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
                 <textarea
                     defaultValue={descriptionText}
                     onChange={e => setDescriptionText(e.target.value)}
-                 onBlur={async () => {
-                                   try {
-                                   const token = localStorage.getItem("jwt");
-                                    if (!token) throw new Error("Пользователь не авторизован");
-                              
-                                   await handleGameUpdate(
-                                       game.documentId,
-                                      { description: descriptionText },
-                                       token
-                                    );
-                              
-            
-                                    alert("game description updated");
-                                  } catch (err) {
-                                   console.error(err);
-                                    alert("Не удалось сохранить game description");
-                                   }
-                                 }}
+onBlur={async () => {
+  if (descriptionText.trim() === originalDescriptionText.trim()) return;
+
+  try {
+    const token = localStorage.getItem("jwt");
+    if (!token) throw new Error("Пользователь не авторизован");
+
+    await handleGameUpdate(game.documentId, { description: descriptionText }, token);
+    setOriginalDescriptionText(descriptionText); // sync state after successful save
+    alert("Описание игры обновлено");
+  } catch (err) {
+    console.error(err);
+    alert("Не удалось сохранить описание игры");
+  }
+}}
+
                     onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
@@ -500,7 +501,14 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
               <textarea
                 value={formatText}
                 onChange={e => setFormatText(e.target.value)}
-                onBlur={() => updateField({ format: formatText })}
+                onBlur={() => {
+  if (formatText.trim() === originalFormatText.trim()) return;
+
+  updateField({ format: formatText }, () => {
+    setOriginalFormatText(formatText);
+  });
+}}
+
                 style={{
                     width: "100%",
                     minHeight: "40px",
@@ -545,7 +553,14 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
               <textarea
                 value={authorText}
                 onChange={e => setAuthorText(e.target.value)}
-                onBlur={() => updateField({ author: authorText })}
+                onBlur={() => {
+  if (authorText.trim() === originalAuthorText.trim()) return;
+
+  updateField({ author: authorText }, () => {
+    setOriginalAuthorText(authorText);
+  });
+}}
+
                 style={{
                     width: "100%",
                     minHeight: "40px",

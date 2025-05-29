@@ -33,6 +33,11 @@ position: relative;
   opacity: 1;
   visibility: visible
   }
+
+
+  @media (max-width: 768px) {
+  padding: 0;
+}
 `;
 
 const TopLeftBadge = styled.div`
@@ -48,6 +53,11 @@ const TopLeftBadge = styled.div`
   font-size: 1rem;
   gap: 4px;
   z-index: 2; 
+
+   @media (max-width: 500px) {
+  top: 0;
+  left: 0;
+}
 `;
 
 const TopRightBadge = styled.div`
@@ -59,6 +69,11 @@ const TopRightBadge = styled.div`
   padding: .4rem 1rem;
   font-size: 1rem;
   z-index: 2; 
+
+   @media (max-width: 500px) {
+  top: 0;
+  right: 0;
+}
 `;
 
 

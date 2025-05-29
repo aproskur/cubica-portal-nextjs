@@ -212,77 +212,6 @@ const PurchaseModal = () => {
     if (!isAuthenticated) return <LoginModal onClose={handleCloseModal} />;
 
 
-    /*
-    //Simulated payment success
-        const handlePurchase = async () => {
-            setLoading(true);
-            setError(null);
-            setSuccessMessage(null);
-    
-            try {
-                // Step 1: Create Order
-                const orderResponse = await createOrder(
-                    gameData.documentId,
-                    selectedPackage,
-                    startDate ? new Date(startDate).toISOString() : null,
-                    endDateRaw ? new Date(endDateRaw).toISOString() : null,
-                    price
-                );
-    
-    
-    
-                if (!orderResponse.success) {
-                    setError(mapOrderError(orderResponse.error));
-                    setLoading(false);
-                    return;
-                }
-    
-      
-    
-                // Simulated payment success (replace this with actual payment processing)
-                const paymentSuccess = true;
-    
-                if (paymentSuccess) {
-                    // Step 2: Update Order Status
-                    const orderDocumentId = orderResponse.order.documentId;
-                    const updateResponse = await updateOrderStatus(orderDocumentId, "paid");
-    
-                    if (!updateResponse.success) {
-                        setError("Failed to update order status.");
-                        setLoading(false);
-                        return;
-                    }
-    
-                    // Step 3: Create Purchase. 
-                    const purchaseResponse = await createPurchase(orderDocumentId);
-    
-                    if (!purchaseResponse.success) {
-                        setError("Error creating purchase.");
-                    } else {
-                        setPurchaseDone(true);
-    
-                        setSuccessMessage(
-                            <div style={{ lineHeight: "25px" }}>
-                                Покупка успешно завершена, вы можете найти игру в разделе{" "}
-                                <a href="/games/my" style={{ color: "rgb(var(--theme-yellow))", textDecoration: "none" }}>
-                                    Мои покупки
-                                </a>.
-                            </div>
-                        );
-                        refreshPurchasedGames();
-    
-                    }
-                } else {
-                    setError("Payment failed. Please try again.");
-                }
-            } catch (error) {
-                setError("An unexpected error occurred. Please try again.");
-                console.error(error);
-            } finally {
-                setLoading(false);
-            }
-        }; */
-
     const handlePurchase = async () => {
         setLoading(true);
         setError(null);
@@ -496,8 +425,6 @@ const PurchaseModal = () => {
                         {loading ? "Обработка..." : "Оплатить"}
                     </CubicaButton>
                 )}
-
-                <CubicaButton onClick={testRobokassaLink}>ROBOKASSA</CubicaButton>
             </ModalContent>
         </ModalOverlay>
     );
