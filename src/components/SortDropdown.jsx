@@ -2,6 +2,9 @@
 import React from 'react';
 import styled from 'styled-components';
 import { FiFilter, FiArrowUp, FiArrowDown } from 'react-icons/fi';
+import { FaSort } from 'react-icons/fa'
+import { BiSortAlt2 } from "react-icons/bi";
+import { MdSort } from "react-icons/md";
 
 const Container = styled.div`
   margin-bottom: 1rem;
@@ -89,7 +92,7 @@ const SortDropdown = ({
 <Header onClick={() => setIsOpen((prev) => !prev)} style={{ position: "relative" }}>
   {/* Left icon */}
   <div style={{ display: "flex", alignItems: "center", zIndex: 1 }}>
-    <FiFilter />
+    <MdSort />
   </div>
 
   {/* Centered label */}
