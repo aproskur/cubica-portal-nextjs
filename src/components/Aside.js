@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { fetchAllCompetencies } from "@/utils/apiService";
 import { useFilters, updateFilters } from "@/context/FiltersContext";
 import { BiSortAlt2 } from "react-icons/bi";
+import SortDropdown from "@/components/SortDropdown";
+
 
 const AsideContainer = styled.aside`
   width: 350px;
@@ -186,16 +188,6 @@ const Dropdown = ({ title,
           />
           {item.label}
         </div>
-      
-        {isSortDropdown && isSelected && (
-          <BiSortAlt2
-            className="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSortOrder?.(sortOrder === 'asc' ? 'desc' : 'asc');
-            }}
-          />
-        )}
       </DropdownListItem>
       
     );
@@ -231,7 +223,7 @@ const Dropdown = ({ title,
 
 const Aside = () => {
     const [dropdownState, setDropdownState] = useState({
-        sort: true,
+        sort: false,
         filter: true,
         gameGenre: false,
         showLinks: true,
@@ -313,17 +305,13 @@ const Aside = () => {
                 </SearchContainer>
                 <FilterGroup>
                     <SectionTitle>Сортировка</SectionTitle>
-                    <Dropdown
-  title="Сортировка"
-  icon={<FiFilter />}
-  type="radio"
-  stateKey="sort"
-  dropdownState={dropdownState}
-  setDropdownState={setDropdownState}
-  selectedValues={[filters.sort]}
-  onCheckboxToggle={handleToggleSort}
+<SortDropdown
+  sort={filters.sort}
   sortOrder={filters.sortOrder}
-  setSortOrder={(order) => updateFilters({ sortOrder: order })}
+  onToggleSort={handleToggleSort}
+  onChangeOrder={(order) => updateFilters({ sortOrder: order })}
+  isOpen={dropdownState.sort}
+  setIsOpen={(val) => setDropdownState((prev) => ({ ...prev, sort: val }))}
   items={[
     { label: "По алфавиту", value: "alphabet" },
     { label: "По популярности", value: "popularity" },
@@ -333,6 +321,8 @@ const Aside = () => {
     { label: "По дате публикации", value: "date" }
   ]}
 />
+
+
 
 
                 </FilterGroup>
