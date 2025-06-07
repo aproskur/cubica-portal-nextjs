@@ -23,7 +23,6 @@ export default function MyGamesPage() {
 
   // Add state for both games and links
   const [games, setGames] = useState([]);
-  const [links, setLinks] = useState([]);
   const [fetching, setFetching] = useState(true);
 
   const formatDate = (date) => {
@@ -78,8 +77,6 @@ export default function MyGamesPage() {
 
   return (
     <Container>
-      {/*<h1>{user?.username}'s Games</h1>*/}
-      {/*Pass extracted links to the GameLinksTable */}
       <GameLinksTable games={filteredGames} />
     </Container>
   );

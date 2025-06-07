@@ -1,44 +1,30 @@
-import { handleGameUpdate } from "@/utils/apiService";
+import { handleGameUpdate, fetchGameBySlug } from '@/utils/apiService';
 
-/**
- * Unified function to update a game in backend, context, and local state.
- */
 export const saveAndUpdateGame = async (
-    fieldsToUpdate,
-    {
-        game,
-        token,
-        updateGameInList,
-        setLocalGame,
-        onSuccess,
-        onError,
-    }
+  fieldsToUpdate,
+  { game, token, updateGameInList, setLocalGame, onSuccess, onError }
 ) => {
-    try {
-        // Call API and get the full updated game object back
-        const response = await handleGameUpdate(game.documentId, fieldsToUpdate, token);
-        const updated = response.data; // unwrap it
+  try {
+    await handleGameUpdate(game.documentId, fieldsToUpdate, token);
 
-        // Update global context
-        if (updateGameInList) {
-            updateGameInList({
-                ...updated,
-                pricePerDay: updated.price_per_day ?? updated.pricePerDay,
-            });
+    // Refetch complete data to ensure competencies/images/relations are included
+    const fullGame = await fetchGameBySlug(game.slug, token);
 
-        }
+    if (!fullGame) throw new Error('Could not refetch full game data');
 
-        // Update local state (optional)
-        if (setLocalGame) {
-            setLocalGame((prev) => ({ ...prev, ...updated }));
-        }
+    const fullGameWithFixedPrices = {
+      ...fullGame,
+      pricePerDay: fullGame.price_per_day ?? fullGame.pricePerDay,
+    };
 
-        // Trigger optional callback
-        if (onSuccess) onSuccess();
+    if (updateGameInList) updateGameInList(fullGameWithFixedPrices);
+    if (setLocalGame) setLocalGame(fullGameWithFixedPrices);
+    if (onSuccess) onSuccess();
 
-        return updated;
-    } catch (err) {
-        console.error("Ошибка при обновлении игры:", err);
-        if (onError) onError(err);
-    }
+    return fullGameWithFixedPrices;
+  } catch (err) {
+    console.error('Ошибка при обновлении игры:', err);
+    if (onError) onError(err);
+    return null;
+  }
 };
