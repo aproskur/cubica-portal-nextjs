@@ -234,7 +234,7 @@ const InfoContainer = ({ token, isDeveloper, updateGameInList, onUpdate, onBuyCl
       game,
       token,
       updateGameInList,
-      setLocalGame: setCurrentGame, // ✅ correct way now
+      setLocalGame: setCurrentGame, // correct way now
       onSuccess,
     });
   };
@@ -353,7 +353,7 @@ const InfoContainer = ({ token, isDeveloper, updateGameInList, onUpdate, onBuyCl
             inputMode="decimal"
             defaultValue={pricePerDay}
             onBlur={(e) => {
-              updateField({ price_per_day: parseFloat(e.target.value) }, () =>
+              updateField({ pricePerDay: parseFloat(e.target.value) }, () =>
                 setIsEditingPrices(false)
               );
             }}
