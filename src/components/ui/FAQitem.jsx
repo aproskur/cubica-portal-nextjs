@@ -3,8 +3,13 @@ import styled from 'styled-components';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
 
 const AccordionWrapper = styled.div`
-  border-bottom: 1px solid rgb(var(--theme-yellow));
+  border-bottom: 1px solid rgba(var(--theme-yellow), 0.2);
   margin-bottom: 1rem;
+`;
+
+const QuestionText = styled.span`
+  text-align: left;
+  flex: 1;
 `;
 
 const QuestionButton = styled.button`
@@ -39,7 +44,7 @@ const FAQItem = ({ question, answer }) => {
   return (
     <AccordionWrapper>
       <QuestionButton onClick={() => setIsOpen((prev) => !prev)}>
-        {question}
+        <QuestionText>{question}</QuestionText>
         {isOpen ? <FiChevronUp size={20} /> : <FiChevronDown size={20} />}
       </QuestionButton>
       <AnswerWrapper $isOpen={isOpen}>
