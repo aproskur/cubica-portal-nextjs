@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import RichTextBlockRenderer from './RichTextBlockRenderer';
 import QuillEditor from './QuillEditor';
@@ -16,6 +16,7 @@ import {
 } from '@/utils/slateTransformHelpers';
 import { useIsMobile } from '@/app/hooks/useIsMobile';
 import FAQitem from './ui/FAQitem';
+import { useGamesData } from '@/context/GamesDataContext';
 
 const TabContainer = styled.div`
   display: flex;
@@ -82,22 +83,27 @@ const TabContent = styled.div`
   }
 `;
 
-const Tabs = ({ game }) => {
-  const { user } = useAuth();
-  const isDeveloper = user?.id === game?.developed_by?.id;
+const Tabs = () => {
   const isMobile = useIsMobile();
+  const { currentGame: game, setCurrentGame } = useGamesData();
+
+  const { user } = useAuth();
+  if (!game) return null;
+  const isDeveloper = user?.id === game?.developed_by?.id;
 
   return isMobile ? (
-    <MobileTabs game={game} isDeveloper={isDeveloper} />
+    <MobileTabs isDeveloper={isDeveloper} />
   ) : (
-    <DesktopTabs game={game} isDeveloper={isDeveloper} />
+    <DesktopTabs isDeveloper={isDeveloper} />
   );
 };
 
-const DesktopTabs = ({ isDeveloper, game }) => {
-  const [supportText, setSupportText] = useState(game.game_support || '');
-  const [originalSupportText, setOriginalSupportText] = useState(game.game_support || '');
+const DesktopTabs = ({ isDeveloper }) => {
+  const { currentGame: game, setCurrentGame } = useGamesData();
   const [activeTab, setActiveTab] = useState(0);
+  useEffect(() => {
+    setActiveTab(0); // reset to the first tab when a new game is loaded
+  }, [game]);
 
   const tabs = [
     { label: 'Для чего и кого' },
@@ -144,6 +150,7 @@ const DesktopTabs = ({ isDeveloper, game }) => {
                     },
                     token
                   );
+                  setCurrentGame({ ...game, purpose: sendToStrapi });
 
                   alert('Цель игры успешно сохранена');
                 } catch (error) {
@@ -178,7 +185,7 @@ const DesktopTabs = ({ isDeveloper, game }) => {
                     },
                     token
                   );
-
+                  setCurrentGame({ ...game, plot: sendToStrapi });
                   alert('Сюжет игры успешно сохранён');
                 } catch (error) {
                   console.error('Ошибка при сохранении сюжета:', error);
@@ -213,7 +220,7 @@ const DesktopTabs = ({ isDeveloper, game }) => {
                     },
                     token
                   );
-
+                  setCurrentGame({ ...game, about_author: sendToStrapi });
                   alert('Информация об авторе игры успешно сохранена');
                 } catch (error) {
                   console.error('Ошибка при сохранении об авторе:', error);
@@ -259,10 +266,13 @@ const DesktopTabs = ({ isDeveloper, game }) => {
   );
 };
 
-const MobileTabs = ({ game, isDeveloper }) => {
+const MobileTabs = ({ isDeveloper }) => {
+  const { currentGame: game, setCurrentGame } = useGamesData();
   const [activeTab, setActiveTab] = useState(0);
-  const [supportText, setSupportText] = useState(game.game_support || '');
-  const [originalSupportText, setOriginalSupportText] = useState(game.game_support || '');
+
+  useEffect(() => {
+    setActiveTab(0); // reset to the first tab when a new game is loaded
+  }, [game]);
 
   const tabs = [
     { label: 'Для чего и кого' },
@@ -295,6 +305,7 @@ const MobileTabs = ({ game, isDeveloper }) => {
                       const slate = htmlToSlate(fixedHtml, htmlToSlateConfig);
                       const sendToStrapi = ensureTextNodesHaveType(slate);
                       await handleGameUpdate(game.documentId, { game_purpose: sendToStrapi }, token);
+                      setCurrentGame({ ...game, purpose: sendToStrapi });
                       alert('Цель обновлена');
                     }}
                   />
@@ -313,6 +324,7 @@ const MobileTabs = ({ game, isDeveloper }) => {
                       const slate = htmlToSlate(fixedHtml, htmlToSlateConfig);
                       const sendToStrapi = ensureTextNodesHaveType(slate);
                       await handleGameUpdate(game.documentId, { game_plot: sendToStrapi }, token);
+                      setCurrentGame({ ...game, plot: sendToStrapi });
                       alert('Сюжет обновлён');
                     }}
                   />
@@ -333,6 +345,7 @@ const MobileTabs = ({ game, isDeveloper }) => {
                       const slate = htmlToSlate(fixedHtml, htmlToSlateConfig);
                       const sendToStrapi = ensureTextNodesHaveType(slate);
                       await handleGameUpdate(game.documentId, { about_author: sendToStrapi }, token);
+                      setCurrentGame({ ...game, about_author: sendToStrapi });
                       alert('Об авторе обновлено');
                     }}
                   />

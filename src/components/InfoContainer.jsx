@@ -6,6 +6,8 @@ import { FaEdit, FaCopy, FaArchive, FaEyeSlash, FaEye, FaStar } from 'react-icon
 import { LuShoppingCart, LuMonitorPlay } from 'react-icons/lu';
 import { handleGameUpdate } from '@/utils/apiService';
 import CompetencyModal from './modals/CompetencyModal';
+import { useGamesData } from '@/context/GamesDataContext';
+import { useEffect } from 'react';
 
 const InfoWrapper = styled.div`
   display: flex;
@@ -178,7 +180,37 @@ const Rating = ({ rating }) => {
   );
 };
 
-const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, onBuyClick }) => {
+const InfoContainer = ({ token, isDeveloper, updateGameInList, onUpdate, onBuyClick }) => {
+  const { currentGame: game, setCurrentGame } = useGamesData();
+
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isEditingPrices, setIsEditingPrices] = useState(false);
+  const [descriptionText, setDescriptionText] = useState('');
+  const [formatText, setFormatText] = useState('');
+  const [durationText, setDurationText] = useState('');
+  const [authorText, setAuthorText] = useState('');
+  const [isCompetencyModalOpen, setCompetencyModalOpen] = useState(false);
+  const [localCompetencies, setLocalCompetencies] = useState([]);
+  const [originalDescriptionText, setOriginalDescriptionText] = useState('');
+  const [originalFormatText, setOriginalFormatText] = useState('');
+  const [originalAuthorText, setOriginalAuthorText] = useState('');
+
+  useEffect(() => {
+    if (!game) return;
+
+    setDescriptionText(game.description || '');
+    setFormatText(game.format || '');
+    setDurationText(game.duration || '');
+    setAuthorText(game.author || '');
+    setOriginalDescriptionText(game.description || '');
+    setOriginalFormatText(game.format || '');
+    setOriginalAuthorText(game.author || '');
+    setLocalCompetencies(game.competencies || []);
+  }, [game]);
+
+  if (!game) return null; // Safe return
+
+  // Safe destructuring
   const {
     title,
     rating,
@@ -195,20 +227,6 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
     is_published: gameIsPublished,
   } = game;
 
-  if (!game || !game.competencies) return null;
-
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [isEditingPrices, setIsEditingPrices] = useState(false);
-  const [descriptionText, setDescriptionText] = useState(game.description || '');
-  const [formatText, setFormatText] = useState(format || '');
-  const [durationText, setDurationText] = useState(duration || '');
-  const [authorText, setAuthorText] = useState(author || '');
-  const [isCompetencyModalOpen, setCompetencyModalOpen] = useState(false);
-  const [localCompetencies, setLocalCompetencies] = useState(competencies);
-  const [originalDescriptionText, setOriginalDescriptionText] = useState(game.description || '');
-  const [originalFormatText, setOriginalFormatText] = useState(format || '');
-  const [originalAuthorText, setOriginalAuthorText] = useState(author || '');
-
   const isPublished = gameIsPublished;
 
   const updateField = async (fields, onSuccess) => {
@@ -216,7 +234,7 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
       game,
       token,
       updateGameInList,
-      setLocalGame: onUpdate, // passed setGame via onUpdate
+      setLocalGame: setCurrentGame, // ✅ correct way now
       onSuccess,
     });
   };
@@ -230,6 +248,7 @@ const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, o
         game,
         token,
         updateGameInList,
+        setLocalGame: setCurrentGame,
       }
     );
   };

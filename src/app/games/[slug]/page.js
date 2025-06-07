@@ -81,20 +81,31 @@ const GamePage = () => {
 
   const game = games.find((g) => g.slug === slug);
 
-  // added for the force setting
+  // added for the force setting, updated for resetting current game
   useEffect(() => {
+    let isMounted = true;
+
     const loadGame = async () => {
       try {
         const gameData = await fetchGameBySlug(slug, token);
-        console.log('Setting currentGame:', gameData);
-        setCurrentGame(gameData);
+        if (isMounted) {
+          console.log('Setting currentGame:', gameData);
+          setCurrentGame(gameData);
+        }
       } catch (err) {
         console.error('Failed to load game:', err);
         setError('Ошибка загрузки игры');
       }
     };
 
-    if (slug) loadGame();
+    if (slug) {
+      loadGame();
+    }
+
+    return () => {
+      isMounted = false;
+      setCurrentGame(null); // Reset currentGame on unmount
+    };
   }, [slug, token, setCurrentGame]);
 
   // Fix mutiple rerendering
@@ -161,7 +172,6 @@ const GamePage = () => {
           </SliderContainer>
           <InfoContainerWrapper>
             <InfoContainer
-              game={game}
               token={token}
               isDeveloper={isDeveloper}
               updateGameInList={updateGameInList}
@@ -180,7 +190,6 @@ const GamePage = () => {
         </FirstRow>
         <SecondRow>
           <Tabs
-            game={game}
             isEditable={isDeveloper}
             onUpdate={async (updatedFields) => {
               const updated = await saveAndUpdateGame(updatedFields, { game, token });
