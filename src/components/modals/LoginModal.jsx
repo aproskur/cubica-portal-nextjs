@@ -1,9 +1,9 @@
-"use client";
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import styled from "styled-components";
-import { FiEye, FiEyeOff } from "react-icons/fi";
-import { useAuth } from "@/context/AuthContext";
+'use client';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import styled from 'styled-components';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
+import { useAuth } from '@/context/AuthContext';
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -56,7 +56,7 @@ const StyledInputWrapper = styled.div`
 const StyledInput = styled.input`
   width: 100%;
   padding: 12px;
-  padding-right: 40px; 
+  padding-right: 40px;
   margin-bottom: 12px;
   border: 1px solid rgba(var(--theme-grey), 0.5);
   border-radius: 5px;
@@ -126,13 +126,13 @@ const ErrorMessage = styled.p`
 
 const LoginModal = ({ isOpen, onClose }) => {
   const { login, register, isLoginModalOpen } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
-  const [username, setUsername] = useState(""); // Only needed for registration
-
+  const [username, setUsername] = useState(''); // Only needed for registration
+  const [identifier, setIdentifier] = useState('');
 
   if (!isOpen) return null;
 
@@ -140,55 +140,73 @@ const LoginModal = ({ isOpen, onClose }) => {
     e.preventDefault();
     try {
       if (isRegisterMode) {
-        await register(username, email, password);
+        await register(username, email, password); // registration
       } else {
-        await login(email, password);
+        await login(identifier, password); // login
       }
       onClose();
     } catch (err) {
-      setError(err.message || "Operation failed.");
+      setError(err.message || 'Operation failed.');
     }
   };
 
   const toggleMode = () => {
     setIsRegisterMode(!isRegisterMode);
-    setEmail("");
-    setPassword("");
-    setUsername("");
-    setError("");
+    setEmail('');
+    setPassword('');
+    setUsername('');
+    setError('');
   };
 
   const handleClose = () => {
-    setEmail("");
-    setPassword("");
-    setUsername("");
-    setError("");
+    setIdentifier('');
+    setEmail('');
+    setUsername('');
+    setPassword('');
+    setError('');
     setIsRegisterMode(false);
     onClose();
   };
-
-
 
   return (
     <ModalOverlay>
       <ModalContent>
         <CloseButton onClick={handleClose}>&times;</CloseButton>
-        <h2>{isRegisterMode ? "Регистрация" : "Вход"}</h2>
+        <h2>{isRegisterMode ? 'Регистрация' : 'Вход'}</h2>
 
         {error && <ErrorMessage>{error}</ErrorMessage>}
 
         <form onSubmit={handleSubmit}>
-          <StyledInput
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+          {isRegisterMode ? (
+            <>
+              <StyledInput
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <StyledInput
+                type="text"
+                placeholder="Имя пользователя"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </>
+          ) : (
+            <StyledInput
+              type="text"
+              placeholder="Email или имя пользователя"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              required
+            />
+          )}
 
           <StyledInputWrapper>
             <StyledInput
-              type={isPasswordVisible ? "text" : "password"}
+              type={isPasswordVisible ? 'text' : 'password'}
               placeholder="Пароль"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -199,22 +217,13 @@ const LoginModal = ({ isOpen, onClose }) => {
             </EyeIcon>
           </StyledInputWrapper>
 
-          {isRegisterMode && (
-            <StyledInput
-              type="text"
-              placeholder="Имя пользователя"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          )}
           <StyledButton type="submit">
-            {isRegisterMode ? "Зарегистрироваться" : "Войти"}
+            {isRegisterMode ? 'Зарегистрироваться' : 'Войти'}
           </StyledButton>
-
         </form>
+
         <ToggleText onClick={toggleMode}>
-          {isRegisterMode ? "Уже есть аккаунт? Войти" : "Нет аккаунта? Зарегистрироваться"}
+          {isRegisterMode ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Зарегистрироваться'}
         </ToggleText>
       </ModalContent>
     </ModalOverlay>
