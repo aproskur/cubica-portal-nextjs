@@ -75,11 +75,10 @@ const GamePage = () => {
   const { slug } = useParams(); // Get slug from URL
   const { user, token } = useAuth(); // token might be undefined
   const { openPurchaseModal, setIsModalOpen } = useModal();
-  const { updateGameInList, games, setCurrentGame } = useGamesData();
 
   const [fetchedSlugs, setFetchedSlugs] = useState(new Set());
 
-  const game = games.find((g) => g.slug === slug);
+  const { currentGame: game, setCurrentGame, updateGameInList } = useGamesData();
 
   // added for the force setting, updated for resetting current game
   useEffect(() => {

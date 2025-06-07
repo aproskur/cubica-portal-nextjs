@@ -83,8 +83,8 @@ export const fetchGames = async ({ filters = {}, user = null } = {}) => {
         images: imageArray,
         rating: game.rating || 0,
         totalPlayed: game.total_played || 0,
-        pricePerLaunch: game.pricePerLaunch || 0,
-        pricePerMonth: game.pricePerMonth || 0,
+        pricePerLaunch: game.price_per_launch || 0,
+        pricePerMonth: game.price_per_month || 0,
         pricePerDay: game.price_per_day || 0,
         description: game.description || 'No description available.',
         developed_by: developer,
@@ -126,6 +126,8 @@ export const fetchGameBySlug = async (slug, token) => {
   const json = await res.json();
   const game = json.data;
 
+  console.log('Fetched game API :', game);
+
   const competencies = Array.isArray(game.competencies)
     ? game.competencies.map((comp) => ({
         id: comp.id,
@@ -152,24 +154,51 @@ export const fetchGameBySlug = async (slug, token) => {
     : [];
 
   return {
+    // Base
     ...game,
-    image: coverImage, // correct cover
-    images: imageArray, // for Swiper
+
+    // Renamed / normalized fields
+    title: game.title || '',
+    description: game.description || '',
+    format: game.format || '',
+    duration: game.duration || '',
+    author: game.author || '',
+    is_published: game.is_published ?? false,
+    developed_by: game.developed_by ?? null,
+    documentId: game.documentId,
+
+    // Prices
+    pricePerLaunch: game.price_per_launch ?? null,
+    pricePerDay: game.price_per_day ?? null,
+    pricePerMonth: game.price_per_month ?? null,
+
+    // Rich fields
     purpose: game.game_purpose || [],
     plot: game.game_plot || [],
-    about_author: game.about_author || '', // FIXED
+    about_author: game.about_author || '',
     game_support: game.game_support || '',
-    totalPlayed: game.total_played || '',
+
+    // Media
+    image: coverImage,
+    images: imageArray,
+
+    // Stats
+    totalPlayed: game.total_played || 0,
     reviews: game.reviews_tmp || '',
+
+    // Meta
     publishedAt: game.game_published_at || null,
-    competencies: competencies || [],
+
+    // Competencies
+    competencies,
+
+    // Contacts
     contactsTelegram: game.contacts_telegram || '',
     contactsWhatsapp: game.contacts_whatsapp || '',
     contactsEmail: game.contacts_email || '',
     contactsPhone: game.contacts_phone || '',
   };
 };
-
 // Fetch purchases for a user
 export const fetchUserPurchases = async () => {
   try {

@@ -1,27 +1,31 @@
 import { handleGameUpdate, fetchGameBySlug } from '@/utils/apiService';
 
+// Utility: convert camelCase keys to snake_case
+const toSnakeCase = (obj) =>
+  Object.fromEntries(
+    Object.entries(obj).map(([key, value]) => [
+      key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`),
+      value,
+    ])
+  );
+
 export const saveAndUpdateGame = async (
   fieldsToUpdate,
   { game, token, updateGameInList, setLocalGame, onSuccess, onError }
 ) => {
   try {
-    await handleGameUpdate(game.documentId, fieldsToUpdate, token);
+    const fieldsForBackend = toSnakeCase(fieldsToUpdate); // <-- FIX
 
-    // Refetch complete data to ensure competencies/images/relations are included
+    await handleGameUpdate(game.documentId, fieldsForBackend, token);
+
     const fullGame = await fetchGameBySlug(game.slug, token);
-
     if (!fullGame) throw new Error('Could not refetch full game data');
 
-    const fullGameWithFixedPrices = {
-      ...fullGame,
-      pricePerDay: fullGame.price_per_day ?? fullGame.pricePerDay,
-    };
-
-    if (updateGameInList) updateGameInList(fullGameWithFixedPrices);
-    if (setLocalGame) setLocalGame(fullGameWithFixedPrices);
+    if (updateGameInList) updateGameInList(fullGame);
+    if (setLocalGame) setLocalGame(fullGame);
     if (onSuccess) onSuccess();
 
-    return fullGameWithFixedPrices;
+    return fullGame;
   } catch (err) {
     console.error('Ошибка при обновлении игры:', err);
     if (onError) onError(err);
