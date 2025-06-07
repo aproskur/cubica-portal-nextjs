@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useAuth } from "@/context/AuthContext";
-import LoginModal from "@/components/LoginModal";
+import { useAuth } from '@/context/AuthContext';
+import LoginModal from '@/components/modals/LoginModal';
 
 const ClientWrapperAuth = () => {
-    const { isLoginModalOpen, closeLoginModal } = useAuth();
+  const { isLoginModalOpen, closeLoginModal } = useAuth();
 
-    return <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />;
+  return <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />;
 };
 
 export default ClientWrapperAuth;

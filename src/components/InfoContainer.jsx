@@ -1,65 +1,64 @@
-"use client"
-import styled from "styled-components";
-import { useState } from "react";
-import { saveAndUpdateGame } from "@/utils/gameHelpers";
-import { FaEdit, FaCopy, FaArchive, FaEyeSlash, FaEye, FaStar } from "react-icons/fa";
-import { LuShoppingCart, LuMonitorPlay } from "react-icons/lu";
-import { handleGameUpdate } from "@/utils/apiService";
-import CompetencyModal from "./CompetencyModal";
-
+'use client';
+import styled from 'styled-components';
+import { useState } from 'react';
+import { saveAndUpdateGame } from '@/utils/gameHelpers';
+import { FaEdit, FaCopy, FaArchive, FaEyeSlash, FaEye, FaStar } from 'react-icons/fa';
+import { LuShoppingCart, LuMonitorPlay } from 'react-icons/lu';
+import { handleGameUpdate } from '@/utils/apiService';
+import CompetencyModal from './modals/CompetencyModal';
 
 const InfoWrapper = styled.div`
-    display: flex;
-    width: 100%;
-    height: 100%;
-    flex-direction: column;
-    gap: 10px;
-    background-color: inherit;
-    color: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); 
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  gap: 10px;
+  background-color: inherit;
+  color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 `;
 
 const Title = styled.h1`
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin: 0;
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin: 0;
 `;
 
 const Reviews = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
 `;
 
 const PriceWrapper = styled.div`
-    display: flex;
-    justify-content: space-between;
-    font-size: 1rem;
-    font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  font-size: 1rem;
+  font-weight: bold;
 
-    span {
-        color: rgb(var(--theme-yellow));
-    }
+  span {
+    color: rgb(var(--theme-yellow));
+  }
 `;
 
 const Description = styled.p`
-    font-size: 1rem;
-    line-height: 1.5;
-    color: #ccc; 
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #ccc;
 `;
 
 const GameDetails = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9rem;
 
-    span {
-        font-weight: bold;
-    }
+  span {
+    font-weight: bold;
+  }
 `;
 
 const ButtonGroup = styled.div`
@@ -85,17 +84,17 @@ const ButtonGroup = styled.div`
 `;
 
 const Delimeter = styled.div`
-    width: 100%; 
-    height: 1px; 
-    background-color: rgba(var(--theme-yellow), 0.5);
-    margin: 20px 0; 
+  width: 100%;
+  height: 1px;
+  background-color: rgba(var(--theme-yellow), 0.5);
+  margin: 20px 0;
 `;
-
 
 const StarsWrapper = styled.div`
   display: flex;
-    gap: 5px;
-    align-items: center;`;
+  gap: 5px;
+  align-items: center;
+`;
 
 const PriceInput = styled.input`
   width: 50px;
@@ -147,11 +146,11 @@ const IconButton = styled.div`
   position: relative;
   transition: background 0.3s;
   color: rgb(var(--theme-grey));
- font-size: 20px;
+  font-size: 20px;
 
   &:hover {
     background: rgba(var(--theme-grey), 0.7);
-     color: rgb(var(--foreground));
+    color: rgb(var(--foreground));
   }
 
   &:hover::after {
@@ -163,436 +162,427 @@ const IconButton = styled.div`
     border-radius: 5px;
     font-size: 12px;
     white-space: nowrap;
-     bottom: 45px; 
+    bottom: 45px;
     z-index: 999;
-
   }
-
 `;
 
-
-
 const Rating = ({ rating }) => {
-    return (
-        <StarsWrapper>
-            {[...Array(5)].map((_, index) => (
-                <FaStar key={index} color={index < rating ? "rgb(var(--theme-yellow))" : "#ccc"} />
-            ))}
-            {rating === 0 && <span>Нет оценки</span>}
-        </StarsWrapper>
-    );
+  return (
+    <StarsWrapper>
+      {[...Array(5)].map((_, index) => (
+        <FaStar key={index} color={index < rating ? 'rgb(var(--theme-yellow))' : '#ccc'} />
+      ))}
+      {rating === 0 && <span>Нет оценки</span>}
+    </StarsWrapper>
+  );
 };
 
-
 const InfoContainer = ({ game, token, isDeveloper, updateGameInList, onUpdate, onBuyClick }) => {
-    const {
-        title,
-        rating,
-        totalPlayed,
-        description,
-        pricePerLaunch,
-        pricePerMonth,
-        pricePerDay,
-        format,
-        duration,
-        author,
-        details,
-        competencies,
-        is_published: gameIsPublished
-    } = game;
+  const {
+    title,
+    rating,
+    totalPlayed,
+    description,
+    pricePerLaunch,
+    pricePerMonth,
+    pricePerDay,
+    format,
+    duration,
+    author,
+    details,
+    competencies,
+    is_published: gameIsPublished,
+  } = game;
 
+  if (!game || !game.competencies) return null;
 
-    if (!game || !game.competencies) return null;
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isEditingPrices, setIsEditingPrices] = useState(false);
+  const [descriptionText, setDescriptionText] = useState(game.description || '');
+  const [formatText, setFormatText] = useState(format || '');
+  const [durationText, setDurationText] = useState(duration || '');
+  const [authorText, setAuthorText] = useState(author || '');
+  const [isCompetencyModalOpen, setCompetencyModalOpen] = useState(false);
+  const [localCompetencies, setLocalCompetencies] = useState(competencies);
+  const [originalDescriptionText, setOriginalDescriptionText] = useState(game.description || '');
+  const [originalFormatText, setOriginalFormatText] = useState(format || '');
+  const [originalAuthorText, setOriginalAuthorText] = useState(author || '');
 
-    const [isEditingTitle, setIsEditingTitle] = useState(false);
-    const [isEditingPrices, setIsEditingPrices] = useState(false);
-    const [descriptionText,  setDescriptionText]  = useState(game.description  || "");
-    const [formatText, setFormatText] = useState(format);
-    const [durationText, setDurationText] = useState(duration);
-    const [authorText, setAuthorText] = useState(author);
-    const [isCompetencyModalOpen, setCompetencyModalOpen] = useState(false);
-    const [localCompetencies, setLocalCompetencies] = useState(competencies);
-    const [originalDescriptionText, setOriginalDescriptionText] = useState(game.description || "");
-const [originalFormatText, setOriginalFormatText] = useState(format || "");
-const [originalAuthorText, setOriginalAuthorText] = useState(author || "");
+  const isPublished = gameIsPublished;
 
+  const updateField = async (fields, onSuccess) => {
+    await saveAndUpdateGame(fields, {
+      game,
+      token,
+      updateGameInList,
+      setLocalGame: onUpdate, // passed setGame via onUpdate
+      onSuccess,
+    });
+  };
 
+  const handleTogglePublished = async () => {
+    const newStatus = !game.is_published;
 
-    const isPublished = gameIsPublished;
+    await saveAndUpdateGame(
+      { is_published: newStatus },
+      {
+        game,
+        token,
+        updateGameInList,
+      }
+    );
+  };
 
+  const durationLabels = {
+    d30_min: '30 минут',
+    d1_hr: '1 час',
+    d2_hr: '2 часа',
+    d3_hr: '3 часа',
+    d4_hr: '4 часа',
+    d5_hr: '5 часов',
+    d6_hr: '6 часов',
+    d8_hr: '8 часов',
+  };
 
-    const updateField = async (fields, onSuccess) => {
-        await saveAndUpdateGame(fields, {
-            game,
-            token,
-            updateGameInList,
-            setLocalGame: onUpdate, // passed setGame via onUpdate
-            onSuccess
-        });
-    };
+  const durationOptions = {
+    d30_min: '30 минут',
+    d1_hr: '1 час',
+    d2_hr: '2 часа',
+    d3_hr: '3 часа',
+    d4_hr: '4 часа',
+    d5_hr: '5 часов',
+    d6_hr: '6 часов',
+    d8_hr: '8 часов',
+  };
 
-    const handleTogglePublished = async () => {
-        const newStatus = !game.is_published;
-
-        await saveAndUpdateGame(
-            { is_published: newStatus },
-            {
-                game,
-                token,
-                updateGameInList,
+  return (
+    <InfoWrapper>
+      {isDeveloper && isEditingTitle ? (
+        <input
+          defaultValue={title}
+          autoFocus
+          onBlur={(e) => {
+            const newTitle = e.target.value.trim();
+            if (newTitle !== game.title) {
+              updateField({ title: newTitle });
             }
-        );
+            setIsEditingTitle(false);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              e.stopPropagation();
+              e.target.blur();
+            }
+          }}
+          style={{
+            fontSize: '1.8rem',
+            fontWeight: 'bold',
+            background: 'transparent',
+            color: '#fff',
+            border: '1px solid rgba(var(--theme-yellow), 0.5)',
+            borderRadius: '4px',
+            padding: '4px 8px',
+            marginBottom: '4px',
+          }}
+        />
+      ) : (
+        <Title
+          onClick={() => isDeveloper && setIsEditingTitle(true)}
+          style={{ cursor: isDeveloper ? 'pointer' : 'default' }}
+        >
+          {title}
+        </Title>
+      )}
 
-    };
+      {isDeveloper && (
+        <div
+          style={{
+            fontSize: '0.75rem',
+            fontWeight: 500,
+            color: 'rgb(var(--theme-grey))',
+          }}
+        >
+          Вы разработчик этой игры
+        </div>
+      )}
 
+      <Reviews>
+        <Rating rating={rating} />
+        <span>{totalPlayed} запусков </span>
+      </Reviews>
+      {isDeveloper && isEditingPrices ? (
+        <PriceEditWrapper>
+          <PriceInput
+            type="text"
+            inputMode="decimal"
+            defaultValue={pricePerLaunch}
+            onBlur={(e) => {
+              updateField({ pricePerLaunch: parseFloat(e.target.value) }, () =>
+                setIsEditingPrices(false)
+              );
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.target.blur();
+            }}
+          />
+          <PriceLabelDevmode>₽ / запуск</PriceLabelDevmode>
 
-    const durationLabels = {
-        "d30_min": "30 минут",
-        "d1_hr": "1 час",
-        "d2_hr": "2 часа",
-        "d3_hr": "3 часа",
-        "d4_hr": "4 часа",
-        "d5_hr": "5 часов",
-        "d6_hr": "6 часов",
-        "d8_hr": "8 часов"
-      };
+          <PriceInput
+            type="text"
+            inputMode="decimal"
+            defaultValue={pricePerDay}
+            onBlur={(e) => {
+              updateField({ price_per_day: parseFloat(e.target.value) }, () =>
+                setIsEditingPrices(false)
+              );
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.target.blur();
+            }}
+          />
+          <PriceLabelDevmode>₽ / день</PriceLabelDevmode>
 
-      const durationOptions = {
-        "d30_min": "30 минут",
-        "d1_hr": "1 час",
-        "d2_hr": "2 часа",
-        "d3_hr": "3 часа",
-        "d4_hr": "4 часа",
-        "d5_hr": "5 часов",
-        "d6_hr": "6 часов",
-        "d8_hr": "8 часов"
-      };
-      
-    return (
-        <InfoWrapper>
-            {isDeveloper && isEditingTitle ? (
-                <input
-                    defaultValue={title}
-                    autoFocus
-                    onBlur={(e) => {
-                        const newTitle = e.target.value.trim();
-                        if (newTitle !== game.title) {
-                          updateField({ title: newTitle });
-                        }
-                        setIsEditingTitle(false);
-                      }}
-                      
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            e.target.blur();
-                        }
-                    }}
-                    style={{
-                        fontSize: "1.8rem",
-                        fontWeight: "bold",
-                        background: "transparent",
-                        color: "#fff",
-                        border: "1px solid rgba(var(--theme-yellow), 0.5)",
-                        borderRadius: "4px",
-                        padding: "4px 8px",
-                        marginBottom: "4px",
-                    }}
-                />
-            ) : (
-                <Title onClick={() => isDeveloper && setIsEditingTitle(true)} style={{ cursor: isDeveloper ? "pointer" : "default" }}>
-                    {title}
-                </Title>
-            )}
+          <PriceInput
+            type="text"
+            inputMode="decimal"
+            defaultValue={pricePerMonth}
+            onBlur={(e) => {
+              updateField({ pricePerMonth: parseFloat(e.target.value) }, () =>
+                setIsEditingPrices(false)
+              );
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.target.blur();
+            }}
+          />
+          <PriceLabelDevmode>₽ / месяц</PriceLabelDevmode>
+        </PriceEditWrapper>
+      ) : (
+        <PriceWrapper onClick={() => isDeveloper && setIsEditingPrices(true)}>
+          <div style={{ color: 'rgb(var(--theme-yellow))' }}>
+            {pricePerLaunch}{' '}
+            <span style={{ color: 'rgb(var(--theme-grey))', fontWeight: 'normal' }}>
+              ₽ / запуск
+            </span>
+          </div>
+          <div style={{ color: 'rgb(var(--theme-yellow))' }}>
+            {pricePerDay}{' '}
+            <span style={{ color: 'rgb(var(--theme-grey))', fontWeight: 'normal' }}>₽ / день</span>
+          </div>
+          <div style={{ color: 'rgb(var(--theme-yellow))' }}>
+            {pricePerMonth}{' '}
+            <span style={{ color: 'rgb(var(--theme-grey))', fontWeight: 'normal' }}>₽ / месяц</span>
+          </div>
+        </PriceWrapper>
+      )}
 
-            {isDeveloper && (
-                <div style={{
-                    fontSize: "0.75rem",
-                    fontWeight: 500,
-                    color: "rgb(var(--theme-grey))",
+      <ButtonGroup>
+        {/* Always shown */}
+        <IconButton data-tooltip="Демо">
+          <LuMonitorPlay />
+        </IconButton>
+        <IconButton data-tooltip="Купить" onClick={onBuyClick}>
+          <LuShoppingCart />
+        </IconButton>
 
-                }}>
-                    Вы разработчик этой игры
-                </div>
-            )}
+        {/* Only for developers */}
+        {isDeveloper && (
+          <>
+            <IconButton data-tooltip="Редактировать">
+              <FaEdit />
+            </IconButton>
 
-            <Reviews>
-                <Rating rating={rating} />
-                <span>{totalPlayed} запусков </span>
-            </Reviews>
-            {isDeveloper && isEditingPrices ? (
-                <PriceEditWrapper>
-                    <PriceInput
-                        type="text"
-                        inputMode="decimal"
-                        defaultValue={pricePerLaunch}
-                        onBlur={(e) => {
-                            updateField({ pricePerLaunch: parseFloat(e.target.value) }, () => setIsEditingPrices(false));
-                        }}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") e.target.blur();
-                        }}
-                    />
-                    <PriceLabelDevmode>₽ / запуск</PriceLabelDevmode>
+            <IconButton
+              data-tooltip={isPublished ? 'Скрыть игру' : 'Опубликовать игру'}
+              onClick={handleTogglePublished}
+              style={{
+                border: `1px solid rgb(var(--theme-${isPublished ? 'yellow' : 'grey'}))`,
+              }}
+            >
+              {isPublished ? <FaEyeSlash /> : <FaEye />}
+            </IconButton>
 
-                    <PriceInput
-                        type="text"
-                        inputMode="decimal"
-                        defaultValue={pricePerDay}
-                        onBlur={(e) => {
-                            updateField({ price_per_day: parseFloat(e.target.value) }, () => setIsEditingPrices(false));
-                        }}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") e.target.blur();
-                        }}
-                    />
-                    <PriceLabelDevmode>₽ / день</PriceLabelDevmode>
+            <IconButton data-tooltip="В архив">
+              <FaArchive />
+            </IconButton>
+          </>
+        )}
+      </ButtonGroup>
 
-                    <PriceInput
-                        type="text"
-                        inputMode="decimal"
-                        defaultValue={pricePerMonth}
-                        onBlur={(e) => {
-                            updateField({ pricePerMonth: parseFloat(e.target.value) }, () => setIsEditingPrices(false));
-                        }}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") e.target.blur();
-                        }}
-                    />
-                    <PriceLabelDevmode>₽ / месяц</PriceLabelDevmode>
-                </PriceEditWrapper>
-            ) : (
-                <PriceWrapper onClick={() => isDeveloper && setIsEditingPrices(true)}>
-                    <div style={{ color: "rgb(var(--theme-yellow))" }}>
-                        {pricePerLaunch} <span style={{ color: "rgb(var(--theme-grey))", fontWeight: "normal" }}>₽ / запуск</span>
-                    </div>
-                    <div style={{ color: "rgb(var(--theme-yellow))" }}>
-                        {pricePerDay} <span style={{ color: "rgb(var(--theme-grey))", fontWeight: "normal" }}>₽ / день</span>
-                    </div>
-                    <div style={{ color: "rgb(var(--theme-yellow))" }}>
-                        {pricePerMonth} <span style={{ color: "rgb(var(--theme-grey))", fontWeight: "normal" }}>₽ / месяц</span>
-                    </div>
-                </PriceWrapper>
-            )}
+      <Delimeter />
+      {isDeveloper ? (
+        <textarea
+          defaultValue={descriptionText}
+          onChange={(e) => setDescriptionText(e.target.value)}
+          onBlur={async () => {
+            if (descriptionText.trim() === originalDescriptionText.trim()) return;
 
-            <ButtonGroup>
-                {/* Always shown */}
-                <IconButton data-tooltip="Демо">
-                    <LuMonitorPlay />
-                </IconButton>
-                <IconButton data-tooltip="Купить" onClick={onBuyClick}>
-                    <LuShoppingCart />
-                </IconButton>
+            try {
+              const token = localStorage.getItem('jwt');
+              if (!token) throw new Error('Пользователь не авторизован');
 
-                {/* Only for developers */}
-                {isDeveloper && (
-                    <>
-                        <IconButton data-tooltip="Редактировать">
-                            <FaEdit />
-                        </IconButton>
+              await handleGameUpdate(game.documentId, { description: descriptionText }, token);
+              setOriginalDescriptionText(descriptionText); // sync state after successful save
+              alert('Описание игры обновлено');
+            } catch (err) {
+              console.error(err);
+              alert('Не удалось сохранить описание игры');
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              e.stopPropagation();
+              e.target.blur();
+            }
+          }}
+          style={{
+            width: '100%',
+            minHeight: '100px',
+            padding: '10px',
+            fontSize: '14px',
+            backgroundColor: '#1c1c1c',
+            color: '#fff',
+            border: '1px solid #444',
+            borderRadius: '5px',
+            resize: 'vertical',
+          }}
+        />
+      ) : (
+        <Description>{description}</Description>
+      )}
 
-                        <IconButton
-                            data-tooltip={isPublished ? "Скрыть игру" : "Опубликовать игру"}
-                            onClick={handleTogglePublished}
-                            style={{
-                                border: `1px solid rgb(var(--theme-${isPublished ? "yellow" : "grey"}))`
-                            }}
-                        >
-                            {isPublished ? <FaEyeSlash /> : <FaEye />}
-                        </IconButton>
-
-                        <IconButton data-tooltip="В архив">
-                            <FaArchive />
-                        </IconButton>
-                    </>
-                )}
-            </ButtonGroup>
-
-            <Delimeter />
-            {isDeveloper ? (
-                <textarea
-                    defaultValue={descriptionText}
-                    onChange={e => setDescriptionText(e.target.value)}
-onBlur={async () => {
-  if (descriptionText.trim() === originalDescriptionText.trim()) return;
-
-  try {
-    const token = localStorage.getItem("jwt");
-    if (!token) throw new Error("Пользователь не авторизован");
-
-    await handleGameUpdate(game.documentId, { description: descriptionText }, token);
-    setOriginalDescriptionText(descriptionText); // sync state after successful save
-    alert("Описание игры обновлено");
-  } catch (err) {
-    console.error(err);
-    alert("Не удалось сохранить описание игры");
-  }
-}}
-
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            e.target.blur();
-                        }
-                    }}
-                    style={{
-                        width: "100%",
-                        minHeight: "100px",
-                        padding: "10px",
-                        fontSize: "14px",
-                        backgroundColor: "#1c1c1c",
-                        color: "#fff",
-                        border: "1px solid #444",
-                        borderRadius: "5px",
-                        resize: "vertical",
-                    }}
-                />
-            ) : (
-                <Description>{description}</Description>
-            )}
-
-            <Delimeter />
-     {/* Editable Game Details */}
-     <GameDetails>
+      <Delimeter />
+      {/* Editable Game Details */}
+      <GameDetails>
         {isDeveloper ? (
           <>
-{isDeveloper && Array.isArray(localCompetencies) && (
-  <>
-    <span>Тренируемые компетенции: </span>
-    <span
-      onClick={() => setCompetencyModalOpen(true)}
-      style={{ cursor: "pointer", textDecoration: "underline", fontWeight: "normal" }}
-    >
-      {localCompetencies
-        .filter((comp) => comp && typeof comp === "object" && comp.name)
-        .map((comp) => comp.name.charAt(0).toUpperCase() + comp.name.slice(1))
-        .join(", ")}
-    </span>
+            {isDeveloper && Array.isArray(localCompetencies) && (
+              <>
+                <span>Тренируемые компетенции: </span>
+                <span
+                  onClick={() => setCompetencyModalOpen(true)}
+                  style={{ cursor: 'pointer', textDecoration: 'underline', fontWeight: 'normal' }}
+                >
+                  {localCompetencies
+                    .filter((comp) => comp && typeof comp === 'object' && comp.name)
+                    .map((comp) => comp.name.charAt(0).toUpperCase() + comp.name.slice(1))
+                    .join(', ')}
+                </span>
 
-    {isCompetencyModalOpen && (
-      <CompetencyModal 
-
- gameId={game.documentId}
- currentCompetencies={localCompetencies
-    .filter((c) => c && (c.documentId || c.id))
-    .map((c) => c.documentId || c.id)}
-  
-
- onClose={() => setCompetencyModalOpen(false)}
- onSave={(newCompetencies) => {
-    updateField({ competencies: newCompetencies.map(c => c.id) }); // backend update
-    setLocalCompetencies(newCompetencies); // frontend update
-  }}
-  
- updateField={updateField}
-/>
-
-
-
-)}
-
-  </>
-)}
+                {isCompetencyModalOpen && (
+                  <CompetencyModal
+                    gameId={game.documentId}
+                    currentCompetencies={localCompetencies
+                      .filter((c) => c && (c.documentId || c.id))
+                      .map((c) => c.documentId || c.id)}
+                    onClose={() => setCompetencyModalOpen(false)}
+                    onSave={(newCompetencies) => {
+                      updateField({ competencies: newCompetencies.map((c) => c.id) }); // backend update
+                      setLocalCompetencies(newCompetencies); // frontend update
+                    }}
+                    updateField={updateField}
+                  />
+                )}
+              </>
+            )}
 
             <div>
               <span>Формат:</span>
               <textarea
                 value={formatText}
-                onChange={e => setFormatText(e.target.value)}
+                onChange={(e) => setFormatText(e.target.value)}
                 onBlur={() => {
-  if (formatText.trim() === originalFormatText.trim()) return;
+                  if (formatText.trim() === originalFormatText.trim()) return;
 
-  updateField({ format: formatText }, () => {
-    setOriginalFormatText(formatText);
-  });
-}}
-
+                  updateField({ format: formatText }, () => {
+                    setOriginalFormatText(formatText);
+                  });
+                }}
                 style={{
-                    width: "100%",
-                    minHeight: "40px",
-                    padding: "10px",
-                    fontSize: "14px",
-                    backgroundColor: "#1c1c1c",
-                    color: "#fff",
-                    border: "1px solid #444",
-                    borderRadius: "5px",
-                    resize: "vertical",
-                    marginTop: "15px"
+                  width: '100%',
+                  minHeight: '40px',
+                  padding: '10px',
+                  fontSize: '14px',
+                  backgroundColor: '#1c1c1c',
+                  color: '#fff',
+                  border: '1px solid #444',
+                  borderRadius: '5px',
+                  resize: 'vertical',
+                  marginTop: '15px',
                 }}
               />
             </div>
             <div>
-  <span>Продолжительность:</span>
-  <select
-    value={durationText}
-    onChange={e => setDurationText(e.target.value)}
-    onBlur={() => updateField({ duration: durationText })}
-    style={{
-      width: "100%",
-      padding: "10px",
-      fontSize: "14px",
-      backgroundColor: "#1c1c1c",
-      color: "#fff",
-      border: "1px solid #444",
-      borderRadius: "5px",
-      marginTop: "15px"
-    }}
-  >
-    <option value="">Выберите продолжительность</option>
-    {Object.entries(durationOptions).map(([value, label]) => (
-      <option key={value} value={value}>
-        {label}
-      </option>
-    ))}
-  </select>
-</div>
+              <span>Продолжительность:</span>
+              <select
+                value={durationText}
+                onChange={(e) => setDurationText(e.target.value)}
+                onBlur={() => updateField({ duration: durationText })}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  fontSize: '14px',
+                  backgroundColor: '#1c1c1c',
+                  color: '#fff',
+                  border: '1px solid #444',
+                  borderRadius: '5px',
+                  marginTop: '15px',
+                }}
+              >
+                <option value="">Выберите продолжительность</option>
+                {Object.entries(durationOptions).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div>
               <span>Автор:</span>
               <textarea
                 value={authorText}
-                onChange={e => setAuthorText(e.target.value)}
+                onChange={(e) => setAuthorText(e.target.value)}
                 onBlur={() => {
-  if (authorText.trim() === originalAuthorText.trim()) return;
+                  if (authorText.trim() === originalAuthorText.trim()) return;
 
-  updateField({ author: authorText }, () => {
-    setOriginalAuthorText(authorText);
-  });
-}}
-
+                  updateField({ author: authorText }, () => {
+                    setOriginalAuthorText(authorText);
+                  });
+                }}
                 style={{
-                    width: "100%",
-                    minHeight: "40px",
-                    padding: "10px",
-                    fontSize: "14px",
-                    backgroundColor: "#1c1c1c",
-                    color: "#fff",
-                    border: "1px solid #444",
-                    borderRadius: "5px",
-                    resize: "vertical",
-                    marginTop: "15px"
+                  width: '100%',
+                  minHeight: '40px',
+                  padding: '10px',
+                  fontSize: '14px',
+                  backgroundColor: '#1c1c1c',
+                  color: '#fff',
+                  border: '1px solid #444',
+                  borderRadius: '5px',
+                  resize: 'vertical',
+                  marginTop: '15px',
                 }}
               />
             </div>
           </>
         ) : (
           <>
-          <div>
-          <span>Тренируемые компетенции: </span>
-          <span style={{ fontWeight: "normal" }}>
-  {competencies
-    .filter((comp) => comp && comp.name)
-    .map((comp) => comp.name.charAt(0).toUpperCase() + comp.name.slice(1))
-    .join(", ")}
-</span>
-
+            <div>
+              <span>Тренируемые компетенции: </span>
+              <span style={{ fontWeight: 'normal' }}>
+                {competencies
+                  .filter((comp) => comp && comp.name)
+                  .map((comp) => comp.name.charAt(0).toUpperCase() + comp.name.slice(1))
+                  .join(', ')}
+              </span>
             </div>
             <div>
               <span>Формат:</span> {format}
             </div>
             <div>
-              <span>Продолжительность:</span>  {durationLabels[duration] || duration}
+              <span>Продолжительность:</span> {durationLabels[duration] || duration}
             </div>
             <div>
               <span>Автор:</span> {author}
@@ -600,9 +590,8 @@ onBlur={async () => {
           </>
         )}
       </GameDetails>
-
-        </InfoWrapper>
-    );
+    </InfoWrapper>
+  );
 };
 
 export default InfoContainer;

@@ -48,6 +48,8 @@ const GameGallery = () => {
     const { user } = useAuth();
     const { games } = useGamesData();
 
+    console.log("All games from context:", games);
+
     const sortKeyMap = {
         alphabet: "title",
         popularity: "totalPlayed",
@@ -147,8 +149,8 @@ const GameGallery = () => {
             })
           : filtered;
         
-      
-        return sorted;
+        
+           return sorted;
       }, [processedGames, filters, user]);
       
 

@@ -1,39 +1,38 @@
-"use client"
-import styled from "styled-components";
-import { CiShare2 } from "react-icons/ci"
+'use client';
+import styled from 'styled-components';
+import { CiShare2 } from 'react-icons/ci';
 
 const Table = styled.table`
- width: 100%;
+  width: 100%;
   border-collapse: separate; /* Changed from collapse */
-  border-spacing: 0 10px; 
-  font-size: .9rem;
+  border-spacing: 0 10px;
+  font-size: 0.9rem;
 
-    @media (max-width: 768px) {
-    display: flex;  
+  @media (max-width: 768px) {
+    display: flex;
     flex-direction: column;
-    text-align: center;  
-    justify-content: center; 
-    align-items: center; 
+    text-align: center;
+    justify-content: center;
+    align-items: center;
     padding: 10px;
     position: relative;
-    
   }
 `;
 
 const Th = styled.th`
-  background-color:rgb(var(--background));
+  background-color: rgb(var(--background));
   color: rgb(var(--foreground));
   padding: 10px;
   border-bottom: 1px solid rgba(var(--theme-yellow), 0.8);
   text-align: left;
   font-weight: 400;
 
-    &:nth-child(4) {
+  &:nth-child(4) {
     text-align: right;
   }
 
-    @media (max-width: 768px) {
-    display: none; 
+  @media (max-width: 768px) {
+    display: none;
   }
 `;
 
@@ -41,13 +40,13 @@ const Td = styled.td`
   padding: 10px;
   vertical-align: middle;
 
-      /* Right-align only "Все даты" column */
+  /* Right-align only "Все даты" column */
   &:nth-child(4) {
     text-align: right;
   }
 
-    @media (max-width: 768px) {
-    display: flex;  
+  @media (max-width: 768px) {
+    display: flex;
     flex-direction: column;
     text-align: left;
     padding: 10px;
@@ -62,33 +61,32 @@ const GameNameTd = styled(Td)`
 const DateContainer = styled.div`
   display: flex;
   align-items: center;
-  justify-content: flex-end; 
+  justify-content: flex-end;
   gap: 10px;
 
   @media (max-width: 768px) {
-  justify-content: flex-start;
-}
-
+    justify-content: flex-start;
+  }
 `;
 
 const HoverRow = styled.tr`
   transition: all 0.3s ease-in-out;
-   border: 1px solid rgba(var(--background), 1);
-   border-radius: 5px;
+  border: 1px solid rgba(var(--background), 1);
+  border-radius: 5px;
 
-   &:hover,
+  &:hover,
   &:focus-within {
-    box-shadow: 0 0 0 1px rgba(var(--theme-yellow), 1); 
+    box-shadow: 0 0 0 1px rgba(var(--theme-yellow), 1);
     border-radius: 5px;
     outline: none;
-     & > td > button > svg {
-      color: rgb(var(--theme-yellow)); 
+    & > td > button > svg {
+      color: rgb(var(--theme-yellow));
     }
   }
 
-   @media (max-width: 768px) {
+  @media (max-width: 768px) {
     display: block;
-    margin-bottom: 10px; 
+    margin-bottom: 10px;
     border: 1px solid rgba(var(--theme-yellow), 0.8);
     padding: 15px;
   }
@@ -116,10 +114,8 @@ const ShareButton = styled.button`
 `;
 
 const ShareIcon = styled(CiShare2)`
-color: rgb(var(--theme-grey));
-&:hover {
-color: rgb(var(--theme-yellow));
-`
+  color: rgb(var(--theme-yellow));
+`;
 
 const GameNameContainer = styled.div`
   display: flex;
@@ -150,7 +146,9 @@ const Tooltip = styled.div`
   opacity: 0;
   visibility: hidden;
   z-index: 1000;
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  transition:
+    opacity 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 
   ${GameNameContainer}:hover & {
@@ -160,24 +158,23 @@ const Tooltip = styled.div`
   }
 `;
 
-
 const GameShareButton = styled.button`
-background: none;
-border: 1px solid rgb(var(--theme-grey));
-cursor: pointer;
-padding: 5px;
-margin-left: 8px;
-display: flex;
-align-items: center;
-justify-content: center;
-width: 30px; 
-height: 30px; 
-border-radius: 5px; 
-transition: background 0.2s ease-in-out;
+  background: none;
+  border: 1px solid rgb(var(--theme-grey));
+  cursor: pointer;
+  padding: 5px;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  transition: background 0.2s ease-in-out;
 
-&:hover {
-  border: 1px solid rgb(var(--theme-yellow));
-}
+  &:hover {
+    border: 1px solid rgb(var(--theme-yellow));
+  }
 `;
 
 const GameLinksTable = ({ games: purchases }) => {
@@ -190,16 +187,18 @@ const GameLinksTable = ({ games: purchases }) => {
     alert(`Создать ссылку для игры: ${purchase.title}`);
   };
 
-
   const translateType = (type) => {
     switch (type) {
-      case "one-time": return "Разовый запуск";
-      case "day": return "День";
-      case "month": return "Месяц";
-      default: return "Неизвестно";
+      case 'one-time':
+        return 'Разовый запуск';
+      case 'day':
+        return 'День';
+      case 'month':
+        return 'Месяц';
+      default:
+        return 'Неизвестно';
     }
   };
-
 
   return (
     <Table>
@@ -220,7 +219,7 @@ const GameLinksTable = ({ games: purchases }) => {
                 <GameNameSpan>{purchase.title}</GameNameSpan>
                 <Tooltip>{purchase.title}</Tooltip>
                 <GameShareButton onClick={() => handleShare(purchase)}>
-                  <CiShare2 size={18} color="rgb(var(--theme-yellow))" />
+                  <ShareIcon size={18} />
                 </GameShareButton>
               </GameNameContainer>
             </GameNameTd>
@@ -228,7 +227,9 @@ const GameLinksTable = ({ games: purchases }) => {
             <Td>
               <DateContainer>
                 {purchase.startDate && purchase.endDate ? (
-                  <span>{purchase.startDate} - {purchase.endDate}</span>
+                  <span>
+                    {purchase.startDate} - {purchase.endDate}
+                  </span>
                 ) : (
                   <span>{purchase.date}</span>
                 )}
@@ -240,10 +241,5 @@ const GameLinksTable = ({ games: purchases }) => {
     </Table>
   );
 };
-
-
-
-
-
 
 export default GameLinksTable;

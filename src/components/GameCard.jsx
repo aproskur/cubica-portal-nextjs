@@ -1,28 +1,40 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import styled from "styled-components";
-import SquareIconButton from "./SquareIconButton";
-import { CiHeart } from "react-icons/ci";
-import { LuShoppingCart, LuGamepad2, LuLayoutDashboard } from "react-icons/lu";
-import { FaStar, FaInfoCircle, FaEdit, FaCopy, FaCheck, FaArchive, FaTimes, FaEyeSlash, FaEye } from "react-icons/fa";
-import { useState, useEffect, useDeferredValue } from "react";
-import { toggleFavorite, fetchFavorites } from "../utils/toggleFavourites";
-import { useAuth } from "../context/AuthContext";
-import { useModal } from "../context/ModalContext";
-import { handleGameUpdate } from "@/utils/apiService";
-import { useGamesData } from "@/context/GamesDataContext";
-import { saveAndUpdateGame } from "@/utils/gameHelpers";
-
+import Link from 'next/link';
+import styled from 'styled-components';
+import SquareIconButton from './ui/SquareIconButton';
+import { CiHeart } from 'react-icons/ci';
+import { LuShoppingCart, LuGamepad2, LuLayoutDashboard } from 'react-icons/lu';
+import {
+  FaStar,
+  FaInfoCircle,
+  FaEdit,
+  FaCopy,
+  FaCheck,
+  FaArchive,
+  FaTimes,
+  FaEyeSlash,
+  FaEye,
+} from 'react-icons/fa';
+import { useState, useEffect, useDeferredValue } from 'react';
+import { toggleFavorite, fetchFavorites } from '../utils/toggleFavourites';
+import { useAuth } from '../context/AuthContext';
+import { useModal } from '../context/ModalContext';
+import { handleGameUpdate } from '@/utils/apiService';
+import { useGamesData } from '@/context/GamesDataContext';
+import { saveAndUpdateGame } from '@/utils/gameHelpers';
 
 const CardWrapper = styled.div`
-position: relative; 
+  position: relative;
   background-color: inherit;
   border-radius: 5px;
   padding: 16px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border: ${({ $showDashedBorder }) => $showDashedBorder ? '2px dashed grey' : '2px solid rgb(var(--background))'};
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  border: ${({ $showDashedBorder }) =>
+    $showDashedBorder ? '2px dashed grey' : '2px solid rgb(var(--background))'};
 
   &:hover {
     transform: scale(1.02);
@@ -30,52 +42,52 @@ position: relative;
   }
 
   &:hover .hover-overlay {
-  opacity: 1;
-  visibility: visible
+    opacity: 1;
+    visibility: visible;
   }
 
-
   @media (max-width: 768px) {
-  padding: 0;
-}
+    padding: 0;
+  }
 `;
 
 const TopLeftBadge = styled.div`
   position: absolute;
-  top: 25px;
+  top: 30px;
   left: 16px;
   background-color: rgba(var(--theme-grey), 0.6);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: .4rem 1rem;
+  padding: 0.4rem 1rem;
   font-size: 1rem;
   gap: 4px;
-  z-index: 2; 
+  z-index: 2;
+  min-width: 60px;
 
-   @media (max-width: 500px) {
-  top: 0;
-  left: 0;
-}
+  @media (max-width: 500px) {
+    top: 10px;
+    left: 0;
+  }
 `;
 
 const TopRightBadge = styled.div`
   position: absolute;
-  top: 25px;
-  right: 15px;
+  top: 30px;
+  right: 16px;
   background-color: rgba(var(--theme-grey), 0.6);
   color: #fff;
-  padding: .4rem 1rem;
+  padding: 0.4rem 1rem;
   font-size: 1rem;
-  z-index: 2; 
+  z-index: 2;
+  min-width: 60px;
 
-   @media (max-width: 500px) {
-  top: 0;
-  right: 0;
-}
+  @media (max-width: 500px) {
+    top: 10px;
+    right: 0;
+  }
 `;
-
 
 const DeveloperRibbon = styled.div`
   position: absolute;
@@ -85,26 +97,25 @@ const DeveloperRibbon = styled.div`
   color: #fff;
   font-size: 0.7rem;
   font-weight: 600;
-  padding: .3rem .6rem;
+  padding: 0.3rem 0.6rem;
   border-radius: 0px 4px 0px 4px;
-z-index: 1;
+  z-index: 1;
   pointer-events: none;
 `;
 
 const CardImage = styled.img`
   width: 100%;
-  height: 250px;
+  height: 300px;
   object-fit: cover;
   border-radius: 5px;
   margin-bottom: 12px;
   cursor: pointer;
 `;
 
-
 const CardImageWrapper = styled.div`
   position: relative;
   width: 100%;
-  height: 250px;
+  height: 300px;
   margin-bottom: 1rem;
 `;
 
@@ -121,10 +132,13 @@ const HoverOverlay = styled.div`
   justify-content: center;
   gap: 10px;
   border-radius: 5px;
-  transform: scale(${({ $isOverlayVisible }) => ($isOverlayVisible ? "1" : "0")});
-  opacity: ${({ $isOverlayVisible }) => ($isOverlayVisible ? "1" : "0")};
-  visibility: ${({ $isOverlayVisible }) => ($isOverlayVisible ? "visible" : "hidden")};
-  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease-out;
+  transform: scale(${({ $isOverlayVisible }) => ($isOverlayVisible ? '1' : '0')});
+  opacity: ${({ $isOverlayVisible }) => ($isOverlayVisible ? '1' : '0')};
+  visibility: ${({ $isOverlayVisible }) => ($isOverlayVisible ? 'visible' : 'hidden')};
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease,
+    transform 0.3s ease-out;
   z-index: 10;
 
   ${CardImageWrapper}:hover & {
@@ -136,17 +150,15 @@ const HoverOverlay = styled.div`
   }
 `;
 
-
-
 const ButtonRow = styled.div`
   display: flex;
   gap: 10px;
-  width: 100%; 
+  width: 100%;
   justify-content: center;
 `;
 
 const FixedIconWrapper = styled.div`
-flex-shrink: 0;
+  flex-shrink: 0;
 `;
 
 const IconButton = styled.div`
@@ -162,11 +174,11 @@ const IconButton = styled.div`
   position: relative;
   transition: background 0.3s;
   color: #4a4a4a;
- font-size: 20px;
+  font-size: 20px;
 
   &:hover {
     background: rgba(var(--theme-grey), 0.7);
-     color: rgb(var(--foreground));
+    color: rgb(var(--foreground));
   }
 
   &:hover::after {
@@ -178,11 +190,9 @@ const IconButton = styled.div`
     border-radius: 5px;
     font-size: 12px;
     white-space: nowrap;
-     bottom: -35px; /* Move tooltips below for smaller buttons */
+    bottom: -35px; /* Move tooltips below for smaller buttons */
     z-index: 999;
-
   }
-
 `;
 
 const LargeIconButton = styled(IconButton)`
@@ -197,8 +207,6 @@ const LargeIconButton = styled(IconButton)`
     z-index: 999;
   }
 `;
-
-
 
 const CardContent = styled.div`
   display: flex;
@@ -226,9 +234,9 @@ const PriceLabel = styled.span`
 `;
 
 const PriceLabelDevmode = styled.div`
-align-self: center;
-font-size: .9rem;
-color: rgb(var(--theme-grey));
+  align-self: center;
+  font-size: 0.9rem;
+  color: rgb(var(--theme-grey));
 `;
 
 const Row = styled.div`
@@ -261,7 +269,6 @@ const PriceInput = styled.input`
   }
 `;
 
-
 const GameName = styled.h3`
   font-size: 1rem;
   color: #fff;
@@ -269,7 +276,7 @@ const GameName = styled.h3`
   cursor: pointer;
   font-weight: 400;
   display: -webkit-box;
-  -webkit-line-clamp: 2; 
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -304,14 +311,14 @@ const ModalContent = styled.div`
   border: 1px solid rgba(var(--theme-yellow), 0.2);
 
   h2 {
-  font-weight: 600;
-  font-size: 1rem;
-  margin-bottom: 1rem;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 1rem;
   }
 
-    @media (max-width: 768px) {
-    width: 95%; 
-    padding: 15px; 
+  @media (max-width: 768px) {
+    width: 95%;
+    padding: 15px;
   }
 `;
 
@@ -322,8 +329,8 @@ const CloseButton = styled.div`
   cursor: pointer;
   font-size: 20px;
 
-     @media (max-width: 768px) {
-      font-size: 30px;
+  @media (max-width: 768px) {
+    font-size: 30px;
   }
 `;
 
@@ -332,10 +339,10 @@ const ModalHeader = styled.div`
   gap: 20px;
   align-items: center;
 
-    @media (max-width: 768px) {
-    flex-direction: column; 
-    gap: 10px; 
-    text-align: center; 
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
   }
 `;
 
@@ -347,7 +354,7 @@ const ModalImage = styled.img`
   border-radius: 5px;
 
   @media (max-width: 768px) {
-    max-width: 100%; 
+    max-width: 100%;
     margin-top: 2rem;
     margin-bottom: 1rem;
   }
@@ -356,8 +363,8 @@ const ModalImage = styled.img`
 const ModalDetails = styled.div`
   flex: 1;
 
-    @media (max-width: 768px) {
-    width: 100%; 
+  @media (max-width: 768px) {
+    width: 100%;
   }
 `;
 
@@ -365,20 +372,18 @@ const ButtonGroup = styled.div`
   display: flex;
   gap: 10px;
   margin-top: 1rem;
-
-
 `;
 
 const ModalButton = styled.button`
   background: inherit;
   border: 1px solid rgb(var(--theme-grey));
   color: rgb(var(--foreground));
-    font-family: var(--font-montserrat), Arial, Helvetica, sans-serif;
+  font-family: var(--font-montserrat), Arial, Helvetica, sans-serif;
   padding: 10px;
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
- 
+
   width: auto;
   min-width: 150px;
   &:hover {
@@ -386,10 +391,9 @@ const ModalButton = styled.button`
     color: #fff;
   }
 
-      @media (max-width: 768px) {
-  width: 100%;
+  @media (max-width: 768px) {
+    width: 100%;
   }
-
 `;
 
 const ModalDescription = styled.p`
@@ -397,14 +401,11 @@ const ModalDescription = styled.p`
   font-size: 14px;
   color: rgb(var(--foreground));
 
-    @media (max-width: 768px) {
-    text-align: left; 
+  @media (max-width: 768px) {
+    text-align: left;
     line-height: 1.5;
   }
 `;
-
-
-
 
 const GameCard = ({ game }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -412,17 +413,14 @@ const GameCard = ({ game }) => {
   const { isAuthenticated, user, token } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [priceErrors, setPriceErrors] = useState({ launch: "", month: "" });
-
+  const [priceErrors, setPriceErrors] = useState({ launch: '', month: '' });
 
   const isPublished = game.is_published;
-  const isDeveloper = game.developed_by?.id === user?.id;
+  const isDeveloper = !!user && !!game.developed_by && game.developed_by.id === user.id;
 
   const [isEditingPrice, setIsEditingPrice] = useState(false);
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-
-
 
   const { updateGameInList } = useGamesData();
 
@@ -430,7 +428,6 @@ const GameCard = ({ game }) => {
     const number = parseFloat(value);
     return isNaN(number) ? '—' : `${number}`;
   };
-
 
   const handleTogglePublished = async () => {
     const newStatus = !game.is_published;
@@ -447,19 +444,16 @@ const GameCard = ({ game }) => {
     // No manual setIsPublished — the context will update game, which triggers useEffect
   };
 
-
-
   const handleSaveLaunchPrice = async (value) => {
     const parsed = parseFloat(value);
     if (isNaN(parsed)) {
-      setPriceErrors((prev) => ({ ...prev, launch: "Введите корректную цену за запуск." }));
+      setPriceErrors((prev) => ({ ...prev, launch: 'Введите корректную цену за запуск.' }));
       return;
     }
 
     if (parsed === game.pricePerLaunch) return; // Skip if value is the same
 
-    setPriceErrors((prev) => ({ ...prev, launch: "" }));
-
+    setPriceErrors((prev) => ({ ...prev, launch: '' }));
 
     await saveAndUpdateGame(
       { pricePerLaunch: parsed },
@@ -467,23 +461,20 @@ const GameCard = ({ game }) => {
         game,
         token,
         updateGameInList,
-        onSuccess: () => setIsEditingPrice(false)
+        onSuccess: () => setIsEditingPrice(false),
       }
     );
-
   };
 
   const handleSaveMonthPrice = async (value) => {
     const parsed = parseFloat(value);
     if (isNaN(parsed)) {
-      setPriceErrors((prev) => ({ ...prev, month: "Введите корректную цену за месяц." }));
+      setPriceErrors((prev) => ({ ...prev, month: 'Введите корректную цену за месяц.' }));
       return;
     }
     if (parsed === game.pricePerMonth) return; // Skip if unchanged
 
-
-    setPriceErrors((prev) => ({ ...prev, month: "" }));
-
+    setPriceErrors((prev) => ({ ...prev, month: '' }));
 
     await saveAndUpdateGame(
       { pricePerMonth: parsed },
@@ -494,19 +485,14 @@ const GameCard = ({ game }) => {
         onSuccess: () => setIsEditingPrice(false),
       }
     );
-
   };
 
-
   const { openPurchaseModal } = useModal();
-
 
   const handleModalsBuyClick = (game) => {
     openPurchaseModal(game);
     setIsModalOpen(false);
-  }
-
-
+  };
 
   // Handle favorite status on mount
   useEffect(() => {
@@ -515,35 +501,27 @@ const GameCard = ({ game }) => {
       return;
     }
 
-
     let isMounted = true; // Flag to prevent state updates after unmounting
 
     fetchFavorites(user.documentId, token).then((favoriteGameIds) => {
-
       if (isMounted) {
         const isFav = favoriteGameIds.includes(game.documentId); // Check if the current game is in the list of favorite games
         setIsFavorite(isFav); // Update the state
       }
     });
 
-    return () => { isMounted = false }; // Cleanup function to prevent memory leaks
+    return () => {
+      isMounted = false;
+    }; // Cleanup function to prevent memory leaks
   }, [isAuthenticated, user, game.documentId, token]);
-
-
-
-
 
   // Optimistic update for faster UX
   const handleFavoriteClick = async () => {
-
-
     if (!isAuthenticated) {
-      alert("Please log in to add games to favorites.");
-      console.warn("User not authenticated!");
+      alert('Please log in to add games to favorites.');
+      console.warn('User not authenticated!');
       return;
     }
-
-
 
     setLoading(true);
     setIsFavorite((prev) => !prev);
@@ -551,19 +529,17 @@ const GameCard = ({ game }) => {
     try {
       const result = await toggleFavorite(game.documentId, user.documentId, token, isFavorite);
 
-
       if (!result) {
         setIsFavorite((prev) => !prev); // Revert if request fails
-        console.warn("Toggle favorite request failed, reverting state.");
+        console.warn('Toggle favorite request failed, reverting state.');
       }
     } catch (error) {
-      console.error("Error toggling favorite:", error);
+      console.error('Error toggling favorite:', error);
       setIsFavorite((prev) => !prev);
     }
 
     setLoading(false);
   };
-
 
   // Handle overlay toggle
   const handleOverlayToggle = () => {
@@ -580,13 +556,12 @@ const GameCard = ({ game }) => {
       }
     };
 
-    document.addEventListener("click", handleOutsideClick);
-    return () => document.removeEventListener("click", handleOutsideClick);
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
   }, [isOverlayVisible]);
 
   return (
     <>
-
       <CardWrapper $showDashedBorder={!isPublished && isDeveloper}>
         {/* Top left badge (rating) */}
         <TopLeftBadge>
@@ -597,7 +572,6 @@ const GameCard = ({ game }) => {
         <TopRightBadge>{game.totalPlayed}</TopRightBadge>
 
         {/* Game Image & Hover Overlay */}
-
 
         <CardImageWrapper onClick={handleOverlayToggle}>
           {isDeveloper && <DeveloperRibbon>Вы разработчик</DeveloperRibbon>}
@@ -617,18 +591,25 @@ const GameCard = ({ game }) => {
                 </LargeIconButton>
               </Link>
             </ButtonRow>
-            {isDeveloper && <ButtonRow>
-              <IconButton data-tooltip="Редактировать"><FaEdit /></IconButton>
-              <IconButton data-tooltip="Копировать"><FaCopy /></IconButton>
-              <IconButton
-                data-tooltip={isPublished ? "Скрыть игру" : "Опубликовать игру"}
-                onClick={handleTogglePublished}
-              >
-                {isPublished ? <FaEyeSlash /> : <FaEye />}
-              </IconButton>
-              <IconButton data-tooltip="В архив"><FaArchive /></IconButton>
-            </ButtonRow>}
-
+            {isDeveloper && (
+              <ButtonRow>
+                <IconButton data-tooltip="Редактировать">
+                  <FaEdit />
+                </IconButton>
+                <IconButton data-tooltip="Копировать">
+                  <FaCopy />
+                </IconButton>
+                <IconButton
+                  data-tooltip={isPublished ? 'Скрыть игру' : 'Опубликовать игру'}
+                  onClick={handleTogglePublished}
+                >
+                  {isPublished ? <FaEyeSlash /> : <FaEye />}
+                </IconButton>
+                <IconButton data-tooltip="В архив">
+                  <FaArchive />
+                </IconButton>
+              </ButtonRow>
+            )}
           </HoverOverlay>
         </CardImageWrapper>
 
@@ -638,7 +619,7 @@ const GameCard = ({ game }) => {
             <SquareIconButton icon={<LuShoppingCart />} onClick={() => openPurchaseModal(game)} />
           </FixedIconWrapper>
           {isDeveloper ? (
-            <PriceContainer onClick={() => setIsEditingPrice(true)} style={{ cursor: "pointer" }}>
+            <PriceContainer onClick={() => setIsEditingPrice(true)} style={{ cursor: 'pointer' }}>
               {isEditingPrice ? (
                 <>
                   <PriceInput
@@ -647,7 +628,7 @@ const GameCard = ({ game }) => {
                     defaultValue={game.pricePerLaunch}
                     onBlur={(e) => handleSaveLaunchPrice(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") {
+                      if (e.key === 'Enter') {
                         e.preventDefault();
                         e.stopPropagation();
                         e.target.blur();
@@ -662,7 +643,7 @@ const GameCard = ({ game }) => {
                     defaultValue={game.pricePerMonth}
                     onBlur={(e) => handleSaveMonthPrice(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") {
+                      if (e.key === 'Enter') {
                         e.preventDefault();
                         e.stopPropagation();
                         e.target.blur();
@@ -670,9 +651,7 @@ const GameCard = ({ game }) => {
                     }}
                   />
                   <PriceLabelDevmode> месяц </PriceLabelDevmode>
-
                 </>
-
               ) : (
                 <>
                   <PriceText>
@@ -685,9 +664,7 @@ const GameCard = ({ game }) => {
                   </PriceText>
                 </>
               )}
-
             </PriceContainer>
-
           ) : (
             <PriceContainer>
               <PriceText>
@@ -700,7 +677,6 @@ const GameCard = ({ game }) => {
               </PriceText>
             </PriceContainer>
           )}
-
         </CardContent>
 
         {/* Game Title & Favorite Button */}
@@ -709,7 +685,7 @@ const GameCard = ({ game }) => {
             <SquareIconButton
               icon={<CiHeart />}
               iconType="stroke"
-              color={isFavorite ? "rgb(var(--theme-yellow))" : "rgb(var(--theme-grey))"}
+              color={isFavorite ? 'rgb(var(--theme-yellow))' : 'rgb(var(--theme-grey))'}
               onClick={handleFavoriteClick}
               isFavorite={isFavorite}
             />
@@ -732,97 +708,91 @@ const GameCard = ({ game }) => {
                   )
                 }
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+                  if (e.key === 'Enter') {
                     e.preventDefault();
                     e.stopPropagation();
                     e.target.blur();
                   }
                 }}
                 style={{
-                  fontSize: "1rem",
+                  fontSize: '1rem',
                   fontWeight: 400,
-                  background: "transparent",
-                  color: "#fff",
-                  border: "1px solid rgba(var(--theme-yellow), 0.5)",
-                  borderRadius: "4px",
-                  padding: "4px 8px",
-                  width: "100%",
+                  background: 'transparent',
+                  color: '#fff',
+                  border: '1px solid rgba(var(--theme-yellow), 0.5)',
+                  borderRadius: '4px',
+                  padding: '4px 8px',
+                  width: '100%',
                 }}
-
-
               />
-
             ) : (
-              <GameName onClick={() => setIsEditingTitle(true)}>
-                {game.title}
-              </GameName>
+              <GameName onClick={() => setIsEditingTitle(true)}>{game.title}</GameName>
             )
           ) : (
             <Link href={`/games/${game.slug}`}>
               <GameName>{game.title}</GameName>
             </Link>
           )}
-
         </Row>
-        <Row>          {priceErrors.launch && (
-          <div style={{ color: "red", fontSize: "0.8rem", marginTop: "0.75rem" }}>
-            {priceErrors.launch}
-          </div>
-        )}
+        <Row>
+          {' '}
+          {priceErrors.launch && (
+            <div style={{ color: 'red', fontSize: '0.8rem', marginTop: '0.75rem' }}>
+              {priceErrors.launch}
+            </div>
+          )}
           {priceErrors.month && (
-            <div style={{ color: "red", fontSize: "0.8rem", marginTop: "0.75rem" }}>
+            <div style={{ color: 'red', fontSize: '0.8rem', marginTop: '0.75rem' }}>
               {priceErrors.month}
             </div>
           )}
-
         </Row>
-      </CardWrapper >
+      </CardWrapper>
 
       {/* Game Details Modal */}
-      {
-        isModalOpen && (
-          <ModalOverlay>
-            <ModalContent>
-              <CloseButton onClick={() => setIsModalOpen(false)}>
-                <FaTimes />
-              </CloseButton>
-              <ModalHeader>
-                <ModalImage src={game.image} alt={game.title} />
-                <ModalDetails>
-                  <h2>{game.title}</h2>
-                  <PriceContainer>
-                    <PriceText>
-                      <PriceValue>{formatPrice(game.pricePerLaunch)}</PriceValue>
-                      <PriceLabel> ₽/запуск</PriceLabel>
-                    </PriceText>
-                    <PriceText>
-                      <PriceValue>{formatPrice(game.pricePerMonth)}</PriceValue>
-                      <PriceLabel> ₽/месяц</PriceLabel>
-                    </PriceText>
-                  </PriceContainer>
-                  <ButtonGroup>
-                    <SquareIconButton icon={<LuShoppingCart />} onClick={() => handleModalsBuyClick(game)} />
-                    <SquareIconButton
-                      icon={<CiHeart />}
-                      iconType="stroke"
-                      color={isFavorite ? "rgb(var(--theme-yellow))" : "rgb(var(--theme-grey))"}
-                      onClick={handleFavoriteClick}
-                    />
-                    <Link href={`/games/${game.slug}`}>
-                      <ModalButton>Подробнее</ModalButton>
-                    </Link>
-                  </ButtonGroup>
-                </ModalDetails>
-              </ModalHeader>
-              <ModalDescription>{game.description}</ModalDescription>
-            </ModalContent>
-          </ModalOverlay>
-        )
-      }
+      {isModalOpen && (
+        <ModalOverlay>
+          <ModalContent>
+            <CloseButton onClick={() => setIsModalOpen(false)}>
+              <FaTimes />
+            </CloseButton>
+            <ModalHeader>
+              <ModalImage src={game.image} alt={game.title} />
+              <ModalDetails>
+                <h2>{game.title}</h2>
+                <PriceContainer>
+                  <PriceText>
+                    <PriceValue>{formatPrice(game.pricePerLaunch)}</PriceValue>
+                    <PriceLabel> ₽/запуск</PriceLabel>
+                  </PriceText>
+                  <PriceText>
+                    <PriceValue>{formatPrice(game.pricePerMonth)}</PriceValue>
+                    <PriceLabel> ₽/месяц</PriceLabel>
+                  </PriceText>
+                </PriceContainer>
+                <ButtonGroup>
+                  <SquareIconButton
+                    icon={<LuShoppingCart />}
+                    onClick={() => handleModalsBuyClick(game)}
+                  />
+                  <SquareIconButton
+                    icon={<CiHeart />}
+                    iconType="stroke"
+                    color={isFavorite ? 'rgb(var(--theme-yellow))' : 'rgb(var(--theme-grey))'}
+                    onClick={handleFavoriteClick}
+                  />
+                  <Link href={`/games/${game.slug}`}>
+                    <ModalButton>Подробнее</ModalButton>
+                  </Link>
+                </ButtonGroup>
+              </ModalDetails>
+            </ModalHeader>
+            <ModalDescription>{game.description}</ModalDescription>
+          </ModalContent>
+        </ModalOverlay>
+      )}
     </>
   );
 };
 
 export default GameCard;
-
-
