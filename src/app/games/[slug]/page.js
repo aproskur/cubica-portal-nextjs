@@ -75,10 +75,27 @@ const GamePage = () => {
   const { slug } = useParams(); // Get slug from URL
   const { user, token } = useAuth(); // token might be undefined
   const { openPurchaseModal, setIsModalOpen } = useModal();
-  const { updateGameInList, games } = useGamesData();
+  const { updateGameInList, games, setCurrentGame } = useGamesData();
+
   const [fetchedSlugs, setFetchedSlugs] = useState(new Set());
 
   const game = games.find((g) => g.slug === slug);
+
+  // added for the force setting
+  useEffect(() => {
+    const loadGame = async () => {
+      try {
+        const gameData = await fetchGameBySlug(slug, token);
+        console.log('Setting currentGame:', gameData);
+        setCurrentGame(gameData);
+      } catch (err) {
+        console.error('Failed to load game:', err);
+        setError('Ошибка загрузки игры');
+      }
+    };
+
+    if (slug) loadGame();
+  }, [slug, token, setCurrentGame]);
 
   // Fix mutiple rerendering
   useEffect(() => {
@@ -88,8 +105,11 @@ const GamePage = () => {
 
     if (isEnrichmentNeeded && !fetchedSlugs.has(slug)) {
       fetchGameBySlug(slug, token).then((fullGame) => {
-        updateGameInList({ ...game, ...fullGame }); // merge to preserve unsynced fields
+        const enrichedGame = { ...game, ...fullGame };
+        updateGameInList(enrichedGame);
+        setCurrentGame(enrichedGame); // now Aside will get this
         setFetchedSlugs((prev) => new Set(prev).add(slug));
+        console.log('SETTING CURRENT GAME:', enrichedGame);
       });
     }
   }, [

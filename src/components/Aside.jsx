@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation';
 import SortDropdown from '@/components/ui/SortDropdown';
 import useAsideFilters from '@/hooks/useAsideFilters';
 import Dropdown from './ui/Dropdown';
+import { FaTelegramPlane, FaWhatsapp, FaPhoneAlt, FaEnvelope } from 'react-icons/fa';
+import { useGamesData } from '@/context/GamesDataContext';
 
 const AsideContainer = styled.aside`
   width: 350px;
@@ -77,9 +79,29 @@ const ResetDropdownButton = styled.button`
   }
 `;
 
-const stopPropagation = (event) => {
-  event.stopPropagation();
-};
+const ContactInfo = styled.div`
+  margin-top: 2rem;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgb(var(--foreground));
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
+const ContactLink = styled.a`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  color: rgb(var(--foreground));
+  text-decoration: none;
+
+  &:hover {
+    color: rgb(var(--theme-yellow));
+    text-decoration: none;
+  }
+`;
 
 const Aside = () => {
   const {
@@ -93,6 +115,17 @@ const Aside = () => {
   } = useAsideFilters();
 
   const [isMobile, setIsMobile] = useState(false);
+
+  const { currentGame } = useGamesData();
+
+  const {
+    contactsTelegram = '',
+    contactsWhatsapp = '',
+    contactsEmail = '',
+    contactsPhone = '',
+  } = currentGame || {};
+
+  console.log('CURRENT GAME from aside', currentGame);
 
   const pathname = usePathname();
   let asideType = 'game-page'; // Default type
@@ -169,7 +202,44 @@ const Aside = () => {
     );
   }
   if (asideType === 'game-page') {
-    return <AsideContainer>ПОИСК</AsideContainer>;
+    return (
+      <AsideContainer>
+        <SectionTitle>Контакты</SectionTitle>
+        <ContactInfo>
+          Вопросы разработчику игры вы можете задать:
+          {contactsTelegram && (
+            <ContactLink
+              href={`https://t.me/${contactsTelegram}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FaTelegramPlane />в телеграм
+            </ContactLink>
+          )}
+          {contactsWhatsapp && (
+            <ContactLink
+              href={`https://wa.me/${contactsWhatsapp}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FaWhatsapp />в вотсап
+            </ContactLink>
+          )}
+          {contactsEmail && (
+            <ContactLink href={`mailto:${contactsEmail}`}>
+              <FaEnvelope />
+              написать на почту: {contactsEmail}
+            </ContactLink>
+          )}
+          {contactsPhone && (
+            <ContactLink href={`tel:${contactsPhone}`}>
+              <FaPhoneAlt />
+              позвонить: {contactsPhone}
+            </ContactLink>
+          )}
+        </ContactInfo>
+      </AsideContainer>
+    );
   }
 
   if (asideType === 'my-purchases') {

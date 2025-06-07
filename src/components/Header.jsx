@@ -3,6 +3,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
 import { LuLogIn, LuLogOut } from 'react-icons/lu';
+import { FiLogOut, FiLogIn } from 'react-icons/fi';
 import { FiMenu, FiX } from 'react-icons/fi';
 import Logo from '@/components/ui/Logo';
 import Breadcrumbs from './ui/Breadcrumb';
@@ -263,19 +264,31 @@ const MyGamesMenuItemWrapper = styled.div`
 const LoginButton = styled.button`
   display: flex;
   align-items: center;
+  justify-content: center;
   background: transparent;
   border: 1px solid rgb(var(--theme-grey));
   font-size: 18px;
   cursor: pointer;
   color: rgb(var(--foreground));
   transition: color 0.3s ease-in-out;
-  width: 100px;
+  max-width: 150px;
   padding: 0.5em 1em;
   border-radius: 5px;
   gap: 8px;
   margin: 0.5em;
 
+  svg {
+    color: rgb(var(--foreground));
+    font-size: 20px;
+    transition: color 0.3s ease-in-out;
+  }
+
   &:hover {
+    color: rgb(var(--theme-yellow));
+    border: 1px solid rgb(var(--theme-yellow));
+  }
+
+  &:hover svg {
     color: rgb(var(--theme-yellow));
   }
 `;
@@ -498,18 +511,23 @@ const Header = () => {
               </MyGamesMenuItemWrapper>
               {/* Mobile Login Button */}
               {isAuthenticated ? (
-                <LoginButton
-                  onClick={() => {
-                    handleLogout();
-                    setMenuOpen(false);
-                  }}
-                >
-                  <LuLogOut size={20} /> Выход
-                </LoginButton>
+                <>
+                  <LoginButton
+                    onClick={() => {
+                      handleLogout();
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <LuLogOut size={20} /> Выход
+                  </LoginButton>
+                </>
               ) : (
-                <LoginButton onClick={openLoginModal}>
-                  <LuLogIn size={20} /> Вход
-                </LoginButton>
+                <>
+                  {console.log('Render: login button')}
+                  <LoginButton onClick={openLoginModal}>
+                    <LuLogIn size={20} /> Вход
+                  </LoginButton>
+                </>
               )}
             </MobileOffCanavasMenuContainer>
           </MobileOffCanvasMenu>

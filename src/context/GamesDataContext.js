@@ -20,6 +20,7 @@ export const GamesDataProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [purchasedGames, setPurchasedGames] = useState([]);
+  const [currentGame, setCurrentGame] = useState(null);
 
   const { isAuthenticated, user, token } = useAuth();
   const { filters, updateFilters } = useFilters();
@@ -81,9 +82,11 @@ export const GamesDataProvider = ({ children }) => {
         loading,
         error,
         purchasedGames,
+        currentGame,
         setPurchasedGames,
         refreshPurchasedGames: fetchAndSetPurchasedGames,
         updateGameInList,
+        setCurrentGame, //added for aside on game page
       }}
     >
       {children}
