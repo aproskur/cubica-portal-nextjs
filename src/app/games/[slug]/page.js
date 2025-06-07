@@ -131,20 +131,15 @@ const GamePage = () => {
   ]);
 
   //const isDeveloper = user && game?.developed_by?.id === user.id;
-  const isDeveloper = !!user && !!game.developed_by && game.developed_by.id === user.id;
+  //const isDeveloper = !!user && !!game.developed_by && game.developed_by.id === user.id;
+  const isDeveloper = user?.id === game?.developed_by?.id;
 
   const [error, setError] = useState(null);
-
+  if (error) return <p>{error}</p>;
+  if (!game) return <p>Загрузка игры...</p>;
   const handleModalsBuyClick = (game) => {
     openPurchaseModal(game);
   };
-
-  if (error) return <p>{error}</p>;
-
-  if (!games || games.length === 0) return <p>Загрузка игр...</p>;
-  if (!game) {
-    return <p>Загрузка игры...</p>;
-  }
 
   const imageUrlArray =
     game.images?.map((image) => ({
@@ -152,13 +147,18 @@ const GamePage = () => {
       url: image.url,
     })) || [];
 
-  const API_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+  const mergeGameUpdates = (original, updated) => {
+    return {
+      ...original,
+      ...updated,
+      competencies: updated.competencies ?? original.competencies,
+    };
+  };
 
-  const mergeGameUpdates = (original, updated) => ({
-    ...original,
-    ...updated,
-    competencies: updated.competencies || original.competencies,
-  });
+  const handleGameUpdateFields = async (updatedFields) => {
+    const updated = await saveAndUpdateGame(updatedFields, { game, token });
+    if (updated) updateGameInList(mergeGameUpdates(game, updated));
+  };
 
   return (
     <>
@@ -171,31 +171,24 @@ const GamePage = () => {
             {imageUrlArray.length > 0 && <Swiper images={imageUrlArray} />}
           </SliderContainer>
           <InfoContainerWrapper>
-            <InfoContainer
-              token={token}
-              isDeveloper={isDeveloper}
-              updateGameInList={updateGameInList}
-              onUpdate={async (updatedFields) => {
-                const updated = await saveAndUpdateGame(updatedFields, { game, token });
-                if (updated) updateGameInList(mergeGameUpdates(game, updated));
-              }}
-              onBuyClick={() => handleModalsBuyClick(game)}
-              details={{
-                format: game.format,
-                duration: game.duration,
-                author: game.author,
-              }}
-            />
+            {game && (
+              <InfoContainer
+                token={token}
+                isDeveloper={isDeveloper}
+                updateGameInList={updateGameInList}
+                onUpdate={handleGameUpdateFields}
+                onBuyClick={() => handleModalsBuyClick(game)}
+                details={{
+                  format: game.format,
+                  duration: game.duration,
+                  author: game.author,
+                }}
+              />
+            )}
           </InfoContainerWrapper>
         </FirstRow>
         <SecondRow>
-          <Tabs
-            isEditable={isDeveloper}
-            onUpdate={async (updatedFields) => {
-              const updated = await saveAndUpdateGame(updatedFields, { game, token });
-              if (updated) updateGameInList(mergeGameUpdates(game, updated));
-            }}
-          />
+          {game && <Tabs isEditable={isDeveloper} onUpdate={handleGameUpdateFields} />}
         </SecondRow>
       </GridContainer>
     </>

@@ -202,6 +202,17 @@ const Aside = () => {
     );
   }
   if (asideType === 'game-page') {
+    const hasAnyContact = contactsTelegram || contactsWhatsapp || contactsEmail || contactsPhone;
+
+    if (!hasAnyContact) {
+      return (
+        <AsideContainer>
+          <SectionTitle>Контакты</SectionTitle>
+          <ContactInfo>Нет доступной контактной информации</ContactInfo>
+        </AsideContainer>
+      );
+    }
+
     return (
       <AsideContainer>
         <SectionTitle>Контакты</SectionTitle>
@@ -213,7 +224,7 @@ const Aside = () => {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <FaTelegramPlane />в телеграм
+              <FaTelegramPlane /> в телеграм
             </ContactLink>
           )}
           {contactsWhatsapp && (
@@ -222,19 +233,17 @@ const Aside = () => {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <FaWhatsapp />в вотсап
+              <FaWhatsapp /> в вотсап
             </ContactLink>
           )}
           {contactsEmail && (
             <ContactLink href={`mailto:${contactsEmail}`}>
-              <FaEnvelope />
-              написать на почту: {contactsEmail}
+              <FaEnvelope /> написать на почту: {contactsEmail}
             </ContactLink>
           )}
           {contactsPhone && (
             <ContactLink href={`tel:${contactsPhone}`}>
-              <FaPhoneAlt />
-              позвонить: {contactsPhone}
+              <FaPhoneAlt /> позвонить: {contactsPhone}
             </ContactLink>
           )}
         </ContactInfo>
