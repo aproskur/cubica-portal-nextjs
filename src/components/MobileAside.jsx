@@ -50,7 +50,28 @@ const CloseButton = styled.button`
   color: rgb(var(--theme-yellow));
 `;
 
-const FilterGroup = styled.div``;
+const Heading2 = styled.h2`
+  text-align: center;
+`;
+const FilterGroup = styled.div`
+  margin-top: 1rem;
+`;
+
+const ApplyButton = styled.button`
+  margin-top: 2rem;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid rgba(var(--theme-yellow), 0.5);
+  background: inherit;
+  color: rgb(var(--foreground));
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+
+  &:hover {
+    border: 1px solid rgb(var(--theme-yellow));
+  }
+`;
 
 const MobileAside = ({ isOpen, onClose }) => {
   const { dropdownState, setDropdownState, competencies, filters, handleToggleCompetency } =
@@ -61,8 +82,6 @@ const MobileAside = ({ isOpen, onClose }) => {
       <CloseButton onClick={onClose}>
         <FiX />
       </CloseButton>
-      <h2>Фильтры</h2>
-      <p>Здесь будут фильтры...</p>
       <FilterGroup>
         {competencies.length > 0 && (
           <Dropdown
@@ -81,6 +100,7 @@ const MobileAside = ({ isOpen, onClose }) => {
           />
         )}
       </FilterGroup>
+      <ApplyButton onClick={onClose}>Применить</ApplyButton>
     </MobileAsideContainer>
   );
 };
