@@ -128,11 +128,16 @@ const Aside = () => {
   console.log('CURRENT GAME from aside', currentGame);
 
   const pathname = usePathname();
-  let asideType = 'game-page'; // Default type
-  if (pathname === '/games/my') {
-    asideType = 'my-purchases';
-  } else if (pathname === '/') {
+  const isGamePage = /^\/games\/[^/]+$/.test(pathname);
+
+  let asideType = null;
+
+  if (pathname === '/') {
     asideType = 'main';
+  } else if (pathname === '/games/my') {
+    asideType = 'my-purchases';
+  } else if (isGamePage) {
+    asideType = 'game-page';
   }
 
   useEffect(() => {

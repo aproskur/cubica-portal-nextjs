@@ -153,6 +153,14 @@ export const fetchGameBySlug = async (slug, token) => {
       }))
     : [];
 
+  const faqs = Array.isArray(game.faqs)
+    ? game.faqs.map((faq) => ({
+        id: faq.documentId,
+        question: faq.question,
+        answer: faq.answer,
+      }))
+    : [];
+
   return {
     // Base
     ...game,
@@ -197,6 +205,9 @@ export const fetchGameBySlug = async (slug, token) => {
     contactsWhatsapp: game.contacts_whatsapp || '',
     contactsEmail: game.contacts_email || '',
     contactsPhone: game.contacts_phone || '',
+
+    //faq
+    faqs: faqs || '',
   };
 };
 // Fetch purchases for a user

@@ -17,6 +17,9 @@ import {
 import { useIsMobile } from '@/app/hooks/useIsMobile';
 import FAQitem from './ui/FAQitem';
 import { useGamesData } from '@/context/GamesDataContext';
+import { CiCirclePlus } from 'react-icons/ci';
+import { nanoid } from 'nanoid';
+import FAQeditor from './FAQeditor';
 
 const TabContainer = styled.div`
   display: flex;
@@ -101,9 +104,17 @@ const Tabs = () => {
 const DesktopTabs = ({ isDeveloper }) => {
   const { currentGame: game, setCurrentGame } = useGamesData();
   const [activeTab, setActiveTab] = useState(0);
-  useEffect(() => {
-    setActiveTab(0); // reset to the first tab when a new game is loaded
-  }, [game]);
+
+  useEffect(() => {}, [game]);
+  const [editedFaqs, setEditedFaqs] = useState(() =>
+    (game.faqs || []).map((faq) => ({
+      documentId: faq.documentId || faq.id || null, // fallback to id if needed
+      question: faq.question,
+      answer: faq.answer,
+    }))
+  );
+
+  const [newFaq, setNewFaq] = useState({ question: '', answer: '' });
 
   const tabs = [
     { label: 'Для чего и кого' },
@@ -112,10 +123,6 @@ const DesktopTabs = ({ isDeveloper }) => {
     { label: 'Об авторе' },
     { label: 'Частые вопросы' },
   ];
-
-  const toggleTab = (index) => {
-    setActiveTab(activeTab === index ? null : index);
-  };
 
   return (
     <TabContainer>
@@ -231,36 +238,29 @@ const DesktopTabs = ({ isDeveloper }) => {
           ) : (
             <RichTextBlockRenderer blocks={game.about_author} />
           ))}
-
         {activeTab === 4 && (
           <div>
-            <FAQitem
-              question="Как работает система рейтинга?"
-              answer="Рейтинг формируется на основе активности игроков и их результатов в бизнес-играх."
-            />
-
-            <FAQitem
-              question="Что означает 'Закон Парето' в контексте игры?"
-              answer="В игре 'Закон Парето' демонстрируется принцип 80/20: 80% результатов достигаются 20% усилий. Игроки учатся выявлять ключевые действия и ресурсы."
-            />
-
-            <FAQitem
-              question="Сколько времени длится игра?"
-              answer="Обычно игра занимает от 60 до 90 минут, включая вводную часть, активную фазу и обсуждение результатов."
-            />
-
-            <FAQitem
-              question="Можно ли играть в 'Закон Парето' в команде?"
-              answer="Да, игра рассчитана как на индивидуальное, так и на командное участие, что позволяет сравнивать подходы и стратегии разных игроков."
-            />
-
-            <FAQitem
-              question="Какие навыки развиваются в ходе игры?"
-              answer="Участники развивают навыки приоритизации, стратегического мышления, анализа эффективности и управления ограниченными ресурсами."
-            />
+            {isDeveloper ? (
+              <FAQeditor
+                initialFaqs={editedFaqs}
+                gameId={game.id}
+                token={localStorage.getItem('jwt')}
+                onSave={(updatedFaqs) => {
+                  setEditedFaqs(updatedFaqs);
+                  setCurrentGame({ ...game, faqs: updatedFaqs });
+                }}
+              />
+            ) : (
+              editedFaqs.map((faq, index) => (
+                <FAQitem
+                  key={faq.id || faq._tempKey || `faq-${index}`}
+                  question={faq.question}
+                  answer={faq.answer}
+                />
+              ))
+            )}
           </div>
         )}
-        {/*TODO variable for FAQ. Add FAQ backend, controller etc */}
       </TabContent>
     </TabContainer>
   );
@@ -270,9 +270,17 @@ const MobileTabs = ({ isDeveloper }) => {
   const { currentGame: game, setCurrentGame } = useGamesData();
   const [activeTab, setActiveTab] = useState(0);
 
-  useEffect(() => {
-    setActiveTab(0); // reset to the first tab when a new game is loaded
-  }, [game]);
+  useEffect(() => {}, [game]);
+
+  const [editedFaqs, setEditedFaqs] = useState(() =>
+    (game.faqs || []).map((faq) => ({
+      documentId: faq.documentId || faq.id || null, // fallback to id if needed
+      question: faq.question,
+      answer: faq.answer,
+    }))
+  );
+
+  const [newFaq, setNewFaq] = useState({ question: '', answer: '' });
 
   const tabs = [
     { label: 'Для чего и кого' },
@@ -355,33 +363,27 @@ const MobileTabs = ({ isDeveloper }) => {
 
               {activeTab === 4 && (
                 <div>
-                  <FAQitem
-                    question="Как работает система рейтинга?"
-                    answer="Рейтинг формируется на основе активности игроков и их результатов в бизнес-играх."
-                  />
-
-                  <FAQitem
-                    question="Что означает 'Закон Парето' в контексте игры?"
-                    answer="В игре 'Закон Парето' демонстрируется принцип 80/20: 80% результатов достигаются 20% усилий. Игроки учатся выявлять ключевые действия и ресурсы."
-                  />
-
-                  <FAQitem
-                    question="Сколько времени длится игра?"
-                    answer="Обычно игра занимает от 60 до 90 минут, включая вводную часть, активную фазу и обсуждение результатов."
-                  />
-
-                  <FAQitem
-                    question="Можно ли играть в 'Закон Парето' в команде?"
-                    answer="Да, игра рассчитана как на индивидуальное, так и на командное участие, что позволяет сравнивать подходы и стратегии разных игроков."
-                  />
-
-                  <FAQitem
-                    question="Какие навыки развиваются в ходе игры?"
-                    answer="Участники развивают навыки приоритизации, стратегического мышления, анализа эффективности и управления ограниченными ресурсами."
-                  />
+                  {isDeveloper ? (
+                    <FAQeditor
+                      initialFaqs={editedFaqs}
+                      gameId={game.id}
+                      token={localStorage.getItem('jwt')}
+                      onSave={(updatedFaqs) => {
+                        setEditedFaqs(updatedFaqs);
+                        setCurrentGame({ ...game, faqs: updatedFaqs });
+                      }}
+                    />
+                  ) : (
+                    editedFaqs.map((faq, index) => (
+                      <FAQitem
+                        key={faq.id || faq._tempKey || `faq-${index}`}
+                        question={faq.question}
+                        answer={faq.answer}
+                      />
+                    ))
+                  )}
                 </div>
               )}
-              {/*TODO variable for FAQ. Add FAQ backend, controller etc */}
             </TabContent>
           )}
         </div>
