@@ -1,3 +1,16 @@
+/* graph TD
+    A[Пользователь нажимает "Купить"] --> B[Открытие PurchaseModal]
+    B --> C[Выбор пакета и даты]
+    C --> D[Нажатие "Оплатить"]
+    D --> E[POST /orders — Создание заказа]
+    E --> F[GET /robokassa/payment-link — Получение ссылки]
+    F --> G[Переход на Robokassa]
+    G --> H[POST /robokassa/result — Обработка на backend]
+    H --> I[Создание покупки и лог события]
+    G --> J[Redirect на сайт с query-параметрами]
+    J --> K[ClientPaymentRedirectHandler показывает успех]
+*/
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -143,28 +156,36 @@ const CloseButton = styled.div`
 const PurchaseModal = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const { isModalOpen, gameData, closePurchaseModal, successData, setSuccessData } = useModal();
+
+  // Package type selected by the user (one-time, day, month)
   const [selectedPackage, setSelectedPackage] = useState('one-time');
+
+  // Price calculated based on the selected package
   const [price, setPrice] = useState(gameData?.pricePerLaunch || 0);
   const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState(''); // display only
+  const [endDate, setEndDate] = useState(''); // display format
   const [endDateRaw, setEndDateRaw] = useState(''); // raw ISO value for API
 
+  // Flags for UI state
   const [loading, setLoading] = useState(false);
   const [purchaseDone, setPurchaseDone] = useState(false);
+
+  // Error and success messages
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
   const { refreshPurchasedGames } = useGamesData();
 
+  // Recalculate price and end date whenever the package or start date changes
   useEffect(() => {
     if (selectedPackage === 'one-time') {
       setPrice(gameData?.pricePerLaunch || 0);
       setEndDate('');
-      setEndDateRaw(''); // reset raw value too
+      setEndDateRaw('');
     } else if (selectedPackage === 'day') {
       setPrice(gameData?.pricePerDay || 0);
       setEndDate(startDate);
-      setEndDateRaw(startDate); // match start date
+      setEndDateRaw(startDate);
     } else if (selectedPackage === 'month') {
       setPrice(gameData?.pricePerMonth || 0);
       if (startDate) {
@@ -185,6 +206,7 @@ const PurchaseModal = () => {
     }
   }, [selectedPackage, gameData, startDate]);
 
+  // Handle redirect after Robokassa payment: show success modal if payment was successful
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const paymentStatus = params.get('payment');
@@ -206,13 +228,14 @@ const PurchaseModal = () => {
   if (!isModalOpen || isLoading) return null;
   if (!isAuthenticated) return <LoginModal onClose={handleCloseModal} />;
 
+  // Main purchase handler: creates an order and gets the Robokassa payment link
   const handlePurchase = async () => {
     setLoading(true);
     setError(null);
     setSuccessMessage(null);
 
     try {
-      // Step 1: Create Order
+      // Step 1: Send order creation request to backend
       const orderResponse = await createOrder(
         gameData.documentId,
         selectedPackage,
@@ -227,7 +250,7 @@ const PurchaseModal = () => {
         return;
       }
 
-      // Step 2: Get Robokassa payment link
+      // Step 2: Fetch payment link from backend
       const paymentLinkResponse = await getRobokassaPaymentLink(orderResponse.order.documentId);
 
       if (!paymentLinkResponse.success) {
@@ -236,7 +259,7 @@ const PurchaseModal = () => {
         return;
       }
 
-      // Step 3: Redirect and exit
+      // Step 3: Redirect user to Robokassa
       window.location.href = paymentLinkResponse.url;
       return;
     } catch (error) {
@@ -247,7 +270,7 @@ const PurchaseModal = () => {
     }
   };
 
-  // Map API errors to user-friendly messages
+  // Map backend error codes to user-friendly messages
   const mapOrderError = (errorCode) => {
     switch (errorCode) {
       case 'AUTHENTICATION_REQUIRED':
@@ -262,6 +285,7 @@ const PurchaseModal = () => {
   };
 
   // added to render modal after redirect from payment gateway
+  // Show success confirmation after redirect from Robokassa
   if (successData) {
     return (
       <ModalOverlay>
@@ -318,7 +342,7 @@ const PurchaseModal = () => {
     );
   }
 
-  // Defensive check — don't show anything if game data is missing
+  // Defensive check, don't show anything if game data is missing
   if (!gameData) return null;
 
   // Normal purchas modal UI
