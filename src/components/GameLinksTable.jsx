@@ -1,6 +1,8 @@
 'use client';
 import styled from 'styled-components';
 import { CiShare2 } from 'react-icons/ci';
+import { generateGameLink } from '@/utils/apiService';
+import { useAuth } from '@/context/AuthContext';
 
 const Table = styled.table`
   width: 100%;
@@ -178,13 +180,33 @@ const GameShareButton = styled.button`
 `;
 
 const GameLinksTable = ({ games: purchases }) => {
+  const { token } = useAuth();
+
+  console.log('PURCHASES lnk table', purchases);
+
   if (!purchases || purchases.length === 0) {
     return <p>У вас пока что нет купленных игр</p>;
   }
 
-  const handleShare = (purchase) => {
-    // Later: call backend to generate a share link
-    alert(`Создать ссылку для игры: ${purchase.title}`);
+  const sortedPurchases = [...purchases].sort(
+    (a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate)
+  );
+
+  const handleShare = async (purchase) => {
+    if (!token) {
+      alert('Вы не авторизованы. Войдите, чтобы получить ссылку.');
+      return;
+    }
+
+    try {
+      const result = await generateGameLink(purchase.documentId, token);
+      const url = result.url;
+
+      await navigator.clipboard.writeText(url);
+      alert(`Ссылка скопирована: ${url}`);
+    } catch (err) {
+      alert(`Ошибка: ${err.message}`);
+    }
   };
 
   const translateType = (type) => {
@@ -211,7 +233,7 @@ const GameLinksTable = ({ games: purchases }) => {
         </tr>
       </thead>
       <tbody>
-        {purchases.map((purchase) => (
+        {sortedPurchases.map((purchase) => (
           <HoverRow key={purchase.id} tabIndex="0">
             <Td>{purchase.date}</Td>
             <GameNameTd>

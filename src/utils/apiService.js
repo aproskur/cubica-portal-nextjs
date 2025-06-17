@@ -454,3 +454,22 @@ export const fetchAllCompetencies = async () => {
 };
 
 // Fetch links for a user
+
+// generate a game link
+export async function generateGameLink(purchaseId, token) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/links/generate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`, // user JWT token from login
+    },
+    body: JSON.stringify({ purchaseId }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error?.message || 'Failed to generate link');
+  }
+
+  return await res.json();
+}
