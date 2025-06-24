@@ -1,7 +1,12 @@
-"use client";
-import { useState } from "react";
-import styled from "styled-components";
-import { FiSearch, FiFilter, FiX } from "react-icons/fi";
+'use client';
+import { useState } from 'react';
+import styled from 'styled-components';
+import { FiSearch, FiFilter, FiX } from 'react-icons/fi';
+import { usePathname } from 'next/navigation';
+import ContactDevelopersIcon from './ui/ContactDevelopers';
+import { RxAccessibility } from 'react-icons/rx';
+import SidebarPanel from './SidebarPanel';
+import DeveloperContacts from './DeveloperContacts';
 
 const FooterContainer = styled.div`
   position: fixed;
@@ -14,9 +19,9 @@ const FooterContainer = styled.div`
   padding: 10px 0;
   box-shadow: 0px -2px 5px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-  
+
   @media (min-width: 876px) {
-    display: none; /* Hide on desktop */
+    display: none;
   }
 `;
 
@@ -44,8 +49,8 @@ const SearchContainer = styled.div`
 `;
 
 const SearchInput = styled.input`
- width: 100%;
-padding: 10px 10px;
+  width: 100%;
+  padding: 10px 10px;
   margin-bottom: 1rem;
   border: 1px solid rgba(var(--theme-yellow), 0.5);
   border-radius: 90px;
@@ -75,37 +80,75 @@ const FilterIcon = styled(FiFilter)`
   }
 `;
 
-
 const MobileFooter = ({ openFilter }) => {
-    const [searchOpen, setSearchOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [asideOpen, setAsideOpen] = useState(false);
 
+  const pathname = usePathname();
+  const isGamePage = /^\/games\/[^/]+$/.test(pathname);
+  let mobileFooterType = null;
+
+  if (pathname === '/') {
+    mobileFooterType = 'main';
+  } else if (pathname === '/games/my') {
+    mobileFooterType = 'my-purchases';
+  } else if (isGamePage) {
+    mobileFooterType = 'game-page';
+  }
+
+  if (mobileFooterType === 'main') {
     return (
-        <>
-            {searchOpen ? (
-                <SearchContainer>
-                    <SearchInput
-                        type="text"
-                        placeholder="Введите название игры..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <FooterButton onClick={() => setSearchOpen(false)}>
-                        <FiX />
-                    </FooterButton>
-                </SearchContainer>
-            ) : (
-                <FooterContainer>
-                    <FooterButton onClick={() => setSearchOpen(true)}>
-                        <SearchIcon />
-                    </FooterButton>
-                    <FooterButton onClick={openFilter}>
-                        <FilterIcon />
-                    </FooterButton>
-                </FooterContainer>
-            )}
-        </>
+      <>
+        {searchOpen ? (
+          <SearchContainer>
+            <SearchInput
+              type="text"
+              placeholder="Введите название игры..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <FooterButton onClick={() => setSearchOpen(false)}>
+              <FiX />
+            </FooterButton>
+          </SearchContainer>
+        ) : (
+          <FooterContainer>
+            <FooterButton onClick={() => setSearchOpen(true)}>
+              <SearchIcon />
+            </FooterButton>
+            <FooterButton onClick={openFilter}>
+              <FilterIcon />
+            </FooterButton>
+          </FooterContainer>
+        )}
+      </>
     );
+  }
+  if (mobileFooterType === 'game-page') {
+    return (
+      <>
+        <FooterContainer>
+          <div
+            onClick={() => setAsideOpen(true)}
+            style={{ display: 'flex', justifyContent: 'flex-start', gap: '1rem' }}
+          >
+            <FooterButton>
+              <RxAccessibility />
+            </FooterButton>
+            <p>Контакты разработчика</p>
+          </div>
+        </FooterContainer>
+        <SidebarPanel
+          isOpen={asideOpen}
+          onClose={() => setAsideOpen(false)}
+          title="Контакты разработчика"
+        >
+          <DeveloperContacts />
+        </SidebarPanel>
+      </>
+    );
+  }
 };
 
 export default MobileFooter;

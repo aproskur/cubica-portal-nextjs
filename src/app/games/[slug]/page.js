@@ -11,6 +11,7 @@ import { useModal } from '@/context/ModalContext';
 import { useAuth } from '@/context/AuthContext';
 import { saveAndUpdateGame } from '@/utils/gameHelpers';
 import { useGamesData } from '@/context/GamesDataContext';
+import MobileFooter from '@/components/MobileFooter';
 
 const GridContainer = styled.div`
   display: grid;
@@ -33,7 +34,9 @@ const GridContainer = styled.div`
     grid-template-areas:
       'info'
       'slider'
-      'tabs';
+      'tabs'
+      'footer';
+
     gap: 15px;
     padding: 0;
   }
@@ -71,6 +74,14 @@ const SecondRow = styled.div`
   border-radius: 10px;
 `;
 
+const FooterContainer = styled.div`
+  grid-area: footer;
+
+  @media (min-width: 876px) {
+    display: none;
+  }
+`;
+
 const GamePage = () => {
   const { slug } = useParams(); // Get slug from URL
   const { user, token } = useAuth(); // token might be undefined
@@ -79,6 +90,7 @@ const GamePage = () => {
   const [fetchedSlugs, setFetchedSlugs] = useState(new Set());
 
   const { currentGame: game, setCurrentGame, updateGameInList } = useGamesData();
+  console.log('Mobile footer', game);
 
   // added for the force setting, updated for resetting current game
   useEffect(() => {
@@ -189,6 +201,9 @@ const GamePage = () => {
         <SecondRow>
           {game && <Tabs isEditable={isDeveloper} onUpdate={handleGameUpdateFields} />}
         </SecondRow>
+        <FooterContainer>
+          <MobileFooter />
+        </FooterContainer>
       </GridContainer>
     </>
   );

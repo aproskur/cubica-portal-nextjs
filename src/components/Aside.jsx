@@ -8,7 +8,7 @@ import useAsideFilters from '@/hooks/useAsideFilters';
 import Dropdown from './ui/Dropdown';
 import { FaTelegramPlane, FaWhatsapp, FaPhoneAlt, FaEnvelope } from 'react-icons/fa';
 import { useGamesData } from '@/context/GamesDataContext';
-
+import DeveloperContacts from './DeveloperContacts';
 const AsideContainer = styled.aside`
   width: 350px;
   flex-shrink: 0;
@@ -207,51 +207,10 @@ const Aside = () => {
     );
   }
   if (asideType === 'game-page') {
-    const hasAnyContact = contactsTelegram || contactsWhatsapp || contactsEmail || contactsPhone;
-
-    if (!hasAnyContact) {
-      return (
-        <AsideContainer>
-          <SectionTitle>Контакты</SectionTitle>
-          <ContactInfo>Нет доступной контактной информации</ContactInfo>
-        </AsideContainer>
-      );
-    }
-
     return (
       <AsideContainer>
         <SectionTitle>Контакты</SectionTitle>
-        <ContactInfo>
-          Вопросы разработчику игры вы можете задать:
-          {contactsTelegram && (
-            <ContactLink
-              href={`https://t.me/${contactsTelegram}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <FaTelegramPlane /> в телеграм
-            </ContactLink>
-          )}
-          {contactsWhatsapp && (
-            <ContactLink
-              href={`https://wa.me/${contactsWhatsapp}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <FaWhatsapp /> в вотсап
-            </ContactLink>
-          )}
-          {contactsEmail && (
-            <ContactLink href={`mailto:${contactsEmail}`}>
-              <FaEnvelope /> написать на почту: {contactsEmail}
-            </ContactLink>
-          )}
-          {contactsPhone && (
-            <ContactLink href={`tel:${contactsPhone}`}>
-              <FaPhoneAlt /> позвонить: {contactsPhone}
-            </ContactLink>
-          )}
-        </ContactInfo>
+        <DeveloperContacts />
       </AsideContainer>
     );
   }

@@ -392,6 +392,11 @@ const Header = () => {
                 >
                   <Link href="/about-platform">О платформе</Link>
                   <Link href="/support">Поддержка</Link>
+                  {isAuthenticated && purchasedGames.length > 0 && (
+                    <StyledNextLink href="/games/my" onClick={() => setMenuOpen(false)}>
+                      Мои покупки
+                    </StyledNextLink>
+                  )}
                   <MenuItemWrapper>
                     <MyGamesMenuItem />
                   </MenuItemWrapper>

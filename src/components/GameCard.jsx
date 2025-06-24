@@ -47,7 +47,7 @@ const CardWrapper = styled.div`
   }
 
   @media (max-width: 768px) {
-    padding: 0;
+    padding: 0.5rem;
   }
 `;
 
@@ -67,8 +67,8 @@ const TopLeftBadge = styled.div`
   min-width: 60px;
 
   @media (max-width: 500px) {
-    top: 10px;
-    left: 0;
+    top: 15px;
+    left: 7px;
   }
 `;
 
@@ -84,8 +84,8 @@ const TopRightBadge = styled.div`
   min-width: 60px;
 
   @media (max-width: 500px) {
-    top: 10px;
-    right: 0;
+    top: 15px;
+    right: 7px;
   }
 `;
 
@@ -690,49 +690,9 @@ const GameCard = ({ game }) => {
               isFavorite={isFavorite}
             />
           </RowIcon>
-          {isDeveloper ? (
-            isEditingTitle ? (
-              <input
-                type="text"
-                defaultValue={game.title}
-                autoFocus
-                onBlur={(e) =>
-                  saveAndUpdateGame(
-                    { title: e.target.value },
-                    {
-                      game,
-                      token,
-                      updateGameInList,
-                      onSuccess: () => setIsEditingTitle(false),
-                    }
-                  )
-                }
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.target.blur();
-                  }
-                }}
-                style={{
-                  fontSize: '1rem',
-                  fontWeight: 400,
-                  background: 'transparent',
-                  color: '#fff',
-                  border: '1px solid rgba(var(--theme-yellow), 0.5)',
-                  borderRadius: '4px',
-                  padding: '4px 8px',
-                  width: '100%',
-                }}
-              />
-            ) : (
-              <GameName onClick={() => setIsEditingTitle(true)}>{game.title}</GameName>
-            )
-          ) : (
-            <Link href={`/games/${game.slug}`}>
-              <GameName>{game.title}</GameName>
-            </Link>
-          )}
+          <Link href={`/games/${game.slug}`}>
+            <GameName>{game.title}</GameName>
+          </Link>
         </Row>
         <Row>
           {' '}

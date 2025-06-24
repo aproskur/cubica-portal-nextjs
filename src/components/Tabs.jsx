@@ -90,7 +90,6 @@ const Tabs = () => {
   const isMobile = useIsMobile();
   const { currentGame: game, setCurrentGame } = useGamesData();
 
-  const { user } = useAuth();
   if (!game) return null;
   const isDeveloper = user?.id === game?.developed_by?.id;
 
