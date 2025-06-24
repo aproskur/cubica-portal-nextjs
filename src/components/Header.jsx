@@ -76,7 +76,6 @@ const BurgerIcon = styled(FiMenu)`
   font-size: 24px;
   color: rgb(var(--theme-yellow));
 `;
-
 const MenuPopup = styled.div`
   position: absolute;
   top: 25px;
@@ -105,11 +104,19 @@ const MenuPopup = styled.div`
     border-radius: 4px;
     border: 1px solid transparent;
     box-sizing: border-box;
+    transition:
+      background 0.3s ease-in-out,
+      border 0.3s ease-in-out;
+  }
 
-    &:hover {
-      background: #333333;
-      border: 1px solid rgb(var(--theme-yellow));
-    }
+  a:hover {
+    background: #333333;
+    border: 1px solid rgb(var(--theme-yellow));
+  }
+
+  a:empty {
+    display: none;
+    pointer-events: none;
   }
 `;
 
@@ -413,15 +420,14 @@ const Header = () => {
             </FlexWrapperNoGap>
 
             <FlexWrapper>
+              {isAuthenticated && purchasedGames.length > 0 ? (
+                <StyledNextLink href="/games/my" onClick={() => setMenuOpen(false)}>
+                  Мои покупки
+                </StyledNextLink>
+              ) : null}
+
               <FlexItemWrapper>
-                {isAuthenticated && purchasedGames.length > 0 && (
-                  <Link href="/games/my">Мои покупки</Link>
-                )}
-              </FlexItemWrapper>
-              <FlexItemWrapper>
-                <FlexItemWrapper>
-                  <MyGamesMenuItem />
-                </FlexItemWrapper>
+                <MyGamesMenuItem />
               </FlexItemWrapper>
 
               <FlexItemWrapper>
