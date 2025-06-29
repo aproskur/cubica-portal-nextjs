@@ -224,7 +224,7 @@ const Aside = () => {
           <SearchInput
             type="text"
             placeholder="Введите название игры..."
-            onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
+            onChange={(e) => updateFilters({ searchQuery: e.target.value.toLowerCase() })}
           />
         </SearchContainer>
         <FilterGroup>
@@ -241,6 +241,8 @@ const Aside = () => {
               { label: 'Активные', value: 'active-links' },
               { label: 'Архивные', value: 'archive-links' },
             ]}
+            onCheckboxToggle={(value) => updateFilters({ linkStatus: value })}
+            selectedValue={filters.linkStatus}
           />
         </FilterGroup>
       </AsideContainer>

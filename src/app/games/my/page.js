@@ -7,6 +7,7 @@ import { fetchUserPurchases } from '@/utils/apiService';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import styled from 'styled-components';
+import { useFilters } from '@/context/FiltersContext';
 
 const Container = styled.div`
   padding: 0 5rem;
@@ -20,6 +21,7 @@ export default function MyGamesPage() {
   const { token, user, loading } = useAuth();
   const { searchQuery } = useSearch();
   const router = useRouter();
+  const { filters } = useFilters();
 
   // Add state for both games and links
   const [games, setGames] = useState([]);
@@ -68,9 +70,17 @@ export default function MyGamesPage() {
   }, [token]);
 
   const filteredGames =
-    games && Array.isArray(games)
-      ? games.filter((game) => game?.title?.toLowerCase().includes(searchQuery.toLowerCase() || ''))
-      : [];
+    games?.filter((game) => {
+      const matchesSearch = game?.title
+        ?.toLowerCase()
+        .includes(filters.searchQuery.toLowerCase() || '');
+      const isExpired = game.end_date && new Date(game.end_date) < new Date();
+
+      if (filters.linkStatus === 'active-links' && isExpired) return false;
+      if (filters.linkStatus === 'archive-links' && !isExpired) return false;
+
+      return matchesSearch;
+    }) || [];
 
   if (loading || fetching) return <p>Загружаем...</p>;
   if (!games.length) return <p>У вас пока что нет купленных игр</p>;

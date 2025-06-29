@@ -453,7 +453,7 @@ export const fetchAllCompetencies = async () => {
   }
 };
 
-// Fetch links for a user
+// Fetch links for a user (right now function is on a link page)
 
 // generate a game link
 export async function generateGameLink(purchaseId, token) {

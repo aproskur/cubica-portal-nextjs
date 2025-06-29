@@ -138,6 +138,11 @@ const CubicaButton = styled.button`
   text-transform: uppercase;
   width: 30%;
   align-self: center;
+  max-width: 100%;
+  width: fit-content;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
   &:hover {
     border: 1px solid rgb(var(--theme-yellow));

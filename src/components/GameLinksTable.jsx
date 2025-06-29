@@ -190,6 +190,11 @@ const GameLinksTable = ({ games: purchases }) => {
     return <p>У вас пока что нет купленных игр</p>;
   }
 
+  const isExpired = (purchase) => {
+    if (!purchase.end_date) return false;
+    return new Date(purchase.end_date) < new Date();
+  };
+
   const sortedPurchases = [...purchases].sort(
     (a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate)
   );
@@ -241,15 +246,29 @@ const GameLinksTable = ({ games: purchases }) => {
       </thead>
       <tbody>
         {sortedPurchases.map((purchase) => (
-          <HoverRow key={purchase.id} tabIndex="0">
+          <HoverRow
+            key={purchase.id}
+            tabIndex="0"
+            style={{
+              opacity: isExpired(purchase) ? 0.4 : 1,
+              pointerEvents: isExpired(purchase) ? 'none' : 'auto',
+            }}
+          >
             <Td>{purchase.date}</Td>
             <GameNameTd>
               <GameNameContainer>
                 <GameNameSpan>{purchase.title}</GameNameSpan>
                 <Tooltip>{purchase.title}</Tooltip>
+
                 <GameShareButton onClick={() => handleShare(purchase)}>
                   <ShareIcon size={18} />
                 </GameShareButton>
+
+                {isExpired(purchase) && (
+                  <span style={{ fontSize: '0.75rem', color: 'gray', marginLeft: '8px' }}>
+                    Архивная
+                  </span>
+                )}
               </GameNameContainer>
             </GameNameTd>
             <Td>{translateType(purchase.type)}</Td>

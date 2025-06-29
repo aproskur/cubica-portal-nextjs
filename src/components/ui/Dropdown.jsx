@@ -79,6 +79,7 @@ const Dropdown = ({
   setDropdownState,
   onCheckboxToggle,
   selectedValues = [],
+  selectedValue,
   sortOrder,
   setSortOrder,
 }) => {
@@ -109,21 +110,23 @@ const Dropdown = ({
         {items.map((item, index) => {
           if (!item || !item.value) return null;
 
-          const isSelected = selectedValues.includes(String(item.value));
+          const isSelected =
+            type === 'radio'
+              ? selectedValue === String(item.value)
+              : selectedValues.includes(String(item.value));
 
           return (
-            <DropdownListItem key={index} onClick={() => onCheckboxToggle?.(item.value)}>
-              <div className="label-content">
+            <DropdownListItem key={index}>
+              <label className="label-content">
                 <input
                   type={type}
                   name={stateKey}
                   value={item.value}
-                  onClick={stopPropagation}
                   checked={isSelected}
                   onChange={() => onCheckboxToggle?.(item.value)}
                 />
                 {item.label}
-              </div>
+              </label>
             </DropdownListItem>
           );
         })}

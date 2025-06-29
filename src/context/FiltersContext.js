@@ -13,6 +13,7 @@ export const FiltersProvider = ({ children }) => {
     sort: 'popularity',
     sortOrder: 'desc',
     totalPlayed: null,
+    linkStatus: 'all-links', // NEW: 'all-links' | 'active-links' | 'archive-links'
   });
 
   const updateFilters = (newFilters) => {
