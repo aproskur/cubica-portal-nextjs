@@ -6,6 +6,7 @@ import { useGamesData } from '@/context/GamesDataContext';
 import { useAuth } from '@/context/AuthContext';
 import { saveAndUpdateGame } from '@/utils/gameHelpers';
 import { useToast } from '@/context/ToastContext';
+import { useRef } from 'react';
 
 // Styled components
 const ContactInfo = styled.div`
@@ -82,6 +83,11 @@ const DeveloperContacts = () => {
   const [phone, setPhone] = useState('');
   const [dirty, setDirty] = useState(false);
 
+  const telegramRef = useRef(null);
+  const whatsappRef = useRef(null);
+  const emailRef = useRef(null);
+  const phoneRef = useRef(null);
+
   useEffect(() => {
     if (game && isDeveloper) {
       setTelegram(game.contactsTelegram || '');
@@ -113,6 +119,21 @@ const DeveloperContacts = () => {
     }
   };
 
+  const handleEnterPress = (e, nextRef) => {
+    if (e.key === 'Enter' && !isMobile && isDeveloper) {
+      e.preventDefault();
+      saveContactInfo({
+        contactsTelegram: telegram,
+        contactsWhatsapp: whatsapp,
+        contactsEmail: email,
+        contactsPhone: phone,
+      });
+      if (nextRef?.current) {
+        nextRef.current.focus();
+      }
+    }
+  };
+
   if (!game) return null;
 
   const hasAny =
@@ -123,42 +144,50 @@ const DeveloperContacts = () => {
       <ContactInfo>
         <label>Telegram</label>
         <Input
+          ref={telegramRef}
           value={telegram}
           onChange={(e) => {
             setTelegram(e.target.value);
             if (isMobile) setDirty(true);
           }}
           onBlur={() => handleBlur('contactsTelegram', telegram, game.contactsTelegram)}
+          onKeyDown={(e) => handleEnterPress(e, whatsappRef)}
         />
 
         <label>WhatsApp</label>
         <Input
+          ref={whatsappRef}
           value={whatsapp}
           onChange={(e) => {
             setWhatsapp(e.target.value);
             if (isMobile) setDirty(true);
           }}
           onBlur={() => handleBlur('contactsWhatsapp', whatsapp, game.contactsWhatsapp)}
+          onKeyDown={(e) => handleEnterPress(e, emailRef)}
         />
 
         <label>Email</label>
         <Input
+          ref={emailRef}
           value={email}
           onChange={(e) => {
             setEmail(e.target.value);
             if (isMobile) setDirty(true);
           }}
           onBlur={() => handleBlur('contactsEmail', email, game.contactsEmail)}
+          onKeyDown={(e) => handleEnterPress(e, phoneRef)}
         />
 
         <label>Телефон</label>
         <Input
+          ref={phoneRef}
           value={phone}
           onChange={(e) => {
             setPhone(e.target.value);
             if (isMobile) setDirty(true);
           }}
           onBlur={() => handleBlur('contactsPhone', phone, game.contactsPhone)}
+          onKeyDown={(e) => handleEnterPress(e, telegramRef)}
         />
 
         {isMobile && dirty && (

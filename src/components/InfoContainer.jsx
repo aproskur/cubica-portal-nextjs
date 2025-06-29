@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useState } from 'react';
 import { saveAndUpdateGame } from '@/utils/gameHelpers';
 import { FaEdit, FaCopy, FaArchive, FaEyeSlash, FaEye, FaStar } from 'react-icons/fa';
+import { FiEdit } from 'react-icons/fi';
 import { LuShoppingCart, LuMonitorPlay } from 'react-icons/lu';
 import { handleGameUpdate } from '@/utils/apiService';
 import CompetencyModal from './modals/CompetencyModal';
@@ -121,6 +122,12 @@ const PriceInput = styled.input`
   }
 `;
 
+const StyledFiEdit = styled(FiEdit)`
+  &:hover {
+    color: rgb(var(--theme-yellow));
+  }
+`;
+
 const PriceLabelDevmode = styled.div`
   align-self: center;
   font-size: 0.9rem;
@@ -167,6 +174,12 @@ const IconButton = styled.div`
     bottom: 45px;
     z-index: 999;
   }
+`;
+
+const FlexRowWrapper = styled.div`
+  display: flex;
+  gap: 1em;
+  align-items: center;
 `;
 
 const Rating = ({ rating }) => {
@@ -307,12 +320,17 @@ const InfoContainer = ({ token, isDeveloper, updateGameInList, onUpdate, onBuyCl
           }}
         />
       ) : (
-        <Title
-          onClick={() => isDeveloper && setIsEditingTitle(true)}
-          style={{ cursor: isDeveloper ? 'pointer' : 'default' }}
-        >
-          {title}
-        </Title>
+        <FlexRowWrapper>
+          {isDeveloper ? (
+            <StyledFiEdit size={25} onClick={() => isDeveloper && setIsEditingTitle(true)} />
+          ) : null}
+          <Title
+            onClick={() => isDeveloper && setIsEditingTitle(true)}
+            style={{ cursor: isDeveloper ? 'pointer' : 'default' }}
+          >
+            {title}
+          </Title>
+        </FlexRowWrapper>
       )}
 
       {isDeveloper && (
@@ -480,16 +498,17 @@ const InfoContainer = ({ token, isDeveloper, updateGameInList, onUpdate, onBuyCl
           <>
             {isDeveloper && Array.isArray(localCompetencies) && (
               <>
-                <span>Тренируемые компетенции: </span>
-                <span
-                  onClick={() => setCompetencyModalOpen(true)}
-                  style={{ cursor: 'pointer', textDecoration: 'underline', fontWeight: 'normal' }}
-                >
-                  {localCompetencies
-                    .filter((comp) => comp && typeof comp === 'object' && comp.name)
-                    .map((comp) => comp.name.charAt(0).toUpperCase() + comp.name.slice(1))
-                    .join(', ')}
-                </span>
+                <div onClick={() => setCompetencyModalOpen(true)}>
+                  <span>Тренируемые компетенции: </span>
+                  <span
+                    style={{ cursor: 'pointer', textDecoration: 'underline', fontWeight: 'normal' }}
+                  >
+                    {localCompetencies
+                      .filter((comp) => comp && typeof comp === 'object' && comp.name)
+                      .map((comp) => comp.name.charAt(0).toUpperCase() + comp.name.slice(1))
+                      .join(', ')}
+                  </span>
+                </div>
 
                 {isCompetencyModalOpen && (
                   <CompetencyModal

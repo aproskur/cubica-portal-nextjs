@@ -10,8 +10,8 @@ import ClientPaymentRedirectHandler from '@/utils/ClientPaymentRedirectHandler';
 import { Suspense } from 'react';
 
 const montserrat = Montserrat({
-  variable: '--font-montserrat',
   subsets: ['latin', 'cyrillic'],
+  display: 'swap',
 });
 
 export const metadata = {
@@ -22,7 +22,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="ru">
-      <body className={`${montserrat.variable}`}>
+      <body className={montserrat.className}>
         <StyledComponentsRegistry>
           <Providers>
             <Header />

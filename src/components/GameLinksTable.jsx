@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { CiShare2 } from 'react-icons/ci';
 import { generateGameLink } from '@/utils/apiService';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
 
 const Table = styled.table`
   width: 100%;
@@ -181,6 +182,7 @@ const GameShareButton = styled.button`
 
 const GameLinksTable = ({ games: purchases }) => {
   const { token } = useAuth();
+  const { showToast } = useToast();
 
   console.log('PURCHASES lnk table', purchases);
 
@@ -194,7 +196,7 @@ const GameLinksTable = ({ games: purchases }) => {
 
   const handleShare = async (purchase) => {
     if (!token) {
-      alert('Вы не авторизованы. Войдите, чтобы получить ссылку.');
+      showToast('Вы не авторизованы. Войдите, чтобы получить ссылку.');
       return;
     }
 
@@ -203,9 +205,9 @@ const GameLinksTable = ({ games: purchases }) => {
       const url = result.url;
 
       await navigator.clipboard.writeText(url);
-      alert(`Ссылка скопирована: ${url}`);
+      showToast(`Ссылка скопирована: ${url}`, 5000, 'top-center');
     } catch (err) {
-      alert(`Ошибка: ${err.message}`);
+      showToast(`Ошибка: ${err.message}`, 5000, 'top-center');
     }
   };
 

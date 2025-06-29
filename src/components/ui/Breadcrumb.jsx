@@ -9,7 +9,7 @@ import AboutPlatform from '@/app/about-platform/page';
 import { useFilters } from '@/context/FiltersContext';
 
 const BreadcrumbContainer = styled.nav`
-  font-size: 16px;
+  font-size: 18px;
   display: flex;
   flex-shrink: 0;
   align-items: center;

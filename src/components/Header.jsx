@@ -15,6 +15,7 @@ import UserProfileModal from './modals/UserProfileModal';
 import { usePathname } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import MyGamesMenuItem from './ui/MyGamesMenuItem';
+import StyledNextLink from './ui/StyledNextLink';
 
 const HeaderContainer = styled.header`
   display: flex;
@@ -88,6 +89,14 @@ const MenuPopup = styled.div`
   min-width: 250px;
   z-index: 100;
 
+  a:empty {
+    display: none;
+    pointer-events: none;
+    height: 0;
+    padding: 0;
+    margin: 0;
+  }
+
   opacity: ${(props) => (props.$isVisible ? '1' : '0')};
   transform: ${(props) => (props.$isVisible ? 'translateY(0)' : 'translateY(-10px)')};
   visibility: ${(props) => (props.$isVisible ? 'visible' : 'hidden')};
@@ -95,29 +104,6 @@ const MenuPopup = styled.div`
     opacity 0.3s ease-in-out,
     transform 0.3s ease-in-out,
     visibility 0.3s ease-in-out;
-
-  a {
-    color: rgb(var(--foreground));
-    text-decoration: none;
-    display: block;
-    padding: 0.5rem;
-    border-radius: 4px;
-    border: 1px solid transparent;
-    box-sizing: border-box;
-    transition:
-      background 0.3s ease-in-out,
-      border 0.3s ease-in-out;
-  }
-
-  a:hover {
-    background: #333333;
-    border: 1px solid rgb(var(--theme-yellow));
-  }
-
-  a:empty {
-    display: none;
-    pointer-events: none;
-  }
 `;
 
 const LoginIconWrapper = styled.div`
@@ -239,7 +225,8 @@ const MobileOffCanavasMenuContainer = styled.div`
   gap: 20px;
 `;
 
-const StyledNextLink = styled(Link).attrs({ as: 'a' })`
+const StyledNextLinkTmp = styled(Link).attrs({ as: 'a' })`
+  ${({ children }) => !children && 'display: none;'}
   color: rgb(var(--foreground));
   text-decoration: none;
   font-size: 18px;
@@ -250,6 +237,20 @@ const StyledNextLink = styled(Link).attrs({ as: 'a' })`
 
   &:hover {
     border: 1px solid rgb(var(--theme-yellow));
+  }
+`;
+
+const StyledNextLinkRightMenu = styled(Link).attrs({ as: 'a' })`
+  color: rgb(var(--foreground));
+  text-decoration: none;
+  font-size: 18px;
+  border-radius: 5px;
+  padding: 0.5em;
+  transition: background 0.3s ease-in-out;
+  border: 1px solid rgb(var(--background));
+
+  &:hover {
+    color: rgb(var(--theme-yellow));
   }
 `;
 
@@ -264,7 +265,7 @@ const MyGamesMenuItemWrapper = styled.div`
   cursor: pointer;
 
   &:hover {
-    border: 1px solid rgb(var(--theme-yellow));
+    color: rgb(var(--theme-yellow));
   }
 `;
 
@@ -308,6 +309,10 @@ const FlexWrapper = styled.div`
   gap: 1rem;
 `;
 
+const BurgerMenuItemWrapper = styled.div`
+  display: ${({ children }) => (children ? 'block' : 'none')};
+`;
+
 const FlexWrapperNoGap = styled(FlexWrapper)`
   gap: 0;
 `;
@@ -329,6 +334,13 @@ const MobileBreadcrumbContainer = styled.div`
 const LoggedUserWrapper = styled.div`
   cursor: pointer;
   color: rgb(var(--theme-yellow));
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 18px;
+  border-radius: 5px;
+  padding: 0.5em;
+  transition: background 0.3s ease-in-out;
+  border: 1px solid rgb(var(--background));
 `;
 
 const LoggedUser = ({ onClick }) => {
@@ -371,13 +383,22 @@ const Header = () => {
 
   if (!hasMounted) return null; // prevent mismatch
 
+  const handleLogoClick = () => {
+    updateFilters({ onlyMyDevelopedGames: false });
+  };
+
+  const handleMobileLogoClick = () => {
+    updateFilters({ onlyMyDevelopedGames: false });
+    setMenuOpen(false);
+  };
+
   return (
     <>
       {!isMobile && (
         <HeaderContainer>
           <LeftContainer>
             {/* Logo */}
-            <LogoWrapper>
+            <LogoWrapper onClick={handleLogoClick}>
               <Link href="/">
                 <Logo width={150} height={70}>
                   {' '}
@@ -397,16 +418,18 @@ const Header = () => {
                   onMouseEnter={() => setMenuVisible(true)}
                   onMouseLeave={() => setMenuVisible(false)}
                 >
-                  <Link href="/about-platform">О платформе</Link>
-                  <Link href="/support">Поддержка</Link>
-                  {isAuthenticated && purchasedGames.length > 0 && (
+                  <StyledNextLink href="/about-platform">О платформе</StyledNextLink>
+                  <StyledNextLink href="/support">Поддержка</StyledNextLink>
+                  {isAuthenticated && purchasedGames.length > 0 ? (
                     <StyledNextLink href="/games/my" onClick={() => setMenuOpen(false)}>
                       Мои покупки
                     </StyledNextLink>
-                  )}
-                  <MenuItemWrapper>
-                    <MyGamesMenuItem />
-                  </MenuItemWrapper>
+                  ) : null}
+                  {isAuthenticated && purchasedGames.length > 0 ? (
+                    <MenuItemWrapper>
+                      <MyGamesMenuItem />
+                    </MenuItemWrapper>
+                  ) : null}
                 </MenuPopup>
               </HoverBuffer>
             </BurgerWrapper>
@@ -421,9 +444,9 @@ const Header = () => {
 
             <FlexWrapper>
               {isAuthenticated && purchasedGames.length > 0 ? (
-                <StyledNextLink href="/games/my" onClick={() => setMenuOpen(false)}>
+                <StyledNextLinkRightMenu href="/games/my" onClick={() => setMenuOpen(false)}>
                   Мои покупки
-                </StyledNextLink>
+                </StyledNextLinkRightMenu>
               ) : null}
 
               <FlexItemWrapper>
@@ -452,7 +475,7 @@ const Header = () => {
           {!menuOpen && (
             <>
               <MobileHeaderContainer>
-                <LogoWrapper>
+                <LogoWrapper onClick={handleLogoClick}>
                   <Link href="/">
                     <Logo />
                   </Link>
@@ -476,7 +499,7 @@ const Header = () => {
           {/* MOBILE OFF-CANVAS MENU */}
           <MobileOffCanvasMenu $isOpen={menuOpen}>
             <MobileOffCanvasMenuHeader>
-              <LogoWrapper>
+              <LogoWrapper onClick={handleMobileLogoClick}>
                 <Logo />
               </LogoWrapper>
               <MobileBurgerWrapper onClick={() => setMenuOpen(false)}>
@@ -495,7 +518,15 @@ const Header = () => {
                   fontWeight: '500',
                 }}
               >
-                Пользователь:&nbsp;{' '}
+                <div
+                  style={{
+                    padding: '0.5em',
+                    fontSize: '18px',
+                    border: '1px solid rgb(var(--background))',
+                  }}
+                >
+                  Пользователь:&nbsp;{' '}
+                </div>
                 <LoggedUser
                   onClick={() => {
                     setMenuOpen(false);
@@ -505,6 +536,9 @@ const Header = () => {
               </div>
             )}
             <MobileOffCanavasMenuContainer>
+              <StyledNextLink href="/" onClick={() => setMenuOpen(false)}>
+                Главная
+              </StyledNextLink>
               <StyledNextLink href="/about-platform" onClick={() => setMenuOpen(false)}>
                 О платформе
               </StyledNextLink>
