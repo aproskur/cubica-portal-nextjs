@@ -204,8 +204,13 @@ const GameLinksTable = ({ games: purchases }) => {
       const result = await generateGameLink(purchase.documentId, token);
       const url = result.url;
 
-      await navigator.clipboard.writeText(url);
-      showToast(`Ссылка скопирована: ${url}`, 5000, 'top-center');
+      if (typeof window !== 'undefined' && window.isSecureContext && navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+        showToast(`Ссылка скопирована: ${url}`, 5000, 'top-center');
+      } else {
+        // Fallback: show the link so the user can copy manually
+        showToast(`Буфер обмена недоступен. Скопируйте ссылку вручную: ${url}`, 7000, 'top-center');
+      }
     } catch (err) {
       showToast(`Ошибка: ${err.message}`, 5000, 'top-center');
     }
