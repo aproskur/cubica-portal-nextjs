@@ -78,27 +78,33 @@ export const AuthProvider = ({ children }) => {
   // Calls fetchUser() to get user details.
   // Redirects the user to /games/my.
   const login = async (identifier, password) => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/auth/local`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, password }),
-      });
+    const response = await fetch(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/auth/local`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier, password }),
+    });
 
-      const responseData = await response.json();
+    const responseData = await response.json();
 
-      if (!response.ok || !responseData.jwt) {
-        throw new Error(responseData?.error?.message || 'Invalid credentials');
+    if (!response.ok || !responseData.jwt) {
+      const backendMessage = responseData?.error?.message;
+
+      // Translate common backend errors
+      let localizedMessage = 'Неверные учетные данные'; // fallback
+      if (backendMessage === 'Invalid identifier or password') {
+        localizedMessage = 'Неверный логин или пароль';
+      } else if (backendMessage === 'Missing required parameter(s): identifier, password') {
+        localizedMessage = 'Пожалуйста, введите логин и пароль';
+      } else if (backendMessage?.toLowerCase().includes('invalid')) {
+        localizedMessage = 'Неверные данные';
       }
 
-      localStorage.setItem('jwt', responseData.jwt);
-      setToken(responseData.jwt);
-
-      await fetchUser(responseData.jwt); // Ensure fetchUser() is awaited
-    } catch (error) {
-      console.error('Login error:', error);
-      alert(error.message || 'Login failed. Please check your credentials.');
+      throw new Error(localizedMessage);
     }
+
+    localStorage.setItem('jwt', responseData.jwt);
+    setToken(responseData.jwt);
+    await fetchUser(responseData.jwt);
   };
 
   const handleLogout = () => {
@@ -116,32 +122,41 @@ export const AuthProvider = ({ children }) => {
   // If successful, saves the JWT token in localStorage.
   // Calls fetchUser() to fetch user details.
   // Redirects the user to /games/my.
-  const register = async (username, email, password) => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/auth/local/register`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, email, password }),
-        }
-      );
 
-      const responseData = await response.json();
+  const extractRegisterErrorMessage = (responseData) => {
+    const msg = responseData?.error?.message;
+    if (!msg) return 'Ошибка регистрации';
 
-      if (!response.ok || !responseData.jwt) {
-        throw new Error(responseData?.error?.message || 'Registration failed.');
-      }
+    const normalized = msg.toLowerCase();
 
-      localStorage.setItem('jwt', responseData.jwt);
-      setToken(responseData.jwt);
-
-      await fetchUser(responseData.jwt); // Ensure the new user data is fetched
-
-      //router.push("/games/my");
-    } catch (error) {
-      alert(error.message || 'Registration failed. Please try again.');
+    if (normalized.includes('email or username')) {
+      return 'Email или имя пользователя уже заняты';
     }
+
+    if (normalized.includes('password')) {
+      return 'Пароль не соответствует требованиям';
+    }
+
+    return 'Ошибка регистрации';
+  };
+
+  const register = async (username, email, password) => {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/auth/local/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password }),
+    });
+
+    const responseData = await response.json();
+
+    if (!response.ok || !responseData.jwt) {
+      const localizedMessage = extractRegisterErrorMessage(responseData);
+      throw new Error(localizedMessage);
+    }
+
+    localStorage.setItem('jwt', responseData.jwt);
+    setToken(responseData.jwt);
+    await fetchUser(responseData.jwt);
   };
 
   // Functions to control login modal

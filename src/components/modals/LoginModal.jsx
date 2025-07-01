@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import styled from 'styled-components';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -128,25 +129,52 @@ const LoginModal = ({ isOpen, onClose }) => {
   const { login, register, isLoginModalOpen } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [username, setUsername] = useState(''); // Only needed for registration
   const [identifier, setIdentifier] = useState('');
 
+  const { showToast } = useToast();
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (isRegisterMode) {
+      if (!email.trim() || !username.trim() || !password.trim()) {
+        showToast('Пожалуйста, заполните все поля', 3000, 'top-center');
+        return;
+      }
+
+      // Simple email format check
+      if (!/\S+@\S+\.\S+/.test(email)) {
+        showToast('Введите корректный email', 3000, 'top-center');
+        return;
+      }
+
+      if (password.length < 6) {
+        showToast('Пароль должен быть не менее 6 символов', 3000, 'top-center');
+        return;
+      }
+    } else {
+      if (!identifier.trim() || !password.trim()) {
+        showToast('Введите логин и пароль', 3000, 'top-center');
+        return;
+      }
+    }
+
     try {
       if (isRegisterMode) {
-        await register(username, email, password); // registration
+        await register(username, email, password);
+        showToast('Регистрация прошла успешно!', 3000, 'top-center');
       } else {
-        await login(identifier, password); // login
+        await login(identifier, password);
+        showToast('С возвращением!', 3000, 'top-center');
       }
       onClose();
     } catch (err) {
-      setError(err.message || 'Operation failed.');
+      showToast(err.message || 'Произошла ошибка.', 3000, 'top-center');
     }
   };
 
@@ -155,7 +183,6 @@ const LoginModal = ({ isOpen, onClose }) => {
     setEmail('');
     setPassword('');
     setUsername('');
-    setError('');
   };
 
   const handleClose = () => {
@@ -163,7 +190,6 @@ const LoginModal = ({ isOpen, onClose }) => {
     setEmail('');
     setUsername('');
     setPassword('');
-    setError('');
     setIsRegisterMode(false);
     onClose();
   };
@@ -174,9 +200,7 @@ const LoginModal = ({ isOpen, onClose }) => {
         <CloseButton onClick={handleClose}>&times;</CloseButton>
         <h2>{isRegisterMode ? 'Регистрация' : 'Вход'}</h2>
 
-        {error && <ErrorMessage>{error}</ErrorMessage>}
-
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           {isRegisterMode ? (
             <>
               <StyledInput
