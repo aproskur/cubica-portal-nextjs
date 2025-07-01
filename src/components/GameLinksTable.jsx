@@ -257,7 +257,7 @@ const GameLinksTable = ({ games: purchases }) => {
             <Td>{purchase.date}</Td>
             <GameNameTd>
               <GameNameContainer>
-                <GameNameSpan>{purchase.title}</GameNameSpan>
+                <GameNameSpan onClick={() => handleShare(purchase)}>{purchase.title}</GameNameSpan>
                 <Tooltip>{purchase.title}</Tooltip>
 
                 <GameShareButton onClick={() => handleShare(purchase)}>
