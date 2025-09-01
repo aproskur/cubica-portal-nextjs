@@ -31,6 +31,10 @@ const StyledButton = styled.button`
   width: 100%;
   height: 100%;
   font-size: 18px;
+
+  &:hover {
+    color: rgb(var(--theme-yellow));
+  }
 `;
 
 const MyGamesMenuItem = ({ asButton = false, style = {}, onClick }) => {
@@ -42,16 +46,16 @@ const MyGamesMenuItem = ({ asButton = false, style = {}, onClick }) => {
   if (!isAuthenticated) return null;
 
   const handleClick = () => {
-    const toggle = !filters.onlyMyDevelopedGames;
+    const showOnlyMyGames = true;
 
     if (pathname !== '/') {
       router.push('/');
       setTimeout(() => {
-        updateFilters({ onlyMyDevelopedGames: toggle });
+        updateFilters({ onlyMyDevelopedGames: showOnlyMyGames });
         if (onClick) onClick();
       }, 0);
     } else {
-      updateFilters({ onlyMyDevelopedGames: toggle });
+      updateFilters({ onlyMyDevelopedGames: showOnlyMyGames });
       if (onClick) onClick();
     }
   };

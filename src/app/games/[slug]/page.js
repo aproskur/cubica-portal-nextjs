@@ -12,6 +12,8 @@ import { useAuth } from '@/context/AuthContext';
 import { saveAndUpdateGame } from '@/utils/gameHelpers';
 import { useGamesData } from '@/context/GamesDataContext';
 import MobileFooter from '@/components/MobileFooter';
+import { notFound } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 const GridContainer = styled.div`
   display: grid;
@@ -86,11 +88,19 @@ const GamePage = () => {
   const { slug } = useParams(); // Get slug from URL
   const { user, token } = useAuth(); // token might be undefined
   const { openPurchaseModal, setIsModalOpen } = useModal();
-
+  const [isLoading, setIsLoading] = useState(true);
+  const [fatalError, setFatalError] = useState(null);
   const [fetchedSlugs, setFetchedSlugs] = useState(new Set());
+  const [isNotFound, setIsNotFound] = useState(false);
 
   const { currentGame: game, setCurrentGame, updateGameInList } = useGamesData();
-  console.log('Mobile footer', game);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isNotFound) {
+      router.replace('/not-found');
+    }
+  }, [isNotFound]);
 
   // added for the force setting, updated for resetting current game
   useEffect(() => {
@@ -100,12 +110,19 @@ const GamePage = () => {
       try {
         const gameData = await fetchGameBySlug(slug, token);
         if (isMounted) {
-          console.log('Setting currentGame:', gameData);
           setCurrentGame(gameData);
         }
       } catch (err) {
         console.error('Failed to load game:', err);
-        setError('Ошибка загрузки игры');
+
+        if (err.status === 404 || err.message?.toLowerCase().includes('not found')) {
+          setIsNotFound(true); // mark for 404
+          return;
+        } else {
+          setFatalError('Произошла ошибка при загрузке игры. Попробуйте позже.');
+        }
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -115,7 +132,7 @@ const GamePage = () => {
 
     return () => {
       isMounted = false;
-      setCurrentGame(null); // Reset currentGame on unmount
+      setCurrentGame(null);
     };
   }, [slug, token, setCurrentGame]);
 
@@ -145,18 +162,9 @@ const GamePage = () => {
   //const isDeveloper = !!user && !!game.developed_by && game.developed_by.id === user.id;
   const isDeveloper = user?.id === game?.developed_by?.id;
 
-  const [error, setError] = useState(null);
-  if (error) return <p>{error}</p>;
-  if (!game) return <p>Загрузка игры...</p>;
   const handleModalsBuyClick = (game) => {
     openPurchaseModal(game);
   };
-
-  const imageUrlArray =
-    game.images?.map((image) => ({
-      id: image.id,
-      url: image.url,
-    })) || [];
 
   const mergeGameUpdates = (original, updated) => {
     return {
@@ -171,10 +179,30 @@ const GamePage = () => {
     if (updated) updateGameInList(mergeGameUpdates(game, updated));
   };
 
+  if (isLoading) return <p>Загрузка игры...</p>;
+
+  if (isNotFound) {
+    return (
+      <div style={{ padding: '2rem' }}>
+        <h1>Игра не найдена</h1>
+        <p>Такой игры не существует. Проверьте ссылку или вернитесь на главную.</p>
+      </div>
+    );
+  }
+
+  if (fatalError) return <p>{fatalError}</p>;
+  if (!game) return null;
+
+  const imageUrlArray =
+    game.images?.map((image) => ({
+      id: image.id,
+      url: image.url,
+    })) || [];
+
   return (
     <>
       <Head>
-        <title>{game.title}</title>
+        <title>{game?.title ?? 'Игра'}</title>
       </Head>
       <GridContainer>
         <FirstRow>

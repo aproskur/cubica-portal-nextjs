@@ -8,6 +8,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import styled from 'styled-components';
 import { useFilters } from '@/context/FiltersContext';
+import MobileAside from '@/components/MobileAside';
+import MobileFooter from '@/components/MobileFooter';
 
 const Container = styled.div`
   padding: 0 5rem;
@@ -22,6 +24,7 @@ export default function MyGamesPage() {
   const { searchQuery } = useSearch();
   const router = useRouter();
   const { filters } = useFilters();
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Add state for both games and links
   const [games, setGames] = useState([]);
@@ -86,8 +89,16 @@ export default function MyGamesPage() {
   if (!games.length) return <p>У вас пока что нет купленных игр</p>;
 
   return (
-    <Container>
-      <GameLinksTable games={filteredGames} />
-    </Container>
+    <>
+      <Container>
+        <GameLinksTable games={filteredGames} />
+      </Container>
+      <MobileFooter openFilter={() => setIsFilterOpen(true)} />
+      <MobileAside
+        asideType={'my-purchases'}
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+      />
+    </>
   );
 }

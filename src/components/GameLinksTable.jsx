@@ -4,6 +4,7 @@ import { CiShare2 } from 'react-icons/ci';
 import { generateGameLink } from '@/utils/apiService';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 const Table = styled.table`
   width: 100%;
@@ -19,6 +20,17 @@ const Table = styled.table`
     align-items: center;
     padding: 10px;
     position: relative;
+  }
+`;
+
+const Tbody = styled.tbody`
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
   }
 `;
 
@@ -89,9 +101,11 @@ const HoverRow = styled.tr`
 
   @media (max-width: 768px) {
     display: block;
+    width: 100%;
     margin-bottom: 10px;
     border: 1px solid rgba(var(--theme-yellow), 0.8);
     padding: 15px;
+    width: 100%;
   }
 `;
 
@@ -183,8 +197,7 @@ const GameShareButton = styled.button`
 const GameLinksTable = ({ games: purchases }) => {
   const { token } = useAuth();
   const { showToast } = useToast();
-
-  console.log('PURCHASES lnk table', purchases);
+  const { isMobile } = useIsMobile();
 
   if (!purchases || purchases.length === 0) {
     return <p>У вас пока что нет купленных игр</p>;
@@ -244,7 +257,7 @@ const GameLinksTable = ({ games: purchases }) => {
           <Th>Период действия</Th>
         </tr>
       </thead>
-      <tbody>
+      <Tbody>
         {sortedPurchases.map((purchase) => (
           <HoverRow
             key={purchase.id}
@@ -254,7 +267,7 @@ const GameLinksTable = ({ games: purchases }) => {
               pointerEvents: isExpired(purchase) ? 'none' : 'auto',
             }}
           >
-            <Td>{purchase.date}</Td>
+            <Td> {purchase.date}</Td>
             <GameNameTd>
               <GameNameContainer>
                 <GameNameSpan onClick={() => handleShare(purchase)}>{purchase.title}</GameNameSpan>
@@ -285,7 +298,7 @@ const GameLinksTable = ({ games: purchases }) => {
             </Td>
           </HoverRow>
         ))}
-      </tbody>
+      </Tbody>
     </Table>
   );
 };

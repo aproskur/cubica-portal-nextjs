@@ -14,7 +14,7 @@ import {
   normalizeSlateForStrapi,
   ensureTextNodesHaveType,
 } from '@/utils/slateTransformHelpers';
-import { useIsMobile } from '@/app/hooks/useIsMobile';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import FAQitem from './ui/FAQitem';
 import { useGamesData } from '@/context/GamesDataContext';
 import { CiCirclePlus } from 'react-icons/ci';

@@ -3,6 +3,7 @@ import { FiX } from 'react-icons/fi';
 import Dropdown from './ui/Dropdown';
 import { FiFilter } from 'react-icons/fi';
 import useAsideFilters from '@/hooks/useAsideFilters';
+import { useFilters } from '@/context/FiltersContext';
 
 const slideIn = keyframes`
   from {
@@ -73,10 +74,41 @@ const ApplyButton = styled.button`
   }
 `;
 
-const MobileAside = ({ isOpen, onClose }) => {
+const MobileAside = ({ isOpen, onClose, asideType = 'main' }) => {
   const { dropdownState, setDropdownState, competencies, filters, handleToggleCompetency } =
     useAsideFilters();
 
+  const { filters: purchaseFilters, updateFilters: updatePurchaseFilters } = useFilters();
+
+  if (asideType === 'my-purchases') {
+    return (
+      <MobileAsideContainer $isOpen={isOpen}>
+        <CloseButton onClick={onClose}>
+          <FiX />
+        </CloseButton>
+        <FilterGroup>
+          <Dropdown
+            title="Отображать ссылки"
+            icon={<FiFilter />}
+            type="radio"
+            stateKey="showLinks"
+            dropdownState={dropdownState}
+            setDropdownState={setDropdownState}
+            items={[
+              { label: 'Все', value: 'all-links' },
+              { label: 'Активные', value: 'active-links' },
+              { label: 'Архивные', value: 'archive-links' },
+            ]}
+            onCheckboxToggle={(value) => updatePurchaseFilters({ linkStatus: value })}
+            selectedValue={purchaseFilters.linkStatus}
+          />
+        </FilterGroup>
+        <ApplyButton onClick={onClose}>Применить</ApplyButton>
+      </MobileAsideContainer>
+    );
+  }
+
+  //default aside
   return (
     <MobileAsideContainer $isOpen={isOpen}>
       <CloseButton onClick={onClose}>

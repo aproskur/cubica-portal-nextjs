@@ -438,7 +438,9 @@ const Header = () => {
             <FlexWrapperNoGap>
               <Breadcrumbs />
               {pathname === '/' && filters.onlyMyDevelopedGames && (
-                <p style={{ textAlign: 'left', marginLeft: '10px' }}>&gt; Мои игры</p>
+                <p style={{ padding: 0, textAlign: 'left', marginLeft: '10px', fontSize: '18px' }}>
+                  &gt; Мои игры
+                </p>
               )}
             </FlexWrapperNoGap>
 

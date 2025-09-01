@@ -149,6 +149,15 @@ const MobileFooter = ({ openFilter }) => {
       </>
     );
   }
+  if (mobileFooterType === 'my-purchases') {
+    return (
+      <FooterContainer>
+        <FooterButton onClick={openFilter}>
+          <FilterIcon />
+        </FooterButton>
+      </FooterContainer>
+    );
+  }
 };
 
 export default MobileFooter;

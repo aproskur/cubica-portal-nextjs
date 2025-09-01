@@ -120,7 +120,9 @@ export const fetchGameBySlug = async (slug, token) => {
 
   if (!res.ok) {
     const errorText = await res.text();
-    throw new Error(errorText || 'Failed to fetch game');
+    const error = new Error(errorText || 'Failed to fetch game');
+    error.status = res.status;
+    throw error;
   }
 
   const json = await res.json();

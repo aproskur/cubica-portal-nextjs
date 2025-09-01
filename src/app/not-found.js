@@ -1,26 +1,15 @@
-//app/not-found.js
-
+// app/not-found.js
 'use client';
-
 import styled from 'styled-components';
 import Image from 'next/image';
+import { Roboto } from 'next/font/google';
 import { useRouter } from 'next/navigation';
 
-/*
-const Wrapper = styled.div`
-  height: 100vh;
-  overflow: hidden;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  background-color: rgb(var(--background));
-  color: rgb(var(--foreground));
-  padding: 2rem;
-  text-align: center;
-`; */
+const roboto = Roboto({
+  subsets: ['latin', 'cyrillic'],
+  weight: ['400', '500', '700', '800'],
+  display: 'swap',
+});
 
 const Wrapper = styled.div`
   position: fixed;
@@ -29,78 +18,73 @@ const Wrapper = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 25px;
   background-color: rgb(var(--background));
   color: rgb(var(--foreground));
-  padding: 2rem;
   text-align: center;
   overflow: hidden;
 
   @media (max-width: 768px) {
-    padding-top: 200px;
-    justify-content: flex-start;
+    padding: 16px;
+    gap: 16px;
   }
 `;
 
 const Title = styled.h1`
-  font-size: 6rem;
-  font-weight: bold;
+  margin: 0;
+  padding: 0;
+  font-weight: 700;
   color: rgb(var(--theme-yellow));
-  margin-bottom: 1rem;
-
-  @media (max-width: 600px) {
-    font-size: 4rem;
+  font-size: clamp(115px, 10vw, 196px);
+  line-height: 0.7;
+  @media (max-width: 768px) {
+    padding-top: 16px;
   }
 `;
 
 const Subtitle = styled.h2`
-  font-size: 1.5rem;
-  font-weight: 500;
-  margin-bottom: 2rem;
+  margin: 0;
+  font-weight: 700;
+  max-width: 28ch;
+  text-wrap: balance;
+  font-size: clamp(24px, 2.2vw, 34px);
+  color: rgba(255, 255, 255, 0.7);
 `;
 
 const Message = styled.p`
-  font-size: 1rem;
-  color: rgb(var(--theme-grey));
-  margin-top: 2rem;
+  margin: 0;
+  max-width: 36ch; /* keeps to two lines on desktop and most mobiles */
+  text-wrap: balance;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: clamp(18px, 1.8vw, 22px);
+  font-weight: 500;
 `;
 
 const CubeImageWrapper = styled.div`
-  max-width: 250px;
-  width: 100%;
-  height: auto;
-  margin: 1.5rem 0;
-
+  width: clamp(150px, 22vw, 225px);
   img {
     width: 100%;
     height: auto;
     display: block;
-  }
-
-  @media (max-width: 960px) {
-    max-width: 125px;
+    height: auto;
+    object-fit: contain;
+    object-position: center;
   }
 `;
-/*
-const CubeImage = styled(Image)`
-  max-width: 250px;
-  width: 100%;
-  height: auto;
-  margin: 1.5rem 0;
-`; */
 
 const HomeButton = styled.button`
-  margin-top: 2rem;
   background-color: rgba(var(--theme-grey), 0.2);
   border: none;
   color: rgb(var(--theme-yellow));
-  padding: 12px 24px;
+  padding: 20px 60px;
   border-radius: 10px;
-  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  font-size: clamp(18px, 1.8vw, 22px);
+  font-weight: 500;
 
   &:hover {
-    background-color: rgba(var(--theme-yellow), 0.1);
+    background-color: rgba(var(--theme-grey), 0.1);
     color: rgb(var(--foreground));
   }
 `;
@@ -109,22 +93,19 @@ export default function NotFound() {
   const router = useRouter();
 
   return (
-    <Wrapper>
+    <Wrapper className={roboto.className}>
       <Title>404</Title>
       <Subtitle>Страница не найдена</Subtitle>
-
       <CubeImageWrapper>
         <Image
-          src="/assets/images/cubica404transp.png"
+          src="/assets/images/cube-trimmed.png"
           alt="404 Кубик"
           width={250}
           height={250}
           priority
         />
       </CubeImageWrapper>
-
-      <Message>Запрошенная Вами страница удалена или не существует</Message>
-
+      <Message>Запрошенная вами страница удалена или не существует</Message>
       <HomeButton onClick={() => router.push('/')}>На главную</HomeButton>
     </Wrapper>
   );
