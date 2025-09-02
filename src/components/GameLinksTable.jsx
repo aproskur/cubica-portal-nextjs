@@ -1,10 +1,12 @@
 'use client';
 import styled from 'styled-components';
 import { CiShare2 } from 'react-icons/ci';
-import { generateGameLink } from '@/utils/apiService';
+import { FiCopy } from 'react-icons/fi';
+import { generateGameLink, getLatestGameLink } from '@/utils/apiService';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useRef, useState } from 'react';
 
 const Table = styled.table`
   width: 100%;
@@ -134,6 +136,10 @@ const ShareIcon = styled(CiShare2)`
   color: rgb(var(--theme-yellow));
 `;
 
+const CopyIcon = styled(FiCopy)`
+  color: rgb(var(--theme-yellow));
+`;
+
 const GameNameContainer = styled.div`
   display: flex;
   align-items: center; /* Keep game name and button inline */
@@ -194,14 +200,67 @@ const GameShareButton = styled.button`
   }
 `;
 
+const MobileOnly = styled.div`
+  display: none;
+  @media (max-width: 768px) {
+    display: inline-block;
+  }
+`;
+
+const DesktopOnly = styled.div`
+  display: inline-block;
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+const ShareMenu = styled.div`
+  position: absolute;
+  top: 110%;
+  left: 0;
+  background: rgb(var(--background));
+  border: 1px solid rgb(var(--theme-grey));
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  padding: 6px;
+  min-width: 220px;
+  z-index: 20;
+`;
+
+const ShareMenuItem = styled.button`
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 10px 12px;
+  cursor: pointer;
+  color: rgb(var(--foreground));
+  border-radius: 6px;
+  &:hover {
+    background: rgba(var(--theme-yellow), 0.1);
+  }
+`;
+
 const GameLinksTable = ({ games: purchases }) => {
   const { token } = useAuth();
   const { showToast } = useToast();
-  const { isMobile } = useIsMobile();
+  const isMobile = useIsMobile();
+  const [menuFor, setMenuFor] = useState(null); // purchase id currently showing the menu
 
   if (!purchases || purchases.length === 0) {
     return <p>У вас пока что нет купленных игр</p>;
   }
+
+  const inFlight = useRef(new Set());
+
+  const buildWhatsAppHref = (url, title) => {
+    const text = `${title} — ${url}`;
+    return `https://wa.me/?text=${encodeURIComponent(text)}`;
+  };
+
+  const buildTelegramHref = (url, title) => {
+    return `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`;
+  };
 
   const isExpired = (purchase) => {
     if (!purchase.end_date) return false;
@@ -212,26 +271,125 @@ const GameLinksTable = ({ games: purchases }) => {
     (a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate)
   );
 
-  const handleShare = async (purchase) => {
-    if (!token) {
-      showToast('Вы не авторизованы. Войдите, чтобы получить ссылку.');
-      return;
-    }
+  // Fetch a link once: latest if exists, otherwise create
+  const getUrlForAction = async (purchase) => {
+    const pid = purchase.documentId ?? purchase.id;
 
+    // 1) Try latest
+    const latest = await ensureOnce(`latest:${pid}`, () => getLatestGameLink(pid, token));
+    if (latest?.url) return latest.url;
+
+    // 2) Fallback: generate
+    const created = await ensureOnce(pid, () => generateGameLink(pid, token));
+    return created?.url || null;
+  };
+
+  // Copy only
+  const copyLink = async (url) => {
     try {
-      const result = await generateGameLink(purchase.documentId, token);
-      const url = result.url;
-
-      if (typeof window !== 'undefined' && window.isSecureContext && navigator.clipboard) {
-        await navigator.clipboard.writeText(url);
-        showToast(`Ссылка скопирована: ${url}`, 5000, 'top-center');
-      } else {
-        // Fallback: show the link so the user can copy manually
-        showToast(`Буфер обмена недоступен. Скопируйте ссылку вручную: ${url}`, 7000, 'top-center');
-      }
-    } catch (err) {
-      showToast(`Ошибка: ${err.message}`, 5000, 'top-center');
+      await navigator.clipboard.writeText(url);
+      showToast(`Ссылка скопирована: ${url}`, 4000, 'top-center');
+    } catch {
+      showToast(`Скопируйте вручную: ${url}`, 7000, 'top-center');
     }
+  };
+
+  // Share only (used on mobile). Falls back to copy if share isn’t available.
+  const shareLink = async (url, title) => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url });
+        showToast(`Ссылка отправлена: ${url}`, 4000, 'top-center');
+        return;
+      }
+    } catch (e) {
+      if (e && (e.name === 'AbortError' || /AbortError/i.test(e.message))) {
+        showToast('Отправка отменена', 3000, 'top-center');
+        return;
+      }
+      // fall through to copy
+    }
+    await copyLink(url);
+  };
+
+  const ensureOnce = async (key, fn) => {
+    if (inFlight.current.has(key)) return null;
+    inFlight.current.add(key);
+    try {
+      return await fn();
+    } finally {
+      inFlight.current.delete(key);
+    }
+  };
+
+  // Title click → create (or reuse) then COPY
+  const handleCreateAndCopy = async (purchase) => {
+    if (!token) return showToast('Вы не авторизованы. Войдите, чтобы получить ссылку.');
+    const pid = purchase.documentId ?? purchase.id;
+    const data = await ensureOnce(pid, () => generateGameLink(pid, token));
+    if (data?.url) await copyLink(data.url);
+  };
+
+  // Mobile share button
+  const handleShareMobile = async (purchase) => {
+    if (!token) return showToast('Вы не авторизованы. Войдите, чтобы получить ссылку.');
+    const url = await getUrlForAction(purchase);
+    if (url) await shareLink(url, purchase.title);
+  };
+
+  // Desktop copy button
+  const handleCopyDesktop = async (purchase) => {
+    if (!token) return showToast('Вы не авторизованы. Войдите, чтобы получить ссылку.');
+    const url = await getUrlForAction(purchase);
+    if (url) await copyLink(url);
+  };
+
+  const handleSystemShare = async (purchase) => {
+    try {
+      const url = await getUrlForAction(purchase);
+      if (!url) return;
+      if (navigator.share) {
+        await navigator.share({ title: purchase.title, url });
+        showToast(`Ссылка отправлена: ${url}`, 4000, 'top-center');
+      } else {
+        await copyLink(url); // graceful fallback
+      }
+    } catch (e) {
+      if (e?.name === 'AbortError') {
+        showToast('Отправка отменена', 3000, 'top-center');
+      } else {
+        showToast('Не удалось поделиться. Скопирована ссылка.', 4000, 'top-center');
+        const url = await getUrlForAction(purchase);
+        if (url) await copyLink(url);
+      }
+    } finally {
+      setMenuFor(null);
+    }
+  };
+
+  const handleShareWhatsApp = async (purchase) => {
+    const url = await getUrlForAction(purchase);
+    if (!url) return;
+    const href = buildWhatsAppHref(url, purchase.title);
+    // try to open in a new tab; if blocked, replace location
+    const win = window.open(href, '_blank', 'noopener,noreferrer');
+    if (!win) window.location.href = href;
+    setMenuFor(null);
+  };
+
+  const handleShareTelegram = async (purchase) => {
+    const url = await getUrlForAction(purchase);
+    if (!url) return;
+    const href = buildTelegramHref(url, purchase.title);
+    const win = window.open(href, '_blank', 'noopener,noreferrer');
+    if (!win) window.location.href = href;
+    setMenuFor(null);
+  };
+
+  const handleCopyFromMenu = async (purchase) => {
+    const url = await getUrlForAction(purchase);
+    if (url) await copyLink(url);
+    setMenuFor(null);
   };
 
   const translateType = (type) => {
@@ -270,12 +428,58 @@ const GameLinksTable = ({ games: purchases }) => {
             <Td> {purchase.date}</Td>
             <GameNameTd>
               <GameNameContainer>
-                <GameNameSpan onClick={() => handleShare(purchase)}>{purchase.title}</GameNameSpan>
+                <GameNameSpan onClick={() => handleCreateAndCopy(purchase)}>
+                  {purchase.title}
+                </GameNameSpan>
                 <Tooltip>{purchase.title}</Tooltip>
 
-                <GameShareButton onClick={() => handleShare(purchase)}>
-                  <ShareIcon size={18} />
-                </GameShareButton>
+                {/* Mobile: Share button opens menu */}
+                <MobileOnly>
+                  <GameShareButton
+                    type="button"
+                    onClick={() =>
+                      setMenuFor((prev) =>
+                        prev === (purchase.documentId ?? purchase.id)
+                          ? null
+                          : (purchase.documentId ?? purchase.id)
+                      )
+                    }
+                    aria-label="Поделиться"
+                    title="Поделиться"
+                  >
+                    <ShareIcon size={18} />
+                  </GameShareButton>
+
+                  {menuFor === (purchase.documentId ?? purchase.id) && (
+                    <ShareMenu>
+                      {/* System share (if supported) */}
+                      <ShareMenuItem onClick={() => handleSystemShare(purchase)}>
+                        Системное меню (iOS/Android)
+                      </ShareMenuItem>
+                      <ShareMenuItem onClick={() => handleShareWhatsApp(purchase)}>
+                        Отправить в WhatsApp
+                      </ShareMenuItem>
+                      <ShareMenuItem onClick={() => handleShareTelegram(purchase)}>
+                        Отправить в Telegram
+                      </ShareMenuItem>
+                      <ShareMenuItem onClick={() => handleCopyFromMenu(purchase)}>
+                        Копировать ссылку
+                      </ShareMenuItem>
+                    </ShareMenu>
+                  )}
+                </MobileOnly>
+
+                {/* Desktop: Copy button */}
+                <DesktopOnly>
+                  <GameShareButton
+                    type="button"
+                    onClick={() => handleCopyDesktop(purchase)}
+                    aria-label="Копировать ссылку"
+                    title="Копировать ссылку"
+                  >
+                    <CopyIcon size={18} />
+                  </GameShareButton>
+                </DesktopOnly>
 
                 {isExpired(purchase) && (
                   <span style={{ fontSize: '0.75rem', color: 'gray', marginLeft: '8px' }}>

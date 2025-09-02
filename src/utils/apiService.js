@@ -475,3 +475,24 @@ export async function generateGameLink(purchaseId, token) {
 
   return await res.json();
 }
+
+// utils/apiService.js
+export async function getLatestGameLink(purchaseId, token) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/links/latest?purchaseId=${encodeURIComponent(purchaseId)}`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: 'no-store',
+    }
+  );
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.error?.message || 'Failed to fetch latest link');
+  }
+  // data => { url, id, documentId, label } or { url: null }
+  return data;
+}
