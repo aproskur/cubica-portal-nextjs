@@ -5,7 +5,7 @@ import { fetchAllCompetencies } from '@/utils/apiService';
 
 export default function useAsideFilters() {
   const [dropdownState, setDropdownState] = useState({
-    sort: false,
+    sort: true,
     filter: true,
     gameGenre: false,
     showLinks: true,

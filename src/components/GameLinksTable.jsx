@@ -1,7 +1,7 @@
 'use client';
 import styled from 'styled-components';
 import { CiShare2 } from 'react-icons/ci';
-import { FiCopy } from 'react-icons/fi';
+import { FiCopy, FiPlus } from 'react-icons/fi';
 import { generateGameLink, getLatestGameLink } from '@/utils/apiService';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
@@ -57,7 +57,6 @@ const Td = styled.td`
   padding: 10px;
   vertical-align: middle;
 
-  /* Right-align only "Все даты" column */
   &:nth-child(4) {
     text-align: right;
   }
@@ -140,11 +139,15 @@ const CopyIcon = styled(FiCopy)`
   color: rgb(var(--theme-yellow));
 `;
 
+const AddPlusIcon = styled(FiPlus)`
+  color: rgb(var(--theme-yellow));
+`;
+
 const GameNameContainer = styled.div`
   display: flex;
-  align-items: center; /* Keep game name and button inline */
+  align-items: center;
   gap: 8px;
-  position: relative; /* Needed for absolute tooltip positioning */
+  position: relative;
 `;
 
 const GameNameSpan = styled.span`
@@ -159,7 +162,7 @@ const GameNameSpan = styled.span`
 const Tooltip = styled.div`
   position: absolute;
   bottom: 100%;
-  left: 0; /* Align tooltip with the game name */
+  left: 0;
   background: rgba(0, 0, 0, 0.9);
   color: white;
   padding: 6px 12px;
@@ -241,6 +244,10 @@ const ShareMenuItem = styled.button`
   }
 `;
 
+const FlexRowWrapper = styled.div`
+  display: flex;
+`;
+
 const GameLinksTable = ({ games: purchases }) => {
   const { token } = useAuth();
   const { showToast } = useToast();
@@ -285,12 +292,16 @@ const GameLinksTable = ({ games: purchases }) => {
   };
 
   // Copy only
-  const copyLink = async (url) => {
+  const copyLink = async (url, silent = false) => {
     try {
       await navigator.clipboard.writeText(url);
-      showToast(`Ссылка скопирована: ${url}`, 4000, 'top-center');
+      if (!silent) {
+        showToast(`Ссылка скопирована: ${url}`, 4000, 'top-center');
+      }
     } catch {
-      showToast(`Скопируйте вручную: ${url}`, 7000, 'top-center');
+      if (!silent) {
+        showToast(`Скопируйте вручную: ${url}`, 7000, 'top-center');
+      }
     }
   };
 
@@ -327,7 +338,8 @@ const GameLinksTable = ({ games: purchases }) => {
     if (!token) return showToast('Вы не авторизованы. Войдите, чтобы получить ссылку.');
     const pid = purchase.documentId ?? purchase.id;
     const data = await ensureOnce(pid, () => generateGameLink(pid, token));
-    if (data?.url) await copyLink(data.url);
+    if (data?.url) await copyLink(data.url, true);
+    showToast(`Ссылка создана и скопирована в буфер`, 4000, 'top-center');
   };
 
   // Mobile share button
@@ -352,7 +364,7 @@ const GameLinksTable = ({ games: purchases }) => {
         await navigator.share({ title: purchase.title, url });
         showToast(`Ссылка отправлена: ${url}`, 4000, 'top-center');
       } else {
-        await copyLink(url); // graceful fallback
+        await copyLink(url);
       }
     } catch (e) {
       if (e?.name === 'AbortError') {
@@ -405,6 +417,8 @@ const GameLinksTable = ({ games: purchases }) => {
     }
   };
 
+  console.log('PURCHASE', purchases);
+
   return (
     <Table>
       <thead>
@@ -435,20 +449,32 @@ const GameLinksTable = ({ games: purchases }) => {
 
                 {/* Mobile: Share button opens menu */}
                 <MobileOnly>
-                  <GameShareButton
-                    type="button"
-                    onClick={() =>
-                      setMenuFor((prev) =>
-                        prev === (purchase.documentId ?? purchase.id)
-                          ? null
-                          : (purchase.documentId ?? purchase.id)
-                      )
-                    }
-                    aria-label="Поделиться"
-                    title="Поделиться"
-                  >
-                    <ShareIcon size={18} />
-                  </GameShareButton>
+                  <FlexRowWrapper>
+                    {purchase.package_type !== 'one-time' && (
+                      <GameShareButton
+                        type="button"
+                        onClick={() => handleCreateAndCopy(purchase)}
+                        aria-label="Создать ссылку"
+                        title="Создать ссылку"
+                      >
+                        <AddPlusIcon size={18} />
+                      </GameShareButton>
+                    )}
+                    <GameShareButton
+                      type="button"
+                      onClick={() =>
+                        setMenuFor((prev) =>
+                          prev === (purchase.documentId ?? purchase.id)
+                            ? null
+                            : (purchase.documentId ?? purchase.id)
+                        )
+                      }
+                      aria-label="Поделиться"
+                      title="Поделиться"
+                    >
+                      <ShareIcon size={18} />
+                    </GameShareButton>
+                  </FlexRowWrapper>
 
                   {menuFor === (purchase.documentId ?? purchase.id) && (
                     <ShareMenu>
@@ -471,14 +497,26 @@ const GameLinksTable = ({ games: purchases }) => {
 
                 {/* Desktop: Copy button */}
                 <DesktopOnly>
-                  <GameShareButton
-                    type="button"
-                    onClick={() => handleCopyDesktop(purchase)}
-                    aria-label="Копировать ссылку"
-                    title="Копировать ссылку"
-                  >
-                    <CopyIcon size={18} />
-                  </GameShareButton>
+                  <FlexRowWrapper>
+                    {purchase.package_type !== 'one-time' && (
+                      <GameShareButton
+                        type="button"
+                        onClick={() => handleCreateAndCopy(purchase)}
+                        aria-label="Создать ссылку"
+                        title="Создать ссылку"
+                      >
+                        <AddPlusIcon size={18} />
+                      </GameShareButton>
+                    )}
+                    <GameShareButton
+                      type="button"
+                      onClick={() => handleCopyDesktop(purchase)}
+                      aria-label="Копировать ссылку"
+                      title="Копировать ссылку"
+                    >
+                      <CopyIcon size={18} />
+                    </GameShareButton>
+                  </FlexRowWrapper>
                 </DesktopOnly>
 
                 {isExpired(purchase) && (
